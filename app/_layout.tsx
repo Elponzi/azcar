@@ -9,7 +9,7 @@ import 'react-native-reanimated';
 import { TamaguiProvider } from 'tamagui';
 import config from '../tamagui.config';
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { useAzkarStore } from '@/store/azkarStore';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -49,11 +49,11 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+  const currentTheme = useAzkarStore((state) => state.theme);
 
   return (
-    <TamaguiProvider config={config} defaultTheme={colorScheme === 'dark' ? 'dark' : 'light'}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <TamaguiProvider config={config} defaultTheme={currentTheme}>
+      <ThemeProvider value={currentTheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
