@@ -86,7 +86,7 @@ export default function SettingsModal() {
             bottom: 0,
         }
     }
-  });
+  }, [isDesktop, isRTL]);
 
   if (!isSettingsOpen && opacity.value === 0) return null;
 
