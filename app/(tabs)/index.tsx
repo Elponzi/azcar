@@ -7,10 +7,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { TRANSLATIONS } from '@/constants/Translations';
 import SettingsModal from '@/components/SettingsModal';
-import { THEME } from '@/constants/Theme';
+import { THEME, ThemeColors } from '@/constants/Theme';
 
 // --- Helper Components ---
-const NavButton = ({ iconName, onPress, colors, isDesktop }) => (
+interface NavButtonProps {
+  iconName: keyof typeof Ionicons.glyphMap;
+  onPress: () => void;
+  colors: ThemeColors;
+  isDesktop: boolean;
+}
+
+const NavButton = ({ iconName, onPress, colors, isDesktop }: NavButtonProps) => (
   <Button 
     size="$6" 
     circular 
@@ -26,7 +33,14 @@ const NavButton = ({ iconName, onPress, colors, isDesktop }) => (
   />
 );
 
-const CategoryButton = ({ label, isActive, onPress, colors }) => (
+interface CategoryButtonProps {
+  label: string;
+  isActive: boolean;
+  onPress: () => void;
+  colors: ThemeColors;
+}
+
+const CategoryButton = ({ label, isActive, onPress, colors }: CategoryButtonProps) => (
   <Button 
     size="$3" 
     br="$10"
@@ -215,7 +229,7 @@ export default function DashboardScreen() {
                 <Button 
                   size="$3" 
                   circular 
-                  bg={colors.bgCard}
+                  bg={isDesktop ? colors.desktopCard : colors.mobileCardBg}
                   color={colors.textSecondary}
                   icon={<Ionicons name="refresh" size={20} color={colors.textSecondary} />} 
                   onPress={() => resetCurrentCount()}
