@@ -230,10 +230,7 @@ export default function DashboardScreen() {
                   bg={colors.bgCard}
                   color={colors.textSecondary}
                   icon={<Ionicons name="refresh" size={20} color={colors.textSecondary} />} 
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    resetCurrentCount();
-                  }}
+                  onPress={() => resetCurrentCount()}
                   position="absolute"
                   bottom={0}
                   right={isDesktop ? 0 : -10}

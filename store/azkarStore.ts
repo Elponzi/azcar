@@ -77,6 +77,6 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
   },
 
   setTheme: (theme) => set({ theme }),
-  setLanguage: (lang) => set({ language }),
+  setLanguage: (language) => set({ language }),
   setSettingsOpen: (isOpen: boolean) => set({ isSettingsOpen: isOpen })
 }));
