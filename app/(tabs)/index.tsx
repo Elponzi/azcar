@@ -7,40 +7,38 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { TRANSLATIONS } from '@/constants/Translations';
 import SettingsModal from '@/components/SettingsModal';
+import { THEME } from '@/constants/Theme';
 
-// Mockup Colors
-const MOCKUP_THEME = {
-  dark: {
-    // Mobile
-    mobileBg: '#050505',
-    mobileCardBg: '#1A1A1A', // Used for track color in mobile
-    // Desktop
-    desktopBody: '#121212',
-    desktopCard: '#1E1E1E',
-    desktopControlBg: '#121212',
-    // Common
-    textPrimary: '#FFFFFF',
-    textSecondary: '#888888',
-    accent: '#34D399',
-    accentDim: 'rgba(52, 211, 153, 0.2)',
-    borderColor: '#333333',
-  },
-  light: {
-    // Mobile
-    mobileBg: '#F3F4F6',
-    mobileCardBg: '#FFFFFF',
-    // Desktop
-    desktopBody: '#E5E7EB',
-    desktopCard: '#FFFFFF',
-    desktopControlBg: '#E5E7EB',
-    // Common
-    textPrimary: '#111827',
-    textSecondary: '#6B7280',
-    accent: '#059669',
-    accentDim: 'rgba(5, 150, 105, 0.1)',
-    borderColor: '#E5E7EB',
-  }
-};
+// --- Helper Components ---
+const NavButton = ({ iconName, onPress, colors, isDesktop }) => (
+  <Button 
+    size="$6" 
+    circular 
+    bg={colors.desktopCard}
+    borderWidth={isDesktop ? 1 : 0}
+    borderColor={colors.borderColor}
+    elevation={0}
+    shadowOpacity={0}
+    color={colors.textPrimary}
+    icon={<Ionicons name={iconName} size={32} color={colors.textPrimary} />} 
+    onPress={onPress} 
+    pressStyle={{ opacity: 0.8 }}
+  />
+);
+
+const CategoryButton = ({ label, isActive, onPress, colors }) => (
+  <Button 
+    size="$3" 
+    br="$10"
+    bg={isActive ? colors.accent : 'transparent'}
+    color={isActive ? '#FFFFFF' : colors.textSecondary}
+    onPress={onPress}
+    chromeless={!isActive}
+    pressStyle={{ opacity: 0.8 }}
+  >
+    {label}
+  </Button>
+);
 
 export default function DashboardScreen() {
   const { width } = useWindowDimensions();
@@ -61,7 +59,7 @@ export default function DashboardScreen() {
     setSettingsOpen,
   } = useAzkarStore();
 
-  const colors = MOCKUP_THEME[theme];
+  const colors = THEME[theme];
   const t = TRANSLATIONS[language];
   const isRTL = language === 'ar';
   
@@ -122,28 +120,18 @@ export default function DashboardScreen() {
             gap="$2" 
             fd={isRTL ? 'row-reverse' : 'row'}
           >
-            <Button 
-              size="$3" 
-              br="$10"
-              bg={currentCategory === 'Morning' ? colors.accent : 'transparent'}
-              color={currentCategory === 'Morning' ? '#FFFFFF' : colors.textSecondary}
-              onPress={() => setCategory('Morning')}
-              chromeless={currentCategory !== 'Morning'}
-              pressStyle={{ opacity: 0.8 }}
-            >
-              {t.morning}
-            </Button>
-            <Button 
-              size="$3" 
-              br="$10"
-              bg={currentCategory === 'Evening' ? colors.accent : 'transparent'}
-              color={currentCategory === 'Evening' ? '#FFFFFF' : colors.textSecondary}
-              onPress={() => setCategory('Evening')}
-              chromeless={currentCategory !== 'Evening'}
-              pressStyle={{ opacity: 0.8 }}
-            >
-              {t.evening}
-            </Button>
+            <CategoryButton 
+              label={t.morning} 
+              isActive={currentCategory === 'Morning'} 
+              onPress={() => setCategory('Morning')} 
+              colors={colors}
+            />
+            <CategoryButton 
+              label={t.evening} 
+              isActive={currentCategory === 'Evening'} 
+              onPress={() => setCategory('Evening')} 
+              colors={colors}
+            />
           </XStack>
 
           <Button 
@@ -243,18 +231,11 @@ export default function DashboardScreen() {
 
             {/* Nav Controls */}
             <XStack w="100%" jc={isDesktop ? "center" : "space-between"} gap={isDesktop ? "$6" : "$0"} ai="center" px="$2" fd={isRTL ? 'row-reverse' : 'row'}>
-              <Button 
-                size="$6" 
-                circular 
-                bg={colors.desktopCard}
-                borderWidth={isDesktop ? 1 : 0}
-                borderColor={colors.borderColor}
-                elevation={0}
-                shadowOpacity={0}
-                color={colors.textPrimary}
-                icon={<Ionicons name={isRTL ? "chevron-forward" : "chevron-back"} size={32} color={colors.textPrimary} />} 
-                onPress={isRTL ? nextZeker : prevZeker} 
-                pressStyle={{ opacity: 0.8 }}
+              <NavButton 
+                iconName={isRTL ? "chevron-forward" : "chevron-back"}
+                onPress={isRTL ? nextZeker : prevZeker}
+                colors={colors}
+                isDesktop={isDesktop}
               />
               
               {!isDesktop && (
@@ -269,18 +250,11 @@ export default function DashboardScreen() {
                 </Text>
               )}
 
-              <Button 
-                size="$6" 
-                circular 
-                bg={colors.desktopCard}
-                borderWidth={isDesktop ? 1 : 0}
-                borderColor={colors.borderColor}
-                elevation={0}
-                shadowOpacity={0}
-                color={colors.textPrimary}
-                icon={<Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={32} color={colors.textPrimary} />} 
-                onPress={isRTL ? prevZeker : nextZeker} 
-                pressStyle={{ opacity: 0.8 }}
+              <NavButton 
+                iconName={isRTL ? "chevron-back" : "chevron-forward"}
+                onPress={isRTL ? prevZeker : nextZeker}
+                colors={colors}
+                isDesktop={isDesktop}
               />
             </XStack>
           </YStack>
