@@ -1,5 +1,6 @@
 import { APP_CONFIG } from '@/constants/Config';
 import React from 'react';
+import { Platform } from 'react-native';
 
 interface SeoHeadProps {
   title?: string;
@@ -14,6 +15,11 @@ export function SeoHead({
   path = '', 
   image = '/assets/images/icon.png' // Default to app icon
 }: SeoHeadProps) {
+  // Only render on web - these HTML elements don't exist in React Native
+  if (Platform.OS !== 'web') {
+    return null;
+  }
+
   const fullTitle = title ? `${title} | ${APP_CONFIG.name}` : APP_CONFIG.name;
   const url = `${APP_CONFIG.domain}${path}`;
   const imageUrl = image.startsWith('http') ? image : `${APP_CONFIG.domain}${image}`;
