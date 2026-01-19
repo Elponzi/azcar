@@ -8,6 +8,7 @@ interface AzkarState {
   filteredAzkar: AzkarItem[];
   theme: 'light' | 'dark';
   language: 'en' | 'ar';
+  isSettingsOpen: boolean;
   
   // Actions
   setCategory: (category: AzkarCategory) => void;
@@ -17,6 +18,7 @@ interface AzkarState {
   resetCurrentCount: () => void;
   setTheme: (theme: 'light' | 'dark') => void;
   setLanguage: (lang: 'en' | 'ar') => void;
+  setSettingsOpen: (isOpen: boolean) => void;
 }
 
 export const useAzkarStore = create<AzkarState>((set, get) => ({
@@ -26,6 +28,7 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
   filteredAzkar: AZKAR_DATA.filter(z => z.category === 'Morning'),
   theme: 'dark', // Default from mockup
   language: 'en',
+  isSettingsOpen: false,
 
   setCategory: (category) => {
     set({
@@ -74,5 +77,6 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
   },
 
   setTheme: (theme) => set({ theme }),
-  setLanguage: (lang) => set({ language })
+  setLanguage: (lang) => set({ language }),
+  setSettingsOpen: (isOpen: boolean) => set({ isSettingsOpen: isOpen })
 }));
