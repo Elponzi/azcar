@@ -8,6 +8,7 @@ import { router } from 'expo-router';
 import { TRANSLATIONS } from '@/constants/Translations';
 import SettingsModal from '@/components/SettingsModal';
 import { THEME, ThemeColors } from '@/constants/Theme';
+import { SeoHead } from '@/components/SeoHead';
 
 // --- Helper Components ---
 interface NavButtonProps {
@@ -116,6 +117,10 @@ export default function DashboardScreen() {
   // Render Content
   const renderContent = () => (
     <>
+       <SeoHead 
+         title={currentCategory === 'Morning' ? 'Morning Azkar' : 'Evening Azkar'}
+         description={currentZeker.translation} 
+       />
        {/* Header */}
        <XStack 
           p="$4" 
