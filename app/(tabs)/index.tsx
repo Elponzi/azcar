@@ -9,8 +9,8 @@ import { TRANSLATIONS } from '@/constants/Translations';
 import SettingsModal from '@/components/SettingsModal';
 import { THEME, ThemeColors } from '@/constants/Theme';
 import { SeoHead } from '@/components/SeoHead';
-import { DivineLight } from '@/components/DivineLight';
-import { StarField } from '@/components/StarField';
+import DivineLight from '@/components/DivineLight';
+import StarField from '@/components/StarField';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 
 // --- Helper Components ---
@@ -245,7 +245,7 @@ export default function DashboardScreen() {
                     bgColor={ringTrackColor} 
                 >
                   <YStack ai="center" jc="center" position="relative">
-                    <DivineLight color={colors.accent} size={isDesktop ? 220 : 160} />
+                    <DivineLight color={colors.accent} size={isDesktop ? 320 : 240} />
                     <Text fontSize={isDesktop ? 72 : 56} fontWeight="800" color={progress >= 100 ? colors.accent : colors.textPrimary} zIndex={1}>
                       {count}
                     </Text>
