@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Platform, useWindowDimensions, Pressable } from 'react-native';
-import { View, Text, YStack, XStack, Button, ScrollView, H4, Paragraph, Separator } from 'tamagui';
+import { View, Text, YStack, XStack, Button, ScrollView, Paragraph } from 'tamagui';
 import { useAzkarStore } from '@/store/azkarStore';
 import { ProgressRing } from '@/components/ProgressRing';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,7 +22,7 @@ const NavButton = ({ iconName, onPress, colors, isDesktop }: NavButtonProps) => 
   <Button 
     size="$6" 
     circular 
-    bg={colors.desktopCard}
+    bg={colors.cardBg}
     borderWidth={isDesktop ? 1 : 0}
     borderColor={colors.borderColor}
     elevation={0}
@@ -45,11 +45,14 @@ const CategoryButton = ({ label, isActive, onPress, colors }: CategoryButtonProp
   <Button 
     size="$3" 
     br="$10"
-    bg={isActive ? colors.accent : 'transparent'}
-    color={isActive ? '#FFFFFF' : colors.textSecondary}
+    bg={isActive ? colors.cardBg : 'transparent'}
+    color={isActive ? colors.accent : colors.textSecondary}
     onPress={onPress}
     chromeless={!isActive}
     pressStyle={{ opacity: 0.8 }}
+    bw={1}
+    bc={isActive ? colors.accent : 'transparent'}
+    fontWeight={isActive ? "700" : "400"}
   >
     {label}
   </Button>
@@ -72,6 +75,7 @@ export default function DashboardScreen() {
     theme,
     language,
     setSettingsOpen,
+    showTranslation
   } = useAzkarStore();
 
   const colors = THEME[theme];
@@ -112,7 +116,7 @@ export default function DashboardScreen() {
 
   if (!currentZeker) return <View><Text>Loading...</Text></View>;
 
-  const ringTrackColor = isDesktop ? colors.desktopCard : colors.mobileCardBg;
+  const ringTrackColor = colors.cardBg;
 
   // Render Content
   const renderContent = () => (
@@ -124,16 +128,16 @@ export default function DashboardScreen() {
        {/* Header */}
        <XStack 
           p="$4" 
-          jc="space-between" 
           ai="center" 
           bbw={isDesktop ? 1 : 0} 
           bbc={colors.borderColor}
           fd={isRTL ? 'row-reverse' : 'row'}
         >
-          <H4 fontWeight="bold" color={colors.textPrimary}>📿 Azkar Drive</H4>
+          {/* Left Spacer */}
+          <XStack f={1} />
           
           <XStack 
-            bg={isDesktop ? colors.desktopBody : colors.mobileCardBg} 
+            bg={colors.cardBg} 
             p="$1.5" 
             br="$10" 
             gap="$2" 
@@ -153,15 +157,17 @@ export default function DashboardScreen() {
             />
           </XStack>
 
-          <Button 
-            size="$3" 
-            circular 
-            bg="transparent"
-            color={colors.textSecondary}
-            icon={<Ionicons name="settings-sharp" size={18} color={colors.textSecondary} />} 
-            onPress={() => setSettingsOpen(true)}
-            hoverStyle={{ bg: isDesktop ? colors.desktopBody : colors.mobileCardBg }}
-          />
+          <XStack f={1} jc="flex-end">
+            <Button 
+              size="$3" 
+              circular 
+              bg="transparent"
+              color={colors.textSecondary}
+              icon={<Ionicons name="settings-sharp" size={18} color={colors.textSecondary} />} 
+              onPress={() => setSettingsOpen(true)}
+              hoverStyle={{ bg: colors.background }}
+            />
+          </XStack>
         </XStack>
 
         {/* Content Body */}
@@ -184,15 +190,17 @@ export default function DashboardScreen() {
               >
                 {currentZeker.arabic}
               </Text>
-              <Paragraph 
-                mt="$4" 
-                fontSize={isDesktop ? 18 : 14} 
-                color={colors.textSecondary} 
-                textAlign="center"
-                maw={600}
-              >
-                {currentZeker.translation}
-              </Paragraph>
+              {showTranslation && (
+                <Paragraph 
+                  mt="$4" 
+                  fontSize={isDesktop ? 18 : 14} 
+                  color={colors.textSecondary} 
+                  textAlign="center"
+                  maw={600}
+                >
+                  {currentZeker.translation}
+                </Paragraph>
+              )}
             </ScrollView>
           </YStack>
 
@@ -201,7 +209,7 @@ export default function DashboardScreen() {
             w={isDesktop ? 400 : '100%'}
             f={isDesktop ? 0 : 0}
             flexShrink={0}
-            bg={isDesktop ? colors.desktopControlBg : 'transparent'} 
+            bg={isDesktop ? colors.background : 'transparent'} 
             p="$6" 
             jc="center" 
             ai="center" 
@@ -234,7 +242,7 @@ export default function DashboardScreen() {
                 <Button 
                   size="$3" 
                   circular 
-                  bg={isDesktop ? colors.desktopCard : colors.mobileCardBg}
+                  bg={colors.cardBg}
                   color={colors.textSecondary}
                   icon={<Ionicons name="refresh" size={20} color={colors.textSecondary} />} 
                   onPress={() => resetCurrentCount()}
@@ -285,7 +293,7 @@ export default function DashboardScreen() {
   return (
     <YStack 
       f={1} 
-      bg={isDesktop ? colors.desktopBody : colors.mobileBg} 
+      bg={colors.background} 
       padding={isDesktop ? "$4" : "$4"} 
       jc={isDesktop ? "center" : "flex-start"} 
       ai="center"
@@ -295,7 +303,7 @@ export default function DashboardScreen() {
           w="100%" 
           maw={1000} 
           h="80%" 
-          bg={colors.desktopCard} 
+          bg={colors.cardBg} 
           br={24} 
           overflow="hidden"
           elevation="$4"

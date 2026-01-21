@@ -9,6 +9,7 @@ interface AzkarState {
   theme: 'light' | 'dark';
   language: 'en' | 'ar';
   isSettingsOpen: boolean;
+  showTranslation: boolean;
   
   // Actions
   setCategory: (category: AzkarCategory) => void;
@@ -19,6 +20,7 @@ interface AzkarState {
   setTheme: (theme: 'light' | 'dark') => void;
   setLanguage: (lang: 'en' | 'ar') => void;
   setSettingsOpen: (isOpen: boolean) => void;
+  setShowTranslation: (show: boolean) => void;
 }
 
 export const useAzkarStore = create<AzkarState>((set, get) => ({
@@ -29,6 +31,7 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
   theme: 'dark', // Default from mockup
   language: 'en',
   isSettingsOpen: false,
+  showTranslation: false,
 
   setCategory: (category) => {
     set({
@@ -78,5 +81,6 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
 
   setTheme: (theme) => set({ theme }),
   setLanguage: (language) => set({ language }),
-  setSettingsOpen: (isOpen: boolean) => set({ isSettingsOpen: isOpen })
+  setSettingsOpen: (isOpen: boolean) => set({ isSettingsOpen: isOpen }),
+  setShowTranslation: (show: boolean) => set({ showTranslation: show })
 }));

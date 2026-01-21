@@ -1,39 +1,35 @@
 export const THEME = {
   dark: {
-    // Mobile
-    mobileBg: '#050505',
-    mobileCardBg: '#1A1A1A', // Used for track color in mobile
-    // Desktop
-    desktopBody: '#121212',
-    desktopCard: '#1E1E1E',
-    desktopControlBg: '#121212',
-    // Common
-    textPrimary: '#FFFFFF',
-    textSecondary: '#888888',
-    accent: '#34D399',
-    accentDim: 'rgba(52, 211, 153, 0.2)',
-    borderColor: '#333333',
-    // Settings Specific (Derived or Explicit)
-    modalBg: '#1E1E1E',
-    activeBg: '#121212',
+    background: "#0F172A",
+    backgroundPattern: "#0F172A",
+    cardBg: "rgba(30, 41, 59, 0.7)",
+    textPrimary: "#F1F5F9",
+    textSecondary: "#94A3B8",
+    textDim: "#64748B",
+    accent: "#D4AF37",
+    accentGlow: "rgba(212, 175, 55, 0.3)",
+    accentDim: "rgba(212, 175, 55, 0.1)",
+    danger: "#EF4444",
+    modalBg: "rgba(15, 23, 42, 0.95)",
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    // For backwards compatibility or mapping
+    activeBg: "#0F172A", 
   },
   light: {
-    // Mobile
-    mobileBg: '#F3F4F6',
-    mobileCardBg: '#FFFFFF',
-    // Desktop
-    desktopBody: '#E5E7EB',
-    desktopCard: '#FFFFFF',
-    desktopControlBg: '#E5E7EB',
-    // Common
-    textPrimary: '#111827',
-    textSecondary: '#6B7280',
-    accent: '#059669',
-    accentDim: 'rgba(5, 150, 105, 0.1)',
-    borderColor: '#E5E7EB',
-    // Settings Specific
-    modalBg: '#FFFFFF',
-    activeBg: '#F3F4F6',
+    background: "#F1F5F9",
+    backgroundPattern: "#E2E8F0",
+    cardBg: "rgba(255, 255, 255, 0.85)",
+    textPrimary: "#0F172A",
+    textSecondary: "#475569",
+    textDim: "#94A3B8",
+    accent: "#0F766E",
+    accentGlow: "rgba(15, 118, 110, 0.2)",
+    accentDim: "rgba(15, 118, 110, 0.08)",
+    danger: "#EF4444",
+    modalBg: "rgba(248, 250, 252, 0.98)",
+    borderColor: "rgba(0, 0, 0, 0.08)",
+    // For backwards compatibility or mapping
+    activeBg: "#F1F5F9",
   }
 };
 
