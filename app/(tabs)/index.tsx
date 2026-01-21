@@ -9,6 +9,9 @@ import { TRANSLATIONS } from '@/constants/Translations';
 import SettingsModal from '@/components/SettingsModal';
 import { THEME, ThemeColors } from '@/constants/Theme';
 import { SeoHead } from '@/components/SeoHead';
+import { DivineLight } from '@/components/DivineLight';
+import { StarField } from '@/components/StarField';
+import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 
 // --- Helper Components ---
 interface NavButtonProps {
@@ -132,6 +135,7 @@ export default function DashboardScreen() {
           bbw={isDesktop ? 1 : 0} 
           bbc={colors.borderColor}
           fd={isRTL ? 'row-reverse' : 'row'}
+          zIndex={10}
         >
           {/* Left Spacer */}
           <XStack f={1} />
@@ -179,28 +183,38 @@ export default function DashboardScreen() {
               contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}
               showsVerticalScrollIndicator={false}
             >
-              <Text 
-                fontFamily="System" 
-                fontWeight="700" 
-                fontSize={getDynamicFontSize(currentZeker.arabic)} 
-                textAlign="center" 
-                lineHeight={isDesktop ? 60 : 36}
-                color={colors.textPrimary}
-                maw={isDesktop ? 800 : '100%'}
+              <Animated.View 
+                key={currentZeker.id}
+                entering={FadeInDown.duration(600).springify()}
+                exiting={FadeOutUp.duration(400)}
+                style={{ alignItems: 'center', width: '100%' }}
               >
-                {currentZeker.arabic}
-              </Text>
-              {showTranslation && (
-                <Paragraph 
-                  mt="$4" 
-                  fontSize={isDesktop ? 18 : 14} 
-                  color={colors.textSecondary} 
-                  textAlign="center"
-                  maw={600}
+                <Text 
+                  fontFamily="System" 
+                  fontWeight="700" 
+                  fontSize={getDynamicFontSize(currentZeker.arabic)} 
+                  textAlign="center" 
+                  lineHeight={isDesktop ? 60 : 36}
+                  color={colors.textPrimary}
+                  maw={isDesktop ? 800 : '100%'}
+                  shadowColor={colors.accent}
+                  shadowRadius={10}
+                  shadowOpacity={0.2}
                 >
-                  {currentZeker.translation}
-                </Paragraph>
-              )}
+                  {currentZeker.arabic}
+                </Text>
+                {showTranslation && (
+                  <Paragraph 
+                    mt="$4" 
+                    fontSize={isDesktop ? 18 : 14} 
+                    color={colors.textSecondary} 
+                    textAlign="center"
+                    maw={600}
+                  >
+                    {currentZeker.translation}
+                  </Paragraph>
+                )}
+              </Animated.View>
             </ScrollView>
           </YStack>
 
@@ -218,6 +232,7 @@ export default function DashboardScreen() {
             blw={isDesktop ? (isRTL ? 0 : 1) : 0}
             brc={colors.borderColor}
             brw={isDesktop ? (isRTL ? 1 : 0) : 0}
+            zIndex={10}
           >
             {/* Counter Ring */}
             <XStack ai="center" jc="center" position="relative">
@@ -229,11 +244,12 @@ export default function DashboardScreen() {
                     color={colors.accent}
                     bgColor={ringTrackColor} 
                 >
-                  <YStack ai="center" jc="center">
-                    <Text fontSize={isDesktop ? 72 : 56} fontWeight="800" color={progress >= 100 ? colors.accent : colors.textPrimary}>
+                  <YStack ai="center" jc="center" position="relative">
+                    <DivineLight color={colors.accent} size={isDesktop ? 220 : 160} />
+                    <Text fontSize={isDesktop ? 72 : 56} fontWeight="800" color={progress >= 100 ? colors.accent : colors.textPrimary} zIndex={1}>
                       {count}
                     </Text>
-                    <Text fontSize={isDesktop ? 20 : 16} color={colors.textSecondary}>/ {currentZeker.target}</Text>
+                    <Text fontSize={isDesktop ? 20 : 16} color={colors.textSecondary} zIndex={1}>/ {currentZeker.target}</Text>
                   </YStack>
                 </ProgressRing>
               </Pressable>
@@ -294,29 +310,41 @@ export default function DashboardScreen() {
     <YStack 
       f={1} 
       bg={colors.background} 
-      padding={isDesktop ? "$4" : "$4"} 
       jc={isDesktop ? "center" : "flex-start"} 
       ai="center"
+      position="relative"
     >
-      {isDesktop ? (
-        <YStack 
-          w="100%" 
-          maw={1000} 
-          h="80%" 
-          bg={colors.cardBg} 
-          br={24} 
-          overflow="hidden"
-          elevation="$4"
-          bc={colors.borderColor}
-          bw={1}
-        >
-          {renderContent()}
-        </YStack>
-      ) : (
-        <YStack f={1} w="100%">
-          {renderContent()}
-        </YStack>
-      )}
+      <StarField color={colors.accent} />
+      
+      <YStack  
+        f={1} 
+        w="100%"
+        padding={isDesktop ? "$4" : "$4"}
+        jc={isDesktop ? "center" : "flex-start"} 
+        ai="center"
+        zIndex={1}
+      >
+        {isDesktop ? (
+          <YStack 
+            w="100%" 
+            maw={1000} 
+            h="80%" 
+            bg={colors.cardBg} 
+            br={24} 
+            overflow="hidden"
+            elevation="$4"
+            bc={colors.borderColor}
+            bw={1}
+            zIndex={1}
+          >
+            {renderContent()}
+          </YStack>
+        ) : (
+          <YStack f={1} w="100%" zIndex={1}>
+            {renderContent()}
+          </YStack>
+        )}
+      </YStack>
       <SettingsModal />
     </YStack>
   );
