@@ -14,7 +14,8 @@ export const TRANSLATIONS = {
     navPrompt: "Use Arrow Keys to Navigate",
     showTranslation: "Show Translation",
     on: "On",
-    off: "Off"
+    off: "Off",
+    hold: "Hold ➔"
   },
   ar: {
     morning: "الصباح",
@@ -31,7 +32,8 @@ export const TRANSLATIONS = {
     navPrompt: "استخدم الأسهم للتنقل",
     showTranslation: "إظهار الترجمة",
     on: "تشغيل",
-    off: "إيقاف"
+    off: "إيقاف",
+    hold: "استمر ➔"
   }
 };
 

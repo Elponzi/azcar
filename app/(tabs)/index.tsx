@@ -257,8 +257,13 @@ export default function DashboardScreen() {
               <Pressable 
                 onPress={() => {
                   incrementCount();
-                  // Trigger a small haptic feedback if available (handled by incrementCount usually, or add here)
                 }}
+                onLongPress={() => {
+                  if (count >= currentZeker.target) {
+                    nextZeker();
+                  }
+                }}
+                delayLongPress={500}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
                 style={{ alignItems: 'center', justifyContent: 'center' }}
@@ -276,7 +281,13 @@ export default function DashboardScreen() {
                       <Text fontSize={isDesktop ? 72 : 56} fontWeight="800" color={progress >= 100 ? colors.accent : colors.textPrimary} zIndex={1}>
                         {count}
                       </Text>
-                      <Text fontSize={isDesktop ? 20 : 16} color={colors.textSecondary} zIndex={1}>/ {currentZeker.target}</Text>
+                      {count >= currentZeker.target ? (
+                        <Text fontSize={isDesktop ? 16 : 14} color={colors.accent} fontWeight="600" zIndex={1} opacity={0.8}>
+                          {t.hold}
+                        </Text>
+                      ) : (
+                        <Text fontSize={isDesktop ? 20 : 16} color={colors.textSecondary} zIndex={1}>/ {currentZeker.target}</Text>
+                      )}
                     </YStack>
                   </ProgressRing>
                 </Animated.View>
