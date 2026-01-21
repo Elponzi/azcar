@@ -11,7 +11,7 @@ import { THEME, ThemeColors } from '@/constants/Theme';
 import { SeoHead } from '@/components/SeoHead';
 import DivineLight from '@/components/DivineLight';
 import StarField from '@/components/StarField';
-import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeOutUp, useSharedValue, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
 
 // --- Helper Components ---
 interface NavButtonProps {
@@ -88,6 +88,24 @@ export default function DashboardScreen() {
   const currentZeker = filteredAzkar[currentIndex];
   const count = counts[currentZeker?.id] || 0;
   const progress = Math.min((count / currentZeker?.target) * 100, 100);
+
+  // Animation for Press
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
+  const animatedScaleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  const handlePressIn = () => {
+    scale.value = withTiming(0.98, { duration: 100 });
+    opacity.value = withTiming(0.9, { duration: 100 });
+  };
+
+  const handlePressOut = () => {
+    scale.value = withTiming(1, { duration: 150 });
+    opacity.value = withTiming(1, { duration: 150 });
+  };
 
   // Dynamic Font Size
   const getDynamicFontSize = (text: string) => {
@@ -236,22 +254,32 @@ export default function DashboardScreen() {
           >
             {/* Counter Ring */}
             <XStack ai="center" jc="center" position="relative">
-              <Pressable onPress={incrementCount} style={{ alignItems: 'center', justifyContent: 'center' }}>
-                <ProgressRing 
-                    radius={isDesktop ? 140 : 90} 
-                    stroke={12} 
-                    progress={progress} 
-                    color={colors.accent}
-                    bgColor={ringTrackColor} 
-                >
-                  <YStack ai="center" jc="center" position="relative">
-                    <DivineLight color={colors.accent} size={isDesktop ? 320 : 240} />
-                    <Text fontSize={isDesktop ? 72 : 56} fontWeight="800" color={progress >= 100 ? colors.accent : colors.textPrimary} zIndex={1}>
-                      {count}
-                    </Text>
-                    <Text fontSize={isDesktop ? 20 : 16} color={colors.textSecondary} zIndex={1}>/ {currentZeker.target}</Text>
-                  </YStack>
-                </ProgressRing>
+              <Pressable 
+                onPress={() => {
+                  incrementCount();
+                  // Trigger a small haptic feedback if available (handled by incrementCount usually, or add here)
+                }}
+                onPressIn={handlePressIn}
+                onPressOut={handlePressOut}
+                style={{ alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Animated.View style={animatedScaleStyle}>
+                  <ProgressRing 
+                      radius={isDesktop ? 140 : 90} 
+                      stroke={6} 
+                      progress={progress} 
+                      color={colors.accent}
+                      bgColor={ringTrackColor} 
+                  >
+                    <YStack ai="center" jc="center" position="relative">
+                      <DivineLight color={colors.accent} size={isDesktop ? 320 : 240} />
+                      <Text fontSize={isDesktop ? 72 : 56} fontWeight="800" color={progress >= 100 ? colors.accent : colors.textPrimary} zIndex={1}>
+                        {count}
+                      </Text>
+                      <Text fontSize={isDesktop ? 20 : 16} color={colors.textSecondary} zIndex={1}>/ {currentZeker.target}</Text>
+                    </YStack>
+                  </ProgressRing>
+                </Animated.View>
               </Pressable>
 
               {count > 0 && (
@@ -263,8 +291,8 @@ export default function DashboardScreen() {
                   icon={<Ionicons name="refresh" size={20} color={colors.textSecondary} />} 
                   onPress={() => resetCurrentCount()}
                   position="absolute"
-                  bottom={0}
-                  right={isDesktop ? 0 : -10}
+                  bottom={-10}
+                  right={isDesktop ? -40 : -20}
                   elevation={0}
                   hoverStyle={{ bg: colors.accentDim }}
                   pressStyle={{ bg: colors.accentDim }}
