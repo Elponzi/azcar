@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import { Platform, useWindowDimensions, Pressable } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { Audio } from 'expo-av';
 import { View, Text, YStack, XStack, Button, ScrollView, Paragraph } from 'tamagui';
 import { useAzkarStore } from '@/store/azkarStore';
 import { ProgressRing } from '@/components/ProgressRing';
@@ -32,7 +34,10 @@ const NavButton = ({ iconName, onPress, colors, isDesktop }: NavButtonProps) => 
     shadowOpacity={0}
     color={colors.textPrimary}
     icon={<Ionicons name={iconName} size={32} color={colors.textPrimary} />} 
-    onPress={onPress} 
+    onPress={() => {
+      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      onPress();
+    }} 
     pressStyle={{ opacity: 0.8 }}
   />
 );
@@ -105,6 +110,27 @@ export default function DashboardScreen() {
   const handlePressOut = () => {
     scale.value = withTiming(1, { duration: 150 });
     opacity.value = withTiming(1, { duration: 150 });
+  };
+
+  const playSuccessSound = async () => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require('../../assets/images/favicon.png'), // Placeholder or real sound
+        { shouldPlay: true, volume: 0.5 }
+      );
+      // Since I don't have a real mp3 file in assets, I'll use a remote one that is commonly available
+      await sound.unloadAsync(); // Reset for real URL
+      await sound.loadAsync({ uri: 'https://www.soundjay.com/buttons/sounds/button-3.mp3' });
+      await sound.playAsync();
+      
+      sound.setOnPlaybackStatusUpdate(async (status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          await sound.unloadAsync();
+        }
+      });
+    } catch (e) {
+      // Ignore audio errors
+    }
   };
 
   // Dynamic Font Size
@@ -256,10 +282,15 @@ export default function DashboardScreen() {
             <XStack ai="center" jc="center" position="relative">
               <Pressable 
                 onPress={() => {
+                  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   incrementCount();
                 }}
                 onLongPress={() => {
                   if (count >= currentZeker.target) {
+                    if (Platform.OS !== 'web') {
+                      Haptics.selectionAsync();
+                      playSuccessSound();
+                    }
                     nextZeker();
                   }
                 }}
