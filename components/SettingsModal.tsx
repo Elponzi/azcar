@@ -24,15 +24,18 @@ const ToggleButton = ({ label, isActive, onPress, colors }: ToggleButtonProps) =
   <Button 
     f={1} 
     bg={isActive ? colors.modalBg : 'transparent'} 
-    color={isActive ? colors.textPrimary : colors.textSecondary}
+    color={isActive ? colors.accent : colors.textSecondary}
     onPress={onPress}
     chromeless={!isActive}
     pressStyle={{ opacity: 0.8 }}
     br="$3"
+    bw={1}
+    bc={isActive ? colors.accent : 'transparent'}
     shadowColor="rgba(0,0,0,0.1)"
     shadowOffset={{ width: 0, height: 2 }}
     shadowOpacity={isActive ? 0.2 : 0}
     elevation={isActive ? 2 : 0}
+    fontWeight={isActive ? "700" : "400"}
   >
     {label}
   </Button>
@@ -41,7 +44,7 @@ const ToggleButton = ({ label, isActive, onPress, colors }: ToggleButtonProps) =
 export default function SettingsModal() {
   const { width, height } = useWindowDimensions();
   const isDesktop = width > 768;
-  const { theme, setTheme, language, setLanguage, isSettingsOpen, setSettingsOpen } = useAzkarStore();
+  const { theme, setTheme, language, setLanguage, isSettingsOpen, setSettingsOpen, showTranslation, setShowTranslation } = useAzkarStore();
   const t = TRANSLATIONS[language];
   const isRTL = language === 'ar';
   
@@ -150,7 +153,7 @@ export default function SettingsModal() {
                     {t.appearance}
                 </Text>
                 
-                <XStack bg={colors.activeBg} p="$1" br="$4" bw={0}>
+                <XStack bg={colors.cardBg} p="$1" br="$4" bw={0}>
                   <ToggleButton 
                     label={t.dark} 
                     isActive={theme === 'dark'} 
@@ -172,7 +175,7 @@ export default function SettingsModal() {
                     {t.language}
                 </Text>
                 
-                <XStack bg={colors.activeBg} p="$1" br="$4" bw={0}>
+                <XStack bg={colors.cardBg} p="$1" br="$4" bw={0}>
                    <ToggleButton 
                     label="English" 
                     isActive={language === 'en'} 
@@ -183,6 +186,28 @@ export default function SettingsModal() {
                     label="العربية" 
                     isActive={language === 'ar'} 
                     onPress={() => setLanguage('ar')} 
+                    colors={colors} 
+                  />
+                </XStack>
+            </YStack>
+
+            {/* Translation Section */}
+            <YStack space="$4">
+                <Text fontSize={12} fontWeight="600" textTransform="uppercase" color={colors.textSecondary} letterSpacing={1}>
+                    {t.showTranslation}
+                </Text>
+                
+                <XStack bg={colors.cardBg} p="$1" br="$4" bw={0}>
+                   <ToggleButton 
+                    label={t.off} 
+                    isActive={!showTranslation} 
+                    onPress={() => setShowTranslation(false)} 
+                    colors={colors} 
+                  />
+                  <ToggleButton 
+                    label={t.on} 
+                    isActive={showTranslation} 
+                    onPress={() => setShowTranslation(true)} 
                     colors={colors} 
                   />
                 </XStack>

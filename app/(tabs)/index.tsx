@@ -1,62 +1,32 @@
 import React, { useEffect } from 'react';
-import { Platform, useWindowDimensions, Pressable } from 'react-native';
-import { View, Text, YStack, XStack, Button, ScrollView, H4, Paragraph, Separator } from 'tamagui';
-import { useAzkarStore } from '@/store/azkarStore';
-import { ProgressRing } from '@/components/ProgressRing';
+import { Platform, useWindowDimensions, StyleSheet } from 'react-native';
+import { YStack, XStack, Button, Text, ScrollView, View } from 'tamagui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import Animated from 'react-native-reanimated';
+import { Audio } from 'expo-av';
+
+import { useAzkarStore } from '@/store/azkarStore';
+import { THEME } from '@/constants/Theme';
 import { TRANSLATIONS } from '@/constants/Translations';
-import SettingsModal from '@/components/SettingsModal';
-import { THEME, ThemeColors } from '@/constants/Theme';
+import { EFFECTS_CONFIG } from '@/constants/EffectsConfig';
+
+// Components
 import { SeoHead } from '@/components/SeoHead';
+import SettingsModal from '@/components/SettingsModal';
+import StarField from '@/components/StarField';
+import { CrescentMoon } from '@/components/CrescentMoon';
+import { AzkarTextDisplay } from '@/components/azkarScreen/AzkarTextDisplay';
+import { AzkarCounter } from '@/components/azkarScreen/AzkarCounter';
+import { NavButton, CategoryButton } from '@/components/azkarScreen/ScreenControls';
 
-// --- Helper Components ---
-interface NavButtonProps {
-  iconName: keyof typeof Ionicons.glyphMap;
-  onPress: () => void;
-  colors: ThemeColors;
-  isDesktop: boolean;
-}
-
-const NavButton = ({ iconName, onPress, colors, isDesktop }: NavButtonProps) => (
-  <Button 
-    size="$6" 
-    circular 
-    bg={colors.desktopCard}
-    borderWidth={isDesktop ? 1 : 0}
-    borderColor={colors.borderColor}
-    elevation={0}
-    shadowOpacity={0}
-    color={colors.textPrimary}
-    icon={<Ionicons name={iconName} size={32} color={colors.textPrimary} />} 
-    onPress={onPress} 
-    pressStyle={{ opacity: 0.8 }}
-  />
-);
-
-interface CategoryButtonProps {
-  label: string;
-  isActive: boolean;
-  onPress: () => void;
-  colors: ThemeColors;
-}
-
-const CategoryButton = ({ label, isActive, onPress, colors }: CategoryButtonProps) => (
-  <Button 
-    size="$3" 
-    br="$10"
-    bg={isActive ? colors.accent : 'transparent'}
-    color={isActive ? '#FFFFFF' : colors.textSecondary}
-    onPress={onPress}
-    chromeless={!isActive}
-    pressStyle={{ opacity: 0.8 }}
-  >
-    {label}
-  </Button>
-);
+// Hooks
+import { useParallax } from '@/hooks/useParallax';
+import { useWebKeyboard } from '@/hooks/useWebKeyboard';
 
 export default function DashboardScreen() {
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isDesktop = width > 768;
 
   const {
@@ -72,6 +42,7 @@ export default function DashboardScreen() {
     theme,
     language,
     setSettingsOpen,
+    showTranslation
   } = useAzkarStore();
 
   const colors = THEME[theme];
@@ -82,58 +53,60 @@ export default function DashboardScreen() {
   const count = counts[currentZeker?.id] || 0;
   const progress = Math.min((count / currentZeker?.target) * 100, 100);
 
-  // Dynamic Font Size
-  const getDynamicFontSize = (text: string) => {
-    const len = text.length;
-    if (len < 50) return isDesktop ? 48 : 32;
-    if (len < 100) return isDesktop ? 36 : 24;
-    if (len < 200) return isDesktop ? 28 : 20;
-    if (len < 300) return isDesktop ? 24 : 18;
-    return isDesktop ? 20 : 16;
-  };
+  // Parallax Effects
+  const starParallax = useParallax(EFFECTS_CONFIG.parallax.starsDepth);
+  const moonParallax = useParallax(EFFECTS_CONFIG.parallax.moonDepth);
 
-  // Keyboard controls for Web "Car Mode"
+  // Web Keyboard Controls
+  useWebKeyboard({
+    onIncrement: incrementCount,
+    onNext: nextZeker,
+    onPrev: prevZeker,
+  });
+
+  // Audio Setup (Global, kept here for now)
   useEffect(() => {
-    if (Platform.OS === 'web') {
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.code === 'Space') {
-          e.preventDefault();
-          incrementCount();
-        } else if (e.code === 'ArrowRight') {
-          nextZeker();
-        } else if (e.code === 'ArrowLeft') {
-          prevZeker();
-        }
-      };
-      window.addEventListener('keydown', handleKeyDown);
-      return () => window.removeEventListener('keydown', handleKeyDown);
-    }
-  }, [incrementCount, nextZeker, prevZeker]);
+    const configureAudio = async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          allowsRecordingIOS: false,
+          staysActiveInBackground: false,
+          shouldDuckAndroid: true,
+        });
+      } catch (e) {
+        console.warn('Error configuring audio', e);
+      }
+    };
+    configureAudio();
+  }, []);
 
   if (!currentZeker) return <View><Text>Loading...</Text></View>;
 
-  const ringTrackColor = isDesktop ? colors.desktopCard : colors.mobileCardBg;
-
-  // Render Content
   const renderContent = () => (
     <>
        <SeoHead 
          title={currentCategory === 'Morning' ? 'Morning Azkar' : 'Evening Azkar'}
          description={currentZeker.translation} 
        />
+       
        {/* Header */}
        <XStack 
-          p="$4" 
-          jc="space-between" 
+          pt={isDesktop ? '$4' : insets.top}
+          pb="$3"
+          px="$4"
           ai="center" 
+          jc="space-between"
           bbw={isDesktop ? 1 : 0} 
           bbc={colors.borderColor}
           fd={isRTL ? 'row-reverse' : 'row'}
+          zIndex={10}
         >
-          <H4 fontWeight="bold" color={colors.textPrimary}>📿 Azkar Drive</H4>
+          {/* Left Spacer to balance Settings button */}
+          <XStack w={40} />
           
           <XStack 
-            bg={isDesktop ? colors.desktopBody : colors.mobileCardBg} 
+            bg={colors.cardBg} 
             p="$1.5" 
             br="$10" 
             gap="$2" 
@@ -153,55 +126,36 @@ export default function DashboardScreen() {
             />
           </XStack>
 
-          <Button 
-            size="$3" 
-            circular 
-            bg="transparent"
-            color={colors.textSecondary}
-            icon={<Ionicons name="settings-sharp" size={18} color={colors.textSecondary} />} 
-            onPress={() => setSettingsOpen(true)}
-            hoverStyle={{ bg: isDesktop ? colors.desktopBody : colors.mobileCardBg }}
-          />
+          <XStack w={40} jc="flex-end">
+            <Button 
+              size="$3" 
+              circular 
+              bg="transparent"
+              color={colors.textSecondary}
+              icon={<Ionicons name="settings-sharp" size={18} color={colors.textSecondary} />} 
+              onPress={() => setSettingsOpen(true)}
+              hoverStyle={{ bg: colors.background }}
+            />
+          </XStack>
         </XStack>
 
         {/* Content Body */}
         <XStack f={1} fd={isDesktop ? (isRTL ? 'row-reverse' : 'row') : 'column'}>
           
           {/* Text Section */}
-          <YStack f={1} p="$6" jc="center" ai="center" space="$4">
-            <ScrollView 
-              contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}
-              showsVerticalScrollIndicator={false}
-            >
-              <Text 
-                fontFamily="System" 
-                fontWeight="700" 
-                fontSize={getDynamicFontSize(currentZeker.arabic)} 
-                textAlign="center" 
-                lineHeight={isDesktop ? 60 : 36}
-                color={colors.textPrimary}
-                maw={isDesktop ? 800 : '100%'}
-              >
-                {currentZeker.arabic}
-              </Text>
-              <Paragraph 
-                mt="$4" 
-                fontSize={isDesktop ? 18 : 14} 
-                color={colors.textSecondary} 
-                textAlign="center"
-                maw={600}
-              >
-                {currentZeker.translation}
-              </Paragraph>
-            </ScrollView>
-          </YStack>
+          <AzkarTextDisplay 
+            currentZeker={currentZeker}
+            showTranslation={showTranslation}
+            isDesktop={isDesktop}
+            theme={theme}
+          />
 
-          {/* Controls Section */}
+          {/* Controls Section Container */}
           <YStack 
             w={isDesktop ? 400 : '100%'}
             f={isDesktop ? 0 : 0}
             flexShrink={0}
-            bg={isDesktop ? colors.desktopControlBg : 'transparent'} 
+            bg={isDesktop ? colors.background : 'transparent'} 
             p="$6" 
             jc="center" 
             ai="center" 
@@ -210,43 +164,19 @@ export default function DashboardScreen() {
             blw={isDesktop ? (isRTL ? 0 : 1) : 0}
             brc={colors.borderColor}
             brw={isDesktop ? (isRTL ? 1 : 0) : 0}
+            zIndex={10}
           >
-            {/* Counter Ring */}
-            <XStack ai="center" jc="center" position="relative">
-              <Pressable onPress={incrementCount} style={{ alignItems: 'center', justifyContent: 'center' }}>
-                <ProgressRing 
-                    radius={isDesktop ? 140 : 90} 
-                    stroke={12} 
-                    progress={progress} 
-                    color={colors.accent}
-                    bgColor={ringTrackColor} 
-                >
-                  <YStack ai="center" jc="center">
-                    <Text fontSize={isDesktop ? 72 : 56} fontWeight="800" color={progress >= 100 ? colors.accent : colors.textPrimary}>
-                      {count}
-                    </Text>
-                    <Text fontSize={isDesktop ? 20 : 16} color={colors.textSecondary}>/ {currentZeker.target}</Text>
-                  </YStack>
-                </ProgressRing>
-              </Pressable>
-
-              {count > 0 && (
-                <Button 
-                  size="$3" 
-                  circular 
-                  bg={isDesktop ? colors.desktopCard : colors.mobileCardBg}
-                  color={colors.textSecondary}
-                  icon={<Ionicons name="refresh" size={20} color={colors.textSecondary} />} 
-                  onPress={() => resetCurrentCount()}
-                  position="absolute"
-                  bottom={0}
-                  right={isDesktop ? 0 : -10}
-                  elevation={0}
-                  hoverStyle={{ bg: colors.accentDim }}
-                  pressStyle={{ bg: colors.accentDim }}
-                />
-              )}
-            </XStack>
+            <AzkarCounter 
+              count={count}
+              target={currentZeker.target}
+              progress={progress}
+              onIncrement={incrementCount}
+              onReset={resetCurrentCount}
+              onComplete={nextZeker}
+              theme={theme}
+              isDesktop={isDesktop}
+              t={t}
+            />
 
             {/* Nav Controls */}
             <XStack w="100%" jc={isDesktop ? "center" : "space-between"} gap={isDesktop ? "$6" : "$0"} ai="center" px="$2" fd={isRTL ? 'row-reverse' : 'row'}>
@@ -285,30 +215,48 @@ export default function DashboardScreen() {
   return (
     <YStack 
       f={1} 
-      bg={isDesktop ? colors.desktopBody : colors.mobileBg} 
-      padding={isDesktop ? "$4" : "$4"} 
+      bg={colors.background} 
       jc={isDesktop ? "center" : "flex-start"} 
       ai="center"
+      position="relative"
     >
-      {isDesktop ? (
-        <YStack 
-          w="100%" 
-          maw={1000} 
-          h="80%" 
-          bg={colors.desktopCard} 
-          br={24} 
-          overflow="hidden"
-          elevation="$4"
-          bc={colors.borderColor}
-          bw={1}
-        >
-          {renderContent()}
-        </YStack>
-      ) : (
-        <YStack f={1} w="100%">
-          {renderContent()}
-        </YStack>
-      )}
+      <Animated.View style={[StyleSheet.absoluteFill, starParallax]} pointerEvents="none">
+        <StarField color={colors.accent} />
+      </Animated.View>
+      
+      <Animated.View style={[StyleSheet.absoluteFill, moonParallax]} pointerEvents="none">
+        <CrescentMoon color={colors.accent} />
+      </Animated.View>
+      
+      <YStack  
+        f={1} 
+        w="100%"
+        padding={isDesktop ? "$4" : "$0"}
+        jc={isDesktop ? "center" : "flex-start"} 
+        ai="center"
+        zIndex={1}
+      >
+        {isDesktop ? (
+          <YStack 
+            w="100%" 
+            maw={1000} 
+            h="80%" 
+            bg={colors.cardBg} 
+            br={24} 
+            overflow="hidden"
+            elevation="$4"
+            bc={colors.borderColor}
+            bw={1}
+            zIndex={1}
+          >
+            {renderContent()}
+          </YStack>
+        ) : (
+          <YStack f={1} w="100%" zIndex={1}>
+            {renderContent()}
+          </YStack>
+        )}
+      </YStack>
       <SettingsModal />
     </YStack>
   );

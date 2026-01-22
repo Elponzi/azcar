@@ -11,7 +11,11 @@ export const TRANSLATIONS = {
     light: "Light ☀️",
     done: "Done",
     countPrompt: "Use Spacebar to Count",
-    navPrompt: "Use Arrow Keys to Navigate"
+    navPrompt: "Use Arrow Keys to Navigate",
+    showTranslation: "Show Translation",
+    on: "On",
+    off: "Off",
+    hold: "Hold ➔"
   },
   ar: {
     morning: "الصباح",
@@ -25,7 +29,11 @@ export const TRANSLATIONS = {
     light: "فاتح ☀️",
     done: "تم",
     countPrompt: "استخدم المسافة للتسبيح",
-    navPrompt: "استخدم الأسهم للتنقل"
+    navPrompt: "استخدم الأسهم للتنقل",
+    showTranslation: "إظهار الترجمة",
+    on: "تشغيل",
+    off: "إيقاف",
+    hold: "استمر ➔"
   }
 };
 
