@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Dimensions, StyleSheet } from 'react-native';
+import { StyleSheet, useWindowDimensions } from 'react-native';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -10,18 +10,17 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { EFFECTS_CONFIG } from '@/constants/EffectsConfig';
-
-const { width, height } = Dimensions.get('window');
+import { useAzkarStore } from '@/store/azkarStore';
 
 const STAR_SIZE = 2; 
 
 export const ShootingStar = () => {
-  // Config Check
-  if (!EFFECTS_CONFIG.masterEnabled || !EFFECTS_CONFIG.shootingStar.enabled) return null;
+  const { width, height } = useWindowDimensions();
+  const currentTheme = useAzkarStore(state => state.theme);
 
   const { minDelay, maxDelay, duration, minTrailLength, maxTrailLength } = EFFECTS_CONFIG.shootingStar;
 
-  // Animation Values
+  // Animation Values (Always call hooks)
   const translateX = useSharedValue(-maxTrailLength);
   const translateY = useSharedValue(-maxTrailLength);
   const opacity = useSharedValue(0);
@@ -61,6 +60,13 @@ export const ShootingStar = () => {
   };
 
   useEffect(() => {
+    // Determine enabled state inside effect or pass as dependency
+    const isEnabled = EFFECTS_CONFIG.masterEnabled && 
+                      EFFECTS_CONFIG.shootingStar.enabled && 
+                      EFFECTS_CONFIG.shootingStar.themes.includes(currentTheme);
+
+    if (!isEnabled) return;
+
     let timeoutId: NodeJS.Timeout;
 
     const scheduleNext = () => {
@@ -78,7 +84,7 @@ export const ShootingStar = () => {
     }, 2000);
 
     return () => clearTimeout(timeoutId);
-  }, []);
+  }, [currentTheme]); 
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -89,6 +95,13 @@ export const ShootingStar = () => {
       { rotate: '135deg' }
     ],
   }));
+
+  // Conditional Return (at the end)
+  const isEnabled = EFFECTS_CONFIG.masterEnabled && 
+                    EFFECTS_CONFIG.shootingStar.enabled && 
+                    EFFECTS_CONFIG.shootingStar.themes.includes(currentTheme);
+
+  if (!isEnabled) return null;
 
   return (
     <Animated.View style={[styles.container, animatedStyle]} pointerEvents="none">

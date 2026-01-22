@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Path, Defs, RadialGradient, Stop, Circle } from 'react-native-svg';
 import { EFFECTS_CONFIG } from '@/constants/EffectsConfig';
+import { useAzkarStore } from '@/store/azkarStore';
 
 interface CrescentMoonProps {
   color?: string;
@@ -18,7 +19,7 @@ interface CrescentMoonProps {
 }
 
 export const CrescentMoon = ({ color = '#FFD700', size: propSize, isRTL = false }: CrescentMoonProps) => {
-  if (!EFFECTS_CONFIG.masterEnabled || !EFFECTS_CONFIG.moon.enabled) return null;
+  const currentTheme = useAzkarStore(state => state.theme);
 
   const { size: configSize, rotation, position, glowEnabled } = EFFECTS_CONFIG.moon;
   const size = propSize || configSize;
@@ -56,6 +57,13 @@ export const CrescentMoon = ({ color = '#FFD700', size: propSize, isRTL = false 
   const containerStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: floatY.value }]
   }));
+
+  // Logic Check
+  const isEnabled = EFFECTS_CONFIG.masterEnabled && 
+                    EFFECTS_CONFIG.moon.enabled && 
+                    EFFECTS_CONFIG.moon.themes.includes(currentTheme);
+
+  if (!isEnabled) return null;
 
   // Dynamic Styles from Config
   const dynamicWrapperStyle = {

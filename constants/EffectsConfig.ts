@@ -1,16 +1,20 @@
+type Theme = 'light' | 'dark';
+
 export const EFFECTS_CONFIG = {
-  // Global Switch (if false, disables all effects)
+  // Global Switch
   masterEnabled: true,
 
   parallax: {
     enabled: true,
+    themes: ['dark'] as Theme[], // Only active in dark mode
     starsDepth: 25,
     moonDepth: 10,
   },
   
   stars: {
     enabled: true,
-    count: 15,
+    themes: ['dark'] as Theme[], // Only visible in dark mode
+    count: 10,
     sizeRange: { min: 8, max: 14 },
     animation: {
       minDuration: 2000,
@@ -20,6 +24,7 @@ export const EFFECTS_CONFIG = {
 
   shootingStar: {
     enabled: true,
+    themes: ['dark'] as Theme[],
     minDelay: 8000,
     maxDelay: 25000,
     duration: 1500,
@@ -29,6 +34,7 @@ export const EFFECTS_CONFIG = {
 
   moon: {
     enabled: true,
+    themes: ['dark'] as Theme[],
     size: 140,
     rotation: -35,
     position: { top: 80, right: 20 },
@@ -36,6 +42,7 @@ export const EFFECTS_CONFIG = {
   },
 
   divineLight: {
-    enabled: true, // The ring background glow
+    enabled: true, 
+    themes: ['light', 'dark'] as Theme[], // Visible in both
   }
 };

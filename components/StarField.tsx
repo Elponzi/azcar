@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { Dimensions, StyleSheet, View, Text } from 'react-native';
+import { Dimensions, StyleSheet, View, Text, useWindowDimensions } from 'react-native';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -11,8 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ShootingStar } from './ShootingStar';
 import { EFFECTS_CONFIG } from '@/constants/EffectsConfig';
-
-const { width, height } = Dimensions.get('window');
+import { useAzkarStore } from '@/store/azkarStore';
 
 const AnimatedText = Animated.createAnimatedComponent(Text);
 
@@ -92,9 +91,12 @@ interface StarFieldProps {
 }
 
 const StarFieldComponent = ({ color = '#FFD700' }: StarFieldProps) => {
-  if (!EFFECTS_CONFIG.masterEnabled) return null;
+  const { width, height } = useWindowDimensions();
+  const currentTheme = useAzkarStore(state => state.theme);
 
   const stars = useMemo(() => {
+    if (!EFFECTS_CONFIG.masterEnabled) return [];
+    if (!EFFECTS_CONFIG.stars.themes.includes(currentTheme)) return [];
     if (!EFFECTS_CONFIG.stars.enabled) return [];
     
     const { count, sizeRange, animation } = EFFECTS_CONFIG.stars;
@@ -107,7 +109,10 @@ const StarFieldComponent = ({ color = '#FFD700' }: StarFieldProps) => {
       delay: Math.random() * 2000,
       duration: Math.random() * (animation.maxDuration - animation.minDuration) + animation.minDuration,
     }));
-  }, []);
+  }, [width, height, currentTheme]);
+
+  if (!EFFECTS_CONFIG.masterEnabled) return null;
+  if (!EFFECTS_CONFIG.stars.themes.includes(currentTheme)) return null;
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
