@@ -92,6 +92,8 @@ interface StarFieldProps {
   color?: string;
 }
 
+import { ShootingStar } from './ShootingStar';
+
 const StarFieldComponent = ({ color = '#FFD700' }: StarFieldProps) => {
   // Memoize the star data so it doesn't recalculate on every render
   const stars = useMemo(() => {
@@ -118,6 +120,7 @@ const StarFieldComponent = ({ color = '#FFD700' }: StarFieldProps) => {
           color={color}
         />
       ))}
+      <ShootingStar />
     </View>
   );
 };
