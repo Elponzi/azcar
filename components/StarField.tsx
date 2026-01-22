@@ -9,10 +9,11 @@ import Animated, {
   Easing,
   withSequence
 } from 'react-native-reanimated';
+import { ShootingStar } from './ShootingStar';
+import { EFFECTS_CONFIG } from '@/constants/EffectsConfig';
 
 const { width, height } = Dimensions.get('window');
 
-const STAR_COUNT = 10;
 const AnimatedText = Animated.createAnimatedComponent(Text);
 
 interface StarProps {
@@ -59,7 +60,6 @@ const StarComponent = ({ x, y, size, delay, duration, color }: StarProps) => {
       opacity: opacity.value,
       transform: [
         { scale: scale.value },
-        // No rotation needed for this character
       ],
       left: x,
       top: y,
@@ -76,7 +76,7 @@ const StarComponent = ({ x, y, size, delay, duration, color }: StarProps) => {
           color: color,
           textShadowColor: color,
           textShadowOffset: { width: 0, height: 0 },
-          textShadowRadius: 8, // Creates the glow/divine light effect
+          textShadowRadius: 8, 
         }
       ]} 
     >
@@ -85,25 +85,27 @@ const StarComponent = ({ x, y, size, delay, duration, color }: StarProps) => {
   );
 };
 
-// Memoize the individual star to prevent re-renders of the list items
 const Star = React.memo(StarComponent);
 
 interface StarFieldProps {
   color?: string;
 }
 
-import { ShootingStar } from './ShootingStar';
-
 const StarFieldComponent = ({ color = '#FFD700' }: StarFieldProps) => {
-  // Memoize the star data so it doesn't recalculate on every render
+  if (!EFFECTS_CONFIG.masterEnabled) return null;
+
   const stars = useMemo(() => {
-    return Array.from({ length: STAR_COUNT }).map((_, i) => ({
+    if (!EFFECTS_CONFIG.stars.enabled) return [];
+    
+    const { count, sizeRange, animation } = EFFECTS_CONFIG.stars;
+
+    return Array.from({ length: count }).map((_, i) => ({
       id: i,
       x: Math.random() * width,
-      y: (Math.random() * (height * 0.4)) + (height * 0.2), // Position between 20% and 60% of screen height
-      size: Math.random() * 6 + 8, // Range 8px to 14px for visibility
+      y: (Math.random() * (height * 0.4)) + (height * 0.2), 
+      size: Math.random() * (sizeRange.max - sizeRange.min) + sizeRange.min,
       delay: Math.random() * 2000,
-      duration: Math.random() * 3000 + 2000,
+      duration: Math.random() * (animation.maxDuration - animation.minDuration) + animation.minDuration,
     }));
   }, []);
 
@@ -125,13 +127,12 @@ const StarFieldComponent = ({ color = '#FFD700' }: StarFieldProps) => {
   );
 };
 
-// Memoize the entire field so it ignores parent re-renders (like counter updates)
 export default React.memo(StarFieldComponent);
 
 const styles = StyleSheet.create({
   star: {
     position: 'absolute',
-    includeFontPadding: false, // Helps center the character vertically
+    includeFontPadding: false, 
     textAlignVertical: 'center',
   },
 });

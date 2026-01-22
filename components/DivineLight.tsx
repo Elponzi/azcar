@@ -1,6 +1,7 @@
 import React from 'react';
 import Svg, { Defs, RadialGradient, Stop, Circle } from 'react-native-svg';
 import { View } from 'react-native';
+import { EFFECTS_CONFIG } from '@/constants/EffectsConfig';
 
 interface DivineLightProps {
   color?: string;
@@ -8,6 +9,8 @@ interface DivineLightProps {
 }
 
 const DivineLightComponent = ({ color = '#FFD700', size = 200 }: DivineLightProps) => {
+  if (!EFFECTS_CONFIG.masterEnabled || !EFFECTS_CONFIG.divineLight.enabled) return null;
+
   return (
     <View 
       style={{ 
