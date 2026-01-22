@@ -1,6 +1,8 @@
 import DivineLight from '@/components/DivineLight';
 import { CrescentMoon } from '@/components/CrescentMoon';
 import { ProgressRing } from '@/components/ProgressRing';
+import { useParallax } from '@/hooks/useParallax';
+import { StyleSheet } from 'react-native';
 import { SeoHead } from '@/components/SeoHead';
 import SettingsModal from '@/components/SettingsModal';
 import StarField from '@/components/StarField';
@@ -180,6 +182,10 @@ export default function DashboardScreen() {
   if (!currentZeker) return <View><Text>Loading...</Text></View>;
 
   const ringTrackColor = colors.cardBg;
+  
+  // Parallax Effects
+  const starParallax = useParallax(25); // Deep background
+  const moonParallax = useParallax(10); // Mid-ground
 
   // Render Content
   const renderContent = () => (
@@ -410,8 +416,13 @@ export default function DashboardScreen() {
       ai="center"
       position="relative"
     >
-      <StarField color={colors.accent} />
-      <CrescentMoon color={colors.accent} />
+      <Animated.View style={[StyleSheet.absoluteFill, starParallax]} pointerEvents="none">
+        <StarField color={colors.accent} />
+      </Animated.View>
+      
+      <Animated.View style={[StyleSheet.absoluteFill, moonParallax]} pointerEvents="none">
+        <CrescentMoon color={colors.accent} />
+      </Animated.View>
       
       <YStack  
         f={1} 
