@@ -1,19 +1,19 @@
-import React, { useEffect } from 'react';
-import { Platform, useWindowDimensions, Pressable } from 'react-native';
-import * as Haptics from 'expo-haptics';
-import { Audio } from 'expo-av';
-import { View, Text, YStack, XStack, Button, ScrollView, Paragraph } from 'tamagui';
-import { useAzkarStore } from '@/store/azkarStore';
-import { ProgressRing } from '@/components/ProgressRing';
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { TRANSLATIONS } from '@/constants/Translations';
-import SettingsModal from '@/components/SettingsModal';
-import { THEME, ThemeColors } from '@/constants/Theme';
-import { SeoHead } from '@/components/SeoHead';
 import DivineLight from '@/components/DivineLight';
+import { ProgressRing } from '@/components/ProgressRing';
+import { SeoHead } from '@/components/SeoHead';
+import SettingsModal from '@/components/SettingsModal';
 import StarField from '@/components/StarField';
-import Animated, { FadeInDown, FadeOutUp, useSharedValue, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
+import { THEME, ThemeColors } from '@/constants/Theme';
+import { TRANSLATIONS } from '@/constants/Translations';
+import { useAzkarStore } from '@/store/azkarStore';
+import { Ionicons } from '@expo/vector-icons';
+import { Audio } from 'expo-av';
+import * as Haptics from 'expo-haptics';
+import React, { useEffect } from 'react';
+import { Platform, Pressable, useWindowDimensions } from 'react-native';
+import Animated, { FadeInDown, FadeOutUp, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { Button, Paragraph, ScrollView, Text, View, XStack, YStack } from 'tamagui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // --- Helper Components ---
 interface NavButtonProps {
@@ -35,7 +35,6 @@ const NavButton = ({ iconName, onPress, colors, isDesktop }: NavButtonProps) => 
     color={colors.textPrimary}
     icon={<Ionicons name={iconName} size={32} color={colors.textPrimary} />} 
     onPress={() => {
-      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       onPress();
     }} 
     pressStyle={{ opacity: 0.8 }}
@@ -68,6 +67,7 @@ const CategoryButton = ({ label, isActive, onPress, colors }: CategoryButtonProp
 
 export default function DashboardScreen() {
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isDesktop = width > 768;
 
   const {
@@ -115,36 +115,51 @@ export default function DashboardScreen() {
   const playSuccessSound = async () => {
     try {
       const { sound } = await Audio.Sound.createAsync(
-        require('../../assets/images/favicon.png'), // Placeholder or real sound
-        { shouldPlay: true, volume: 0.5 }
+        require('@/assets/sounds/2.mp3'),
+        { shouldPlay: false }
       );
-      // Since I don't have a real mp3 file in assets, I'll use a remote one that is commonly available
-      await sound.unloadAsync(); // Reset for real URL
-      await sound.loadAsync({ uri: 'https://www.soundjay.com/buttons/sounds/button-3.mp3' });
-      await sound.playAsync();
       
       sound.setOnPlaybackStatusUpdate(async (status) => {
         if (status.isLoaded && status.didJustFinish) {
           await sound.unloadAsync();
         }
       });
+
+      await sound.playAsync();
     } catch (e) {
-      // Ignore audio errors
+      console.log('Error playing sound', e);
     }
   };
 
   // Dynamic Font Size
-  const getDynamicFontSize = (text: string) => {
+  const getDynamicFontSize = (text: string, translationVisible: boolean) => {
     const len = text.length;
-    if (len < 50) return isDesktop ? 48 : 32;
-    if (len < 100) return isDesktop ? 36 : 24;
-    if (len < 200) return isDesktop ? 28 : 20;
-    if (len < 300) return isDesktop ? 24 : 18;
-    return isDesktop ? 20 : 16;
+    const boost = translationVisible ? 1 : 1.3; // 30% larger when translation is off
+
+    if (len < 50) return (isDesktop ? 48 : 32) * boost;
+    if (len < 100) return (isDesktop ? 36 : 24) * boost;
+    if (len < 200) return (isDesktop ? 28 : 20) * boost;
+    if (len < 300) return (isDesktop ? 24 : 18) * boost;
+    return (isDesktop ? 20 : 16) * boost;
   };
 
   // Keyboard controls for Web "Car Mode"
   useEffect(() => {
+    // Configure Audio for playback
+    const configureAudio = async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          allowsRecordingIOS: false,
+          staysActiveInBackground: false,
+          shouldDuckAndroid: true,
+        });
+      } catch (e) {
+        console.warn('Error configuring audio', e);
+      }
+    };
+    configureAudio();
+
     if (Platform.OS === 'web') {
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.code === 'Space') {
@@ -174,15 +189,18 @@ export default function DashboardScreen() {
        />
        {/* Header */}
        <XStack 
-          p="$4" 
+          pt={isDesktop ? '$4' : insets.top}
+          pb="$3"
+          px="$4"
           ai="center" 
+          jc="space-between"
           bbw={isDesktop ? 1 : 0} 
           bbc={colors.borderColor}
           fd={isRTL ? 'row-reverse' : 'row'}
           zIndex={10}
         >
-          {/* Left Spacer */}
-          <XStack f={1} />
+          {/* Left Spacer to balance Settings button */}
+          <XStack w={40} />
           
           <XStack 
             bg={colors.cardBg} 
@@ -205,7 +223,7 @@ export default function DashboardScreen() {
             />
           </XStack>
 
-          <XStack f={1} jc="flex-end">
+          <XStack w={40} jc="flex-end">
             <Button 
               size="$3" 
               circular 
@@ -233,20 +251,25 @@ export default function DashboardScreen() {
                 exiting={FadeOutUp.duration(400)}
                 style={{ alignItems: 'center', width: '100%' }}
               >
-                <Text 
-                  fontFamily="System" 
-                  fontWeight="700" 
-                  fontSize={getDynamicFontSize(currentZeker.arabic)} 
-                  textAlign="center" 
-                  lineHeight={isDesktop ? 60 : 36}
-                  color={colors.textPrimary}
-                  maw={isDesktop ? 800 : '100%'}
-                  shadowColor={colors.accent}
-                  shadowRadius={10}
-                  shadowOpacity={0.2}
-                >
-                  {currentZeker.arabic}
-                </Text>
+                {(() => {
+                  const fontSize = getDynamicFontSize(currentZeker.arabic, showTranslation);
+                  return (
+                    <Text 
+                      fontFamily="System" 
+                      fontWeight="700" 
+                      fontSize={fontSize} 
+                      textAlign="center" 
+                      lineHeight={fontSize * 1.4}
+                      color={colors.textPrimary}
+                      maw={isDesktop ? 800 : '100%'}
+                      shadowColor={colors.accent}
+                      shadowRadius={10}
+                      shadowOpacity={0.2}
+                    >
+                      {currentZeker.arabic}
+                    </Text>
+                  );
+                })()}
                 {showTranslation && (
                   <Paragraph 
                     mt="$4" 
@@ -282,7 +305,9 @@ export default function DashboardScreen() {
             <XStack ai="center" jc="center" position="relative">
               <Pressable 
                 onPress={() => {
-                  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  if (Platform.OS !== 'web' && count < currentZeker.target) {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
                   incrementCount();
                 }}
                 onLongPress={() => {
@@ -389,7 +414,7 @@ export default function DashboardScreen() {
       <YStack  
         f={1} 
         w="100%"
-        padding={isDesktop ? "$4" : "$4"}
+        padding={isDesktop ? "$4" : "$0"}
         jc={isDesktop ? "center" : "flex-start"} 
         ai="center"
         zIndex={1}
