@@ -1,4 +1,5 @@
 import DivineLight from '@/components/DivineLight';
+import { CrescentMoon } from '@/components/CrescentMoon';
 import { ProgressRing } from '@/components/ProgressRing';
 import { SeoHead } from '@/components/SeoHead';
 import SettingsModal from '@/components/SettingsModal';
@@ -410,6 +411,7 @@ export default function DashboardScreen() {
       position="relative"
     >
       <StarField color={colors.accent} />
+      <CrescentMoon color={colors.accent} />
       
       <YStack  
         f={1} 
