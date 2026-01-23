@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
     // top/right/width/height set dynamically
-    zIndex: 0, 
+    zIndex: 5, 
   },
   moonContainer: {
     ...StyleSheet.absoluteFillObject,

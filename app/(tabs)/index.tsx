@@ -221,7 +221,7 @@ export default function DashboardScreen() {
       position="relative"
     >
       <Animated.View style={[StyleSheet.absoluteFill, starParallax]} pointerEvents="none">
-        <StarField color={colors.accent} />
+        <StarField />
       </Animated.View>
       
       <Animated.View style={[StyleSheet.absoluteFill, moonParallax]} pointerEvents="none">
