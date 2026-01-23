@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { Dimensions, StyleSheet, View, Text, useWindowDimensions } from 'react-native';
+import Svg, { Polygon, Defs, LinearGradient, Stop } from 'react-native-svg';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -13,7 +14,7 @@ import { ShootingStar } from './ShootingStar';
 import { EFFECTS_CONFIG } from '@/constants/EffectsConfig';
 import { useAzkarStore } from '@/store/azkarStore';
 
-const AnimatedText = Animated.createAnimatedComponent(Text);
+const AnimatedSvg = Animated.createAnimatedComponent(Svg);
 
 interface StarProps {
   x: number;
@@ -66,21 +67,26 @@ const StarComponent = ({ x, y, size, delay, duration, color }: StarProps) => {
   });
 
   return (
-    <AnimatedText 
+    <AnimatedSvg 
       style={[
         styles.star, 
-        animatedStyle, 
-        { 
-          fontSize: size,
-          color: color,
-          textShadowColor: color,
-          textShadowOffset: { width: 0, height: 0 },
-          textShadowRadius: 8, 
-        }
-      ]} 
+        animatedStyle
+      ]}
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
     >
-      ✦
-    </AnimatedText>
+      <Defs>
+        <LinearGradient id="starGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <Stop offset="0%" stopColor="#ffd700" stopOpacity="1" />
+          <Stop offset="100%" stopColor="#ffaa00" stopOpacity="1" />
+        </LinearGradient>
+      </Defs>
+      <Polygon
+        points="50,0 61,35 98,35 68,57 79,91 50,70 21,91 32,57 2,35 39,35"
+        fill="url(#starGrad)"
+      />
+    </AnimatedSvg>
   );
 };
 
@@ -100,15 +106,40 @@ const StarFieldComponent = ({ color = '#FFD700' }: StarFieldProps) => {
     if (!EFFECTS_CONFIG.stars.enabled) return [];
     
     const { count, sizeRange, animation } = EFFECTS_CONFIG.stars;
+    
+    // Limits
+    const bottomLimit = height * 0.57; // Avoid bottom controls
+    const sideZoneWidth = width * 0.25; // Left/Right zones take 25% each
+    const topZoneHeight = height * 0.25; // Top zone height
 
-    return Array.from({ length: count }).map((_, i) => ({
-      id: i,
-      x: Math.random() * width,
-      y: (Math.random() * (height * 0.4)) + (height * 0.2), 
-      size: Math.random() * (sizeRange.max - sizeRange.min) + sizeRange.min,
-      delay: Math.random() * 2000,
-      duration: Math.random() * (animation.maxDuration - animation.minDuration) + animation.minDuration,
-    }));
+    return Array.from({ length: count }).map((_, i) => {
+      // Zone-based distribution to frame the text
+      const zone = Math.random();
+      let x, y;
+
+      if (zone < 0.35) {
+        // Left Zone (35%)
+        x = Math.random() * sideZoneWidth;
+        y = Math.random() * bottomLimit;
+      } else if (zone < 0.70) {
+        // Right Zone (35%)
+        x = width - (Math.random() * sideZoneWidth);
+        y = Math.random() * bottomLimit;
+      } else {
+        // Top Zone (30%) - Spread across top, above text
+        x = Math.random() * width;
+        y = Math.random() * topZoneHeight;
+      }
+
+      return {
+        id: i,
+        x,
+        y,
+        size: Math.random() * (sizeRange.max - sizeRange.min) + sizeRange.min,
+        delay: Math.random() * 2000,
+        duration: Math.random() * (animation.maxDuration - animation.minDuration) + animation.minDuration,
+      };
+    });
   }, [width, height, currentTheme]);
 
   if (!EFFECTS_CONFIG.masterEnabled) return null;

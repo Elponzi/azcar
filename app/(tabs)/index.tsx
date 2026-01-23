@@ -92,7 +92,7 @@ export default function DashboardScreen() {
        
        {/* Header */}
        <XStack 
-          pt={isDesktop ? '$4' : insets.top}
+          pt={isDesktop ? '$4' : insets.top + 30}
           pb="$3"
           px="$4"
           ai="center" 

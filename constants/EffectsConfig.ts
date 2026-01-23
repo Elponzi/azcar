@@ -14,7 +14,7 @@ export const EFFECTS_CONFIG = {
   stars: {
     enabled: true,
     themes: ['dark'] as Theme[], // Only visible in dark mode
-    count: 10,
+    count: 20,
     sizeRange: { min: 8, max: 14 },
     animation: {
       minDuration: 2000,
@@ -35,9 +35,9 @@ export const EFFECTS_CONFIG = {
   moon: {
     enabled: true,
     themes: ['dark'] as Theme[],
-    size: 140,
-    rotation: -35,
-    position: { top: 80, right: 20 },
+    size: 180,
+    rotation: -30,
+    position: { top: 80, left: 0 },
     glowEnabled: true,
   },
 

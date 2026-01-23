@@ -32,8 +32,8 @@ export const CrescentMoon = ({ color = '#FFD700', size: propSize, isRTL = false 
     // 1. Breathing Glow Effect
     glowOpacity.value = withRepeat(
       withSequence(
-        withTiming(0.8, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
-        withTiming(0.4, { duration: 4000, easing: Easing.inOut(Easing.ease) })
+        withTiming(0.10, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0.2, { duration: 4000, easing: Easing.inOut(Easing.ease) })
       ),
       -1, 
       true 
@@ -88,12 +88,12 @@ export const CrescentMoon = ({ color = '#FFD700', size: propSize, isRTL = false 
               <Defs>
                 <RadialGradient
                   id="moonGlow"
-                  cx="50"
-                  cy="50"
-                  rx="50"
-                  ry="50"
-                  fx="50"
-                  fy="50"
+                  cx="100"
+                  cy="100"
+                  rx="100"
+                  ry="100"
+                  fx="100"
+                  fy="100"
                   gradientUnits="userSpaceOnUse"
                 >
                   <Stop offset="0" stopColor={color} stopOpacity="0.3" />
