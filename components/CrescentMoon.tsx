@@ -84,10 +84,11 @@ export const CrescentMoon = ({ color = '#FFD700', size: propSize, isRTL = false 
         {/* The Glow (Behind) */}
         {glowEnabled && (
           <Animated.View style={[StyleSheet.absoluteFill, animatedGlowStyle]}>
-            <Svg height="100%" width="100%" viewBox="0 0 100 100">
+            {/* Outer Soft Glow */}
+            <Svg height="100%" width="100%" viewBox="0 0 200 200" style={StyleSheet.absoluteFill}>
               <Defs>
                 <RadialGradient
-                  id="moonGlow"
+                  id="moonGlowOuter"
                   cx="100"
                   cy="100"
                   rx="100"
@@ -96,7 +97,27 @@ export const CrescentMoon = ({ color = '#FFD700', size: propSize, isRTL = false 
                   fy="100"
                   gradientUnits="userSpaceOnUse"
                 >
-                  <Stop offset="0" stopColor={color} stopOpacity="0.3" />
+                  <Stop offset="0" stopColor={color} stopOpacity="0.2" />
+                  <Stop offset="1" stopColor={color} stopOpacity="0" />
+                </RadialGradient>
+              </Defs>
+              <Circle cx="100" cy="100" r="100" fill="url(#moonGlowOuter)" />
+            </Svg>
+
+            {/* Inner Intense Glow */}
+            <Svg height="100%" width="100%" viewBox="0 0 100 100">
+              <Defs>
+                <RadialGradient
+                  id="moonGlow"
+                  cx="50"
+                  cy="50"
+                  rx="50"
+                  ry="50"
+                  fx="50"
+                  fy="50"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <Stop offset="0" stopColor={color} stopOpacity="0.4" />
                   <Stop offset="1" stopColor={color} stopOpacity="0" />
                 </RadialGradient>
               </Defs>

@@ -15,7 +15,7 @@ export const EFFECTS_CONFIG = {
     enabled: true,
     themes: ['dark'] as Theme[], // Only visible in dark mode
     count: 20,
-    sizeRange: { min: 8, max: 14 },
+    sizeRange: { min: 10, max: 14 },
     animation: {
       minDuration: 2000,
       maxDuration: 5000,

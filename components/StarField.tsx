@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { Dimensions, StyleSheet, View, Text, useWindowDimensions } from 'react-native';
-import Svg, { Polygon, Defs, LinearGradient, Stop } from 'react-native-svg';
+import Svg, { Polygon, Defs, LinearGradient, Stop, RadialGradient, Circle } from 'react-native-svg';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -77,14 +77,29 @@ const StarComponent = ({ x, y, size, delay, duration, color }: StarProps) => {
       viewBox="0 0 100 100"
     >
       <Defs>
-        <LinearGradient id="starGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <Stop offset="0%" stopColor="#ffd700" stopOpacity="1" />
-          <Stop offset="100%" stopColor="#ffaa00" stopOpacity="1" />
-        </LinearGradient>
+        {/* External Glow Gradient */}
+        <RadialGradient 
+          id="externalGlow" 
+          cx="50" 
+          cy="50" 
+          rx="50" 
+          ry="50" 
+          fx="50" 
+          fy="50" 
+          gradientUnits="userSpaceOnUse"
+        >
+          <Stop offset="0" stopColor="#FFD700" stopOpacity="0.6" />
+          <Stop offset="1" stopColor="#FFD700" stopOpacity="0" />
+        </RadialGradient>
       </Defs>
+      
+      {/* The Glow (Behind) */}
+      <Circle cx="50" cy="50" r="50" fill="url(#externalGlow)" />
+
+      {/* The Star Shape (Solid Gold) */}
       <Polygon
         points="50,0 61,35 98,35 68,57 79,91 50,70 21,91 32,57 2,35 39,35"
-        fill="url(#starGrad)"
+        fill="#FFD700"
       />
     </AnimatedSvg>
   );
@@ -108,7 +123,7 @@ const StarFieldComponent = ({ color = '#FFD700' }: StarFieldProps) => {
     const { count, sizeRange, animation } = EFFECTS_CONFIG.stars;
     
     // Limits
-    const bottomLimit = height * 0.57; // Avoid bottom controls
+    const bottomLimit = height * 0.55; // Avoid bottom controls
     const sideZoneWidth = width * 0.25; // Left/Right zones take 25% each
     const topZoneHeight = height * 0.25; // Top zone height
 
