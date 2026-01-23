@@ -32,8 +32,8 @@ export const CrescentMoon = ({ color = '#FFD700', size: propSize, isRTL = false 
     // 1. Breathing Glow Effect
     glowOpacity.value = withRepeat(
       withSequence(
-        withTiming(0.8, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
-        withTiming(0.4, { duration: 4000, easing: Easing.inOut(Easing.ease) })
+        withTiming(0.10, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0.2, { duration: 4000, easing: Easing.inOut(Easing.ease) })
       ),
       -1, 
       true 
@@ -84,6 +84,27 @@ export const CrescentMoon = ({ color = '#FFD700', size: propSize, isRTL = false 
         {/* The Glow (Behind) */}
         {glowEnabled && (
           <Animated.View style={[StyleSheet.absoluteFill, animatedGlowStyle]}>
+            {/* Outer Soft Glow */}
+            <Svg height="100%" width="100%" viewBox="0 0 200 200" style={StyleSheet.absoluteFill}>
+              <Defs>
+                <RadialGradient
+                  id="moonGlowOuter"
+                  cx="100"
+                  cy="100"
+                  rx="100"
+                  ry="100"
+                  fx="100"
+                  fy="100"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <Stop offset="0" stopColor={color} stopOpacity="0.2" />
+                  <Stop offset="1" stopColor={color} stopOpacity="0" />
+                </RadialGradient>
+              </Defs>
+              <Circle cx="100" cy="100" r="100" fill="url(#moonGlowOuter)" />
+            </Svg>
+
+            {/* Inner Intense Glow */}
             <Svg height="100%" width="100%" viewBox="0 0 100 100">
               <Defs>
                 <RadialGradient
@@ -96,7 +117,7 @@ export const CrescentMoon = ({ color = '#FFD700', size: propSize, isRTL = false 
                   fy="50"
                   gradientUnits="userSpaceOnUse"
                 >
-                  <Stop offset="0" stopColor={color} stopOpacity="0.3" />
+                  <Stop offset="0" stopColor={color} stopOpacity="0.4" />
                   <Stop offset="1" stopColor={color} stopOpacity="0" />
                 </RadialGradient>
               </Defs>
@@ -133,7 +154,7 @@ const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
     // top/right/width/height set dynamically
-    zIndex: 0, 
+    zIndex: 5, 
   },
   moonContainer: {
     ...StyleSheet.absoluteFillObject,

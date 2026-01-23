@@ -92,7 +92,7 @@ export default function DashboardScreen() {
        
        {/* Header */}
        <XStack 
-          pt={isDesktop ? '$4' : insets.top}
+          pt={isDesktop ? '$4' : insets.top + 30}
           pb="$3"
           px="$4"
           ai="center" 
@@ -221,7 +221,7 @@ export default function DashboardScreen() {
       position="relative"
     >
       <Animated.View style={[StyleSheet.absoluteFill, starParallax]} pointerEvents="none">
-        <StarField color={colors.accent} />
+        <StarField />
       </Animated.View>
       
       <Animated.View style={[StyleSheet.absoluteFill, moonParallax]} pointerEvents="none">

@@ -1,143 +1,182 @@
 import React, { useEffect, useMemo } from 'react';
-import { Dimensions, StyleSheet, View, Text, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import Svg, { Polygon, Defs, RadialGradient, Stop, Circle } from 'react-native-svg';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
   withRepeat, 
   withTiming, 
-  withDelay,
   Easing,
-  withSequence
+  cancelAnimation
 } from 'react-native-reanimated';
 import { ShootingStar } from './ShootingStar';
 import { EFFECTS_CONFIG } from '@/constants/EffectsConfig';
 import { useAzkarStore } from '@/store/azkarStore';
 
-const AnimatedText = Animated.createAnimatedComponent(Text);
+const AnimatedSvg = Animated.createAnimatedComponent(Svg);
 
-interface StarProps {
+// --- Types ---
+interface StarData {
+  id: number;
   x: number;
   y: number;
   size: number;
-  delay: number;
-  duration: number;
-  color: string;
+  rotation: number;
 }
 
-const StarComponent = ({ x, y, size, delay, duration, color }: StarProps) => {
-  const opacity = useSharedValue(0.3);
-  const scale = useSharedValue(0.8);
+interface StarProps extends StarData {}
+
+// --- Individual Star Component ---
+const StarComponent = ({ size, rotation }: StarProps) => {
+  return (
+    <Svg 
+      style={{ 
+        transform: [{ rotate: `${rotation}deg` }],
+        opacity: 0.8 
+      }}
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+    >
+      {/* Star Shape */}
+      <Polygon
+        points="50,0 61,35 98,35 68,57 79,91 50,70 21,91 32,57 2,35 39,35"
+        fill="#FFFFFF"
+      />
+    </Svg>
+  );
+};
+const Star = React.memo(StarComponent);
+
+// --- Layer Components ---
+
+// A static block of stars that covers the screen width once
+const StarBlock = React.memo(({ data }: { data: StarData[] }) => {
+  return (
+    <View style={StyleSheet.absoluteFill}>
+      {data.map((star) => (
+        <View 
+          key={star.id} 
+          style={{ position: 'absolute', left: star.x, top: star.y }}
+        >
+          <Star {...star} />
+        </View>
+      ))}
+    </View>
+  );
+});
+
+// The scrolling container
+const InfiniteLayer = ({
+  data,
+  speed,
+  blockHeight
+}: {
+  data: StarData[],
+  speed: number,
+  blockHeight: number
+}) => {
+  const translateY = useSharedValue(0);
 
   useEffect(() => {
-    opacity.value = withDelay(
-      delay,
-      withRepeat(
-        withSequence(
-          withTiming(1, { duration: duration, easing: Easing.inOut(Easing.quad) }),
-          withTiming(0.3, { duration: duration, easing: Easing.inOut(Easing.quad) })
-        ),
-        -1,
-        true
-      )
+    cancelAnimation(translateY);
+    translateY.value = 0;
+    translateY.value = withRepeat(
+      withTiming(-blockHeight, { duration: speed, easing: Easing.linear }),
+      -1,
+      false
     );
+  }, [blockHeight, speed]);
 
-    scale.value = withDelay(
-      delay,
-      withRepeat(
-        withSequence(
-          withTiming(1, { duration: duration, easing: Easing.inOut(Easing.quad) }),
-          withTiming(0.8, { duration: duration, easing: Easing.inOut(Easing.quad) })
-        ),
-        -1,
-        true
-      )
-    );
-  }, [delay, duration]);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: opacity.value,
-      transform: [
-        { scale: scale.value },
-      ],
-      left: x,
-      top: y,
-    };
-  });
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }]
+  }));
 
   return (
-    <AnimatedText 
-      style={[
-        styles.star, 
-        animatedStyle, 
-        { 
-          fontSize: size,
-          color: color,
-          textShadowColor: color,
-          textShadowOffset: { width: 0, height: 0 },
-          textShadowRadius: 8, 
-        }
-      ]} 
-    >
-      ✦
-    </AnimatedText>
+    <Animated.View style={[StyleSheet.absoluteFill, { flexDirection: 'column', height: blockHeight * 2 }, animatedStyle]}>
+      <View style={{ width: '100%', height: blockHeight }}>
+        <StarBlock data={data} />
+      </View>
+      {/* Duplicate block for seamless loop */}
+      <View style={{ width: '100%', height: blockHeight }}>
+        <StarBlock data={data} />
+      </View>
+    </Animated.View>
   );
 };
 
-const Star = React.memo(StarComponent);
 
-interface StarFieldProps {
-  color?: string;
-}
+// --- Main StarField Component ---
 
-const StarFieldComponent = ({ color = '#FFD700' }: StarFieldProps) => {
+const StarFieldComponent = () => {
   const { width, height } = useWindowDimensions();
   const currentTheme = useAzkarStore(state => state.theme);
 
-  const stars = useMemo(() => {
-    if (!EFFECTS_CONFIG.masterEnabled) return [];
-    if (!EFFECTS_CONFIG.stars.themes.includes(currentTheme)) return [];
-    if (!EFFECTS_CONFIG.stars.enabled) return [];
-    
-    const { count, sizeRange, animation } = EFFECTS_CONFIG.stars;
+  // Configuration
+  const isEnabled = EFFECTS_CONFIG.masterEnabled && 
+                    EFFECTS_CONFIG.stars.enabled && 
+                    EFFECTS_CONFIG.stars.themes.includes(currentTheme);
 
-    return Array.from({ length: count }).map((_, i) => ({
-      id: i,
-      x: Math.random() * width,
-      y: (Math.random() * (height * 0.4)) + (height * 0.2), 
-      size: Math.random() * (sizeRange.max - sizeRange.min) + sizeRange.min,
-      delay: Math.random() * 2000,
-      duration: Math.random() * (animation.maxDuration - animation.minDuration) + animation.minDuration,
-    }));
-  }, [width, height, currentTheme]);
+  // Constants for vertical scroll
+  const horizonY = height * EFFECTS_CONFIG.stars.horizonRatio;
 
-  if (!EFFECTS_CONFIG.masterEnabled) return null;
-  if (!EFFECTS_CONFIG.stars.themes.includes(currentTheme)) return null;
+  // Generate Data for Layers
+  const layers = useMemo(() => {
+    if (!isEnabled) return { foreground: [], middle: [], background: [] };
+
+    const { background, middle, foreground } = EFFECTS_CONFIG.stars.layers;
+
+    // Helper to generate star data
+    const generateStars = (count: number, minSize: number, maxSize: number) => {
+      return Array.from({ length: count }).map((_, i) => ({
+        id: i,
+        x: Math.random() * width,
+        y: Math.random() * horizonY,
+        size: Math.random() * (maxSize - minSize) + minSize,
+        rotation: Math.random() * 360,
+      }));
+    };
+
+    return {
+      foreground: generateStars(foreground.count, foreground.sizeRange.min, foreground.sizeRange.max),
+      middle: generateStars(middle.count, middle.sizeRange.min, middle.sizeRange.max),
+      background: generateStars(background.count, background.sizeRange.min, background.sizeRange.max),
+    };
+  }, [width, horizonY, isEnabled]);
+
+  if (!isEnabled) return null;
+
+  const { background, middle, foreground } = EFFECTS_CONFIG.stars.layers;
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {stars.map((star) => (
-        <Star 
-          key={star.id} 
-          x={star.x} 
-          y={star.y} 
-          size={star.size} 
-          delay={star.delay}
-          duration={star.duration}
-          color={color}
+      
+      {/* Masked Container for Star Layers to prevent overflow into bottom controls */}
+      <View style={{ position: 'absolute', top: 0, left: 0, width: width, height: horizonY, overflow: 'hidden' }}>
+        {/* Layer 1: Deep Space (Background) */}
+        <InfiniteLayer 
+          data={layers.background} 
+          speed={background.speed} 
+          blockHeight={horizonY}
         />
-      ))}
+
+        {/* Layer 2: Mid Space (Middle) */}
+        <InfiniteLayer 
+          data={layers.middle} 
+          speed={middle.speed} 
+          blockHeight={horizonY}
+        />
+
+        {/* Layer 3: Near Field (Foreground) */}
+        <InfiniteLayer 
+          data={layers.foreground} 
+          speed={foreground.speed} 
+          blockHeight={horizonY}
+        />
+      </View>
+
       <ShootingStar />
     </View>
   );
 };
-
 export default React.memo(StarFieldComponent);
-
-const styles = StyleSheet.create({
-  star: {
-    position: 'absolute',
-    includeFontPadding: false, 
-    textAlignVertical: 'center',
-  },
-});

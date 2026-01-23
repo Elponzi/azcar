@@ -14,11 +14,26 @@ export const EFFECTS_CONFIG = {
   stars: {
     enabled: true,
     themes: ['dark'] as Theme[], // Only visible in dark mode
-    count: 10,
-    sizeRange: { min: 8, max: 14 },
-    animation: {
-      minDuration: 2000,
-      maxDuration: 5000,
+    horizonRatio: 1,
+    layers: {
+      background: {
+        count: 30,
+        speed: 50000,
+        sizeRange: { min: 2, max: 4 },
+        color: 'white',
+      },
+      middle: {
+        count: 8,
+        speed: 100000,
+        sizeRange: { min: 5, max: 8 },
+        color: 'white',
+      },
+      foreground: {
+        count: 6,
+        speed: 150000,
+        sizeRange: { min: 9, max: 12 },
+        color: 'white',
+      },
     }
   },
 
@@ -35,9 +50,9 @@ export const EFFECTS_CONFIG = {
   moon: {
     enabled: true,
     themes: ['dark'] as Theme[],
-    size: 140,
-    rotation: -35,
-    position: { top: 80, right: 20 },
+    size: 180,
+    rotation: -30,
+    position: { top: 80, left: 0 },
     glowEnabled: true,
   },
 
