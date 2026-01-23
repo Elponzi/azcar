@@ -14,11 +14,29 @@ export const EFFECTS_CONFIG = {
   stars: {
     enabled: true,
     themes: ['dark'] as Theme[], // Only visible in dark mode
-    count: 20,
-    sizeRange: { min: 10, max: 14 },
     animation: {
       minDuration: 2000,
       maxDuration: 5000,
+    },
+    layers: {
+      background: {
+        count: 20,
+        speed: 25000,
+        sizeRange: { min: 3, max: 6 },
+        color: 'white',
+      },
+      middle: {
+        count: 6,
+        speed: 17000,
+        sizeRange: { min: 8, max: 12 },
+        color: 'white',
+      },
+      foreground: {
+        count: 4,
+        speed: 13000,
+        sizeRange: { min: 14, max: 18 },
+        color: 'gold',
+      },
     }
   },
 
