@@ -32,18 +32,20 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
+  const isHydrated = useAzkarStore((state) => state.isHydrated);
+
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
+    if (loaded && isHydrated) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [loaded, isHydrated]);
 
-  if (!loaded) {
+  if (!loaded || !isHydrated) {
     return null;
   }
 

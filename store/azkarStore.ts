@@ -1,5 +1,13 @@
 import { create } from 'zustand';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AZKAR_DATA, AzkarCategory, AzkarItem } from '../constants/AzkarData';
+
+// Storage keys
+const STORAGE_KEYS = {
+  theme: 'azkar:theme',
+  language: 'azkar:language',
+  showTranslation: 'azkar:showTranslation',
+} as const;
 
 interface AzkarState {
   currentCategory: AzkarCategory;
@@ -10,7 +18,8 @@ interface AzkarState {
   language: 'en' | 'ar';
   isSettingsOpen: boolean;
   showTranslation: boolean;
-  
+  isHydrated: boolean;
+
   // Actions
   setCategory: (category: AzkarCategory) => void;
   nextZeker: () => void;
@@ -21,6 +30,7 @@ interface AzkarState {
   setLanguage: (lang: 'en' | 'ar') => void;
   setSettingsOpen: (isOpen: boolean) => void;
   setShowTranslation: (show: boolean) => void;
+  hydrate: () => Promise<void>;
 }
 
 export const useAzkarStore = create<AzkarState>((set, get) => ({
@@ -32,6 +42,7 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
   language: 'en',
   isSettingsOpen: false,
   showTranslation: false,
+  isHydrated: false,
 
   setCategory: (category) => {
     set({
@@ -57,7 +68,7 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
     const { filteredAzkar, currentIndex, counts } = get();
     const currentZeker = filteredAzkar[currentIndex];
     const currentCount = counts[currentZeker.id] || 0;
-    
+
     // Optional: Stop at target or keep going? Mockup implies keep going but color changes.
     // We'll just increment.
     set({
@@ -79,8 +90,43 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
     });
   },
 
-  setTheme: (theme) => set({ theme }),
-  setLanguage: (language) => set({ language }),
+  setTheme: (theme) => {
+    set({ theme });
+    AsyncStorage.setItem(STORAGE_KEYS.theme, theme);
+  },
+
+  setLanguage: (language) => {
+    set({ language });
+    AsyncStorage.setItem(STORAGE_KEYS.language, language);
+  },
+
   setSettingsOpen: (isOpen: boolean) => set({ isSettingsOpen: isOpen }),
-  setShowTranslation: (show: boolean) => set({ showTranslation: show })
+
+  setShowTranslation: (show: boolean) => {
+    set({ showTranslation: show });
+    AsyncStorage.setItem(STORAGE_KEYS.showTranslation, JSON.stringify(show));
+  },
+
+  hydrate: async () => {
+    try {
+      const [theme, language, showTranslation] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEYS.theme),
+        AsyncStorage.getItem(STORAGE_KEYS.language),
+        AsyncStorage.getItem(STORAGE_KEYS.showTranslation),
+      ]);
+
+      set({
+        ...(theme && { theme: theme as 'light' | 'dark' }),
+        ...(language && { language: language as 'en' | 'ar' }),
+        ...(showTranslation !== null && { showTranslation: JSON.parse(showTranslation) }),
+        isHydrated: true,
+      });
+    } catch (error) {
+      console.warn('Failed to hydrate settings:', error);
+      set({ isHydrated: true });
+    }
+  },
 }));
+
+// Auto-hydrate on app start
+useAzkarStore.getState().hydrate();
