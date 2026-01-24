@@ -156,7 +156,9 @@ export default function DashboardScreen() {
             f={isDesktop ? 0 : 0}
             flexShrink={0}
             bg={isDesktop ? colors.background : 'transparent'} 
-            p="$6" 
+            px="$6"
+            pt="$4"
+            pb={isDesktop ? "$6" : insets.bottom}
             jc="center" 
             ai="center" 
             space="$6"

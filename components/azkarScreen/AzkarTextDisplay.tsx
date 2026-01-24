@@ -28,7 +28,7 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, isDesktop, the
   };
 
   return (
-    <YStack f={1} p="$6" jc="center" ai="center" space="$4">
+    <YStack f={1} px="$6" pb="$0" pt={isDesktop ? "0" : "$10"} jc="center" ai="center" space="$4">
       <ScrollView 
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}
         showsVerticalScrollIndicator={false}
