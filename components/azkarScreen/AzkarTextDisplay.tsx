@@ -4,7 +4,6 @@ import { removeTashkeel } from '@/utils';
 import React from 'react';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { Paragraph, ScrollView, Text, YStack } from 'tamagui';
-import { StyledText } from '../StyledText';
 
 interface AzkarTextDisplayProps {
   currentZeker: AzkarItem;
@@ -86,20 +85,19 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, isDesktop, the
                 </Paragraph>
               )}
               {currentZeker.note && (
-                <YStack
-                  p="$3"
-                  br="$4"
-                  bg={colors.cardBg}
-                  borderWidth={1}
-                  borderColor={colors.borderColor}
-                  maw={600}
+                <Text
+                  fontFamily="Tajawal"
+                  mt="$4"
+                  fontSize={isDesktop ? 15 : 13}
+                  lineHeight={isDesktop ? 24 : 20}
+                  color={colors.textSecondary}
+                  textAlign="center"
+                  fontStyle="italic"
+                  maw={550}
+                  opacity={0.85}
                 >
-                  <StyledText
-                  style={{ fontSize: isDesktop ? 16 : 14, color: colors.textSecondary, textAlign: 'center' }}
-                  >
-                    {currentZeker.note}
-                  </StyledText>
-                </YStack>
+                  ✦ {currentZeker.note}
+                </Text>
               )}
         </Animated.View>
       </ScrollView>
