@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AZKAR_DATA, AzkarCategory, AzkarItem } from '../constants/AzkarData';
+import { AZKAR_DATA, AzkarCategory, AzkarItem } from '../data';
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -37,7 +37,7 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
   currentCategory: 'Morning',
   currentIndex: 0,
   counts: {},
-  filteredAzkar: AZKAR_DATA.filter(z => z.category === 'Morning'),
+  filteredAzkar: AZKAR_DATA['Morning'],
   theme: 'dark', // Default from mockup
   language: 'en',
   isSettingsOpen: false,
@@ -48,7 +48,7 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
     set({
       currentCategory: category,
       currentIndex: 0,
-      filteredAzkar: AZKAR_DATA.filter(z => z.category === category)
+      filteredAzkar: AZKAR_DATA[category]
     });
   },
 
