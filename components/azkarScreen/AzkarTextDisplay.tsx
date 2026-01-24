@@ -1,8 +1,9 @@
-import React from 'react';
-import { ScrollView, Paragraph, Text, YStack } from 'tamagui';
-import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
-import { THEME } from '@/constants/Theme';
 import { AzkarItem } from '@/constants/AzkarData';
+import { THEME } from '@/constants/Theme';
+import { removeTashkeel } from '@/utils';
+import React from 'react';
+import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
+import { Paragraph, ScrollView, Text, YStack } from 'tamagui';
 
 interface AzkarTextDisplayProps {
   currentZeker: AzkarItem;
@@ -16,14 +17,14 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, isDesktop, the
 
   // Dynamic Font Size
   const getDynamicFontSize = (text: string, translationVisible: boolean) => {
-    const len = text.length;
+    const len = removeTashkeel(text).length;
     const boost = translationVisible ? 1 : 1.3; // 30% larger when translation is off
 
     if (len < 50) return (isDesktop ? 48 : 32) * boost;
     if (len < 100) return (isDesktop ? 36 : 24) * boost;
     if (len < 200) return (isDesktop ? 28 : 20) * boost;
     if (len < 300) return (isDesktop ? 24 : 18) * boost;
-    return (isDesktop ? 20 : 16) * boost;
+    return (isDesktop ? 20 : 18) * boost;
   };
 
   return (
@@ -42,32 +43,44 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, isDesktop, the
             const fontSize = getDynamicFontSize(currentZeker.arabic, showTranslation);
             return (
               <Text 
-                fontFamily="System" 
-                fontWeight="700" 
-                fontSize={fontSize} 
+                fontFamily="Amiri" 
+                fontSize={fontSize}
+                lineHeight={fontSize * 1.6}
                 textAlign="center" 
-                lineHeight={fontSize * 1.4}
                 color={colors.textPrimary}
                 maw={isDesktop ? 800 : '100%'}
-                shadowColor={colors.accent}
-                shadowRadius={10}
-                shadowOpacity={0.2}
+                textShadowColor={theme === 'dark' ? "unset" : 'transparent'}
+                textShadowRadius={isDesktop ? 20 : 15}
+                textShadowOffset={{ width: 0, height: 0 }}
               >
                 {currentZeker.arabic}
               </Text>
             );
           })()}
-          {showTranslation && (
-            <Paragraph 
-              mt="$4" 
-              fontSize={isDesktop ? 18 : 14} 
-              color={colors.textSecondary} 
-              textAlign="center"
-              maw={600}
-            >
-              {currentZeker.translation}
-            </Paragraph>
-          )}
+              <YStack py="$2" ai="center" opacity={0.8}>
+                <Text 
+                  color={colors.accent} 
+                  fontSize={24}
+                  textShadowColor={theme === 'dark' ? colors.accent : 'transparent'}
+                  textShadowRadius={15}
+                  textShadowOffset={{ width: 0, height: 0 }}
+                >
+                  ❖
+                </Text>
+              </YStack>
+              {showTranslation && (
+              <Paragraph 
+                fontFamily="Tajawal"
+                mt="$1"
+                fontSize={isDesktop ? 20 : 16} 
+                lineHeight={isDesktop ? 32 : 26}
+                color={colors.textDim} 
+                textAlign="center"
+                maw={600}
+              >
+                  {currentZeker.translation}
+                </Paragraph>
+              )}
         </Animated.View>
       </ScrollView>
     </YStack>
