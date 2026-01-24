@@ -1,4 +1,4 @@
-import { AzkarItem } from '@/constants/AzkarData';
+import { AzkarItem } from '@/data';
 import { THEME } from '@/constants/Theme';
 import { removeTashkeel } from '@/utils';
 import React from 'react';
