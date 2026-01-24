@@ -48,11 +48,11 @@ export const EFFECTS_CONFIG = {
   },
 
   moon: {
-    enabled: true,
+    enabled: false,
     themes: ['dark'] as Theme[],
     size: 180,
     rotation: -30,
-    position: { top: 80, left: 0 },
+    position: { top: 40, left: -30 },
     glowEnabled: true,
   },
 
