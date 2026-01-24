@@ -8,11 +8,12 @@ import { Paragraph, ScrollView, Text, YStack } from 'tamagui';
 interface AzkarTextDisplayProps {
   currentZeker: AzkarItem;
   showTranslation: boolean;
+  showNote: boolean;
   isDesktop: boolean;
   theme: 'light' | 'dark';
 }
 
-export const AzkarTextDisplay = ({ currentZeker, showTranslation, isDesktop, theme }: AzkarTextDisplayProps) => {
+export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDesktop, theme }: AzkarTextDisplayProps) => {
   const colors = THEME[theme];
 
   // Dynamic Font Size
@@ -68,6 +69,22 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, isDesktop, the
                   ❖
                 </Text>
               </YStack>
+
+              {showNote && currentZeker.note && (
+                <Paragraph
+                  fontFamily="Tajawal"
+                  fontSize={isDesktop ? 18 : 14}
+                  lineHeight={isDesktop ? 28 : 22}
+                  color={colors.accent}
+                  textAlign="center"
+                  maw={600}
+                  mb={showTranslation ? "$2" : "$0"}
+                  opacity={0.9}
+                >
+                  ✨ {currentZeker.note}
+                </Paragraph>
+              )}
+
               {showTranslation && (
               <Paragraph 
                 fontFamily="Tajawal"

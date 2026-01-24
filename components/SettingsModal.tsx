@@ -44,7 +44,7 @@ const ToggleButton = ({ label, isActive, onPress, colors }: ToggleButtonProps) =
 export default function SettingsModal() {
   const { width, height } = useWindowDimensions();
   const isDesktop = width > 768;
-  const { theme, setTheme, language, setLanguage, isSettingsOpen, setSettingsOpen, showTranslation, setShowTranslation } = useAzkarStore();
+  const { theme, setTheme, language, setLanguage, isSettingsOpen, setSettingsOpen, showTranslation, setShowTranslation, showNote, setShowNote } = useAzkarStore();
   const t = TRANSLATIONS[language];
   const isRTL = language === 'ar';
   
@@ -208,6 +208,28 @@ export default function SettingsModal() {
                     label={t.on} 
                     isActive={showTranslation} 
                     onPress={() => setShowTranslation(true)} 
+                    colors={colors} 
+                  />
+                </XStack>
+            </YStack>
+
+            {/* Note Section */}
+            <YStack space="$4">
+                <Text fontSize={12} fontWeight="600" textTransform="uppercase" color={colors.textSecondary} letterSpacing={1}>
+                    {t.showBenefits}
+                </Text>
+                
+                <XStack bg={colors.cardBg} p="$1" br="$4" bw={0}>
+                   <ToggleButton 
+                    label={t.off} 
+                    isActive={!showNote} 
+                    onPress={() => setShowNote(false)} 
+                    colors={colors} 
+                  />
+                  <ToggleButton 
+                    label={t.on} 
+                    isActive={showNote} 
+                    onPress={() => setShowNote(true)} 
                     colors={colors} 
                   />
                 </XStack>
