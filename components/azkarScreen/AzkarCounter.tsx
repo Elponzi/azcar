@@ -106,7 +106,7 @@ export const AzkarCounter = ({
             >
               <YStack ai="center" jc="center" position="relative">
                 <DivineLight color={colors.accent} size={isDesktop ? 320 : 240} />
-                <Text fontSize={isDesktop ? 72 : 56} fontWeight="800" color={progress >= 100 ? colors.accent : colors.textPrimary} zIndex={1}>
+                <Text fontSize={isDesktop ? 72 : 56} fontFamily="ReemKufi" color={progress >= 100 ? colors.accent : colors.textPrimary} zIndex={1}>
                   {count}
                 </Text>
                 {count >= target ? (
