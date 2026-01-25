@@ -13,17 +13,17 @@ import { useAzkarStore } from '@/store/azkarStore';
 import { TRANSLATIONS } from '@/constants/Translations';
 import { THEME } from '@/constants/Theme';
 import { AzkarCategory } from '@/data/types';
-import { CategoryButton } from './azkarScreen/ScreenControls';
 
 interface CategorySheetProps {
   isOpen: boolean;
   onClose: () => void;
   categories: AzkarCategory[];
+  onSelect: (category: AzkarCategory) => void;
 }
 
-export default function CategorySheet({ isOpen, onClose, categories }: CategorySheetProps) {
+export default function CategorySheet({ isOpen, onClose, categories, onSelect }: CategorySheetProps) {
   const { height } = useWindowDimensions();
-  const { theme, language, currentCategory, setCategory } = useAzkarStore();
+  const { theme, language, currentCategory } = useAzkarStore();
   const t = TRANSLATIONS[language];
   const isRTL = language === 'ar';
   
@@ -59,7 +59,7 @@ export default function CategorySheet({ isOpen, onClose, categories }: CategoryS
   if (!isOpen && opacity.value === 0) return null;
 
   const handleCategorySelect = (cat: AzkarCategory) => {
-    setCategory(cat);
+    onSelect(cat);
     onClose();
   };
 

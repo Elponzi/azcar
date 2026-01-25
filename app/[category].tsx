@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Platform, useWindowDimensions, StyleSheet } from 'react-native';
+import { useWindowDimensions, StyleSheet } from 'react-native';
 import { YStack, XStack, Button, Text, ScrollView, View } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated from 'react-native-reanimated';
 import { setAudioModeAsync } from 'expo-audio';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useAzkarStore } from '@/store/azkarStore';
 import { THEME } from '@/constants/Theme';
@@ -31,11 +32,14 @@ const CATEGORIES: AzkarCategory[] = [
   'Travel', 'Food', 'Home', 'Hajj', 'Quran', 'Praises'
 ];
 
-export default function DashboardScreen() {
+export default function CategoryScreen() {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const isDesktop = width > 768;
   const [isCategorySheetOpen, setCategorySheetOpen] = useState(false);
+  
+  const router = useRouter();
+  const { category: categoryParam } = useLocalSearchParams<{ category: string }>();
 
   const {
     currentCategory,
@@ -53,6 +57,29 @@ export default function DashboardScreen() {
     showTranslation,
     showNote
   } = useAzkarStore();
+
+  // Sync URL param with Store
+  useEffect(() => {
+    if (categoryParam) {
+      // Normalize param to match AzkarCategory type (capitalize first letter)
+      // Assuming URL is like /morning -> Morning
+      // But if user typed /Morning, it's fine.
+      // We should be case-insensitive or strict. Let's try to match.
+      const match = CATEGORIES.find(c => c.toLowerCase() === categoryParam.toLowerCase());
+      if (match && match !== currentCategory) {
+        setCategory(match);
+      }
+    }
+  }, [categoryParam]);
+
+  // Handle Category Change (Update URL)
+  const handleCategoryChange = (cat: AzkarCategory) => {
+    // Determine if we should push or replace. Replace is usually better for tabs.
+    // Also ensuring we use lowercase for URL aesthetics if desired, but retaining Store case.
+    // Let's use the Store case for the URL to be safe, or mapped.
+    // User requested "selected category be part of url".
+    router.replace(`/${cat}`);
+  };
 
   const colors = THEME[theme];
   const t = TRANSLATIONS[language];
@@ -104,8 +131,8 @@ export default function DashboardScreen() {
        
        {/* Header */}
        <XStack 
-          pt={isDesktop ? '$4' : insets.top + 30}
-          pb="$3"
+          pt={isDesktop ? '$6' : insets.top + 30}
+          pb={isDesktop ? '$6' : '$3'}
           px="$4"
           ai="center" 
           jc="space-between"
@@ -113,6 +140,7 @@ export default function DashboardScreen() {
           bbc={colors.borderColor}
           fd={isRTL ? 'row-reverse' : 'row'}
           zIndex={10}
+          minHeight={isDesktop ? 100 : 'auto'}
         >
           {/* Settings Button / Left Spacer */}
           <XStack w={40} jc="flex-start">
@@ -141,8 +169,9 @@ export default function DashboardScreen() {
                       key={cat}
                       label={label} 
                       isActive={currentCategory === cat} 
-                      onPress={() => setCategory(cat)} 
+                      onPress={() => handleCategoryChange(cat)} 
                       colors={colors}
+                      isDesktop={isDesktop}
                     />
                   );
                 })}
@@ -199,7 +228,7 @@ export default function DashboardScreen() {
             bg={isDesktop ? colors.background : 'transparent'} 
             px="$6"
             pt="$4"
-            pb={isDesktop ? "$6" : insets.bottom + 5}
+            pb={isDesktop ? "$6" : insets.bottom}
             jc="center" 
             ai="center" 
             space="$6"
@@ -308,6 +337,7 @@ export default function DashboardScreen() {
         isOpen={isCategorySheetOpen} 
         onClose={() => setCategorySheetOpen(false)}
         categories={CATEGORIES}
+        onSelect={(cat) => handleCategoryChange(cat)}
       />
     </YStack>
   );
