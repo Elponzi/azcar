@@ -1,13 +1,13 @@
-import React from 'react';
-import { Platform, Pressable } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { Text, YStack, XStack, Button } from 'tamagui';
 import { Ionicons } from '@expo/vector-icons';
 import { useAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
+import React, { useMemo } from 'react';
+import { Platform, Pressable } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { Button, Text, XStack, YStack } from 'tamagui';
 
-import { ProgressRing } from '@/components/ProgressRing';
 import DivineLight from '@/components/DivineLight';
+import { ProgressRing } from '@/components/ProgressRing';
 import { THEME } from '@/constants/Theme';
 
 interface AzkarCounterProps {
@@ -19,6 +19,7 @@ interface AzkarCounterProps {
   onComplete: () => void;
   theme: 'light' | 'dark';
   isDesktop: boolean;
+  language: 'en' | 'ar';
   t: any;
 }
 
@@ -31,6 +32,7 @@ export const AzkarCounter = ({
   onComplete, 
   theme, 
   isDesktop,
+  language,
   t 
 }: AzkarCounterProps) => {
   const colors = THEME[theme];
@@ -61,25 +63,38 @@ export const AzkarCounter = ({
     player.play();
   };
 
+  const timesLabel = useMemo(() => {
+    if (language === 'ar') {
+      return target > 1 && target <= 10 ? t.times : t.time;
+    }
+    return target === 1 ? t.time : t.times;
+  }, [target, t, language])
+
   return (
       <XStack ai="center" jc="center" position="relative">
         <Pressable 
           onPress={() => {
-            if (Platform.OS !== 'web' && count < target) {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            }
-            onIncrement();
-          }}
-          onLongPress={() => {
-            if (count >= target) {
+            if (count < target) {
+              const isCompleting = count + 1 >= target;
+              
               if (Platform.OS !== 'web') {
-                Haptics.selectionAsync();
-                playSuccessSound();
+                 if (isCompleting) {
+                   Haptics.selectionAsync();
+                   playSuccessSound();
+                 } else {
+                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                 }
               }
-              onComplete();
+
+              onIncrement();
+
+              if (isCompleting) {
+                setTimeout(() => {
+                  onComplete();
+                }, 300);
+              }
             }
           }}
-          delayLongPress={500}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
           style={{ alignItems: 'center', justifyContent: 'center' }}
@@ -97,13 +112,12 @@ export const AzkarCounter = ({
                 <Text fontSize={isDesktop ? 72 : 56} fontFamily="ReemKufi" color={progress >= 100 ? colors.accent : colors.textPrimary} zIndex={1}>
                   {count}
                 </Text>
-                {count >= target ? (
-                  <Text fontSize={isDesktop ? 16 : 14} color={colors.accent} fontWeight="600" zIndex={1} opacity={0.8}>
-                    {t.hold}
+                <YStack ai="center" zIndex={1}>
+                  <Text fontSize={isDesktop ? 20 : 16} color={colors.textSecondary}>/ {target}</Text>
+                  <Text fontSize={isDesktop ? 14 : 12} color={colors.textSecondary} opacity={0.7} mt={-2}>
+                   {timesLabel}
                   </Text>
-                ) : (
-                  <Text fontSize={isDesktop ? 20 : 16} color={colors.textSecondary} zIndex={1}>/ {target}</Text>
-                )}
+                </YStack>
               </YStack>
             </ProgressRing>
           </Animated.View>

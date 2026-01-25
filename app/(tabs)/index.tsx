@@ -54,6 +54,9 @@ export default function DashboardScreen() {
   const count = counts[currentZeker?.id] || 0;
   const progress = Math.min((count / currentZeker?.target) * 100, 100);
 
+  const isFirst = currentIndex === 0;
+  const isLast = currentIndex === filteredAzkar.length - 1;
+
   // Parallax Effects
   const starParallax = useParallax(EFFECTS_CONFIG.parallax.starsDepth);
   const moonParallax = useParallax(EFFECTS_CONFIG.parallax.moonDepth);
@@ -179,6 +182,7 @@ export default function DashboardScreen() {
               onComplete={nextZeker}
               theme={theme}
               isDesktop={isDesktop}
+              language={language}
               t={t}
             />
 
@@ -189,6 +193,7 @@ export default function DashboardScreen() {
                 onPress={isRTL ? nextZeker : prevZeker}
                 colors={colors}
                 isDesktop={isDesktop}
+                disabled={isRTL ? isLast : isFirst}
               />
               
               {!isDesktop && (
@@ -208,6 +213,7 @@ export default function DashboardScreen() {
                 onPress={isRTL ? prevZeker : nextZeker}
                 colors={colors}
                 isDesktop={isDesktop}
+                disabled={isRTL ? isFirst : isLast}
               />
             </XStack>
           </YStack>

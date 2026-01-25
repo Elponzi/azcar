@@ -16,7 +16,8 @@ export const TRANSLATIONS = {
     showBenefits: "Show Benefits",
     on: "On",
     off: "Off",
-    hold: "Hold ➔"
+    time: "time",
+    times: "times"
   },
   ar: {
     morning: "الصباح",
@@ -32,10 +33,11 @@ export const TRANSLATIONS = {
     countPrompt: "استخدم المسافة للتسبيح",
     navPrompt: "استخدم الأسهم للتنقل",
     showTranslation: "إظهار الترجمة",
-    showBenefits: "إظهار الفضل",
-    on: "تشغيل",
-    off: "إيقاف",
-    hold: "استمر ➔"
+    showBenefits: "Show Benefits",
+    on: "On",
+    off: "Off",
+    times: "مرات",
+    time: "مرة"
   }
 };
 
