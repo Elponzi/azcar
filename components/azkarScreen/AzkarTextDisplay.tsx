@@ -29,7 +29,7 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
   };
 
   return (
-    <YStack f={1} px="$6" pb="$0" pt={isDesktop ? "0" : "$10"} jc="center" ai="center" space="$4">
+    <YStack f={1} px="$6" pb="$0" pt={isDesktop ? "0" : "$4"} jc="center" ai="center" space="$4">
       <ScrollView 
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}
         showsVerticalScrollIndicator={false}
@@ -46,12 +46,12 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
               <Text 
                 fontFamily="Amiri" 
                 fontSize={fontSize}
-                lineHeight={fontSize * 1.6}
+                lineHeight={fontSize * 1.8}
                 textAlign="center" 
                 color={colors.textPrimary}
                 maw={isDesktop ? 800 : '100%'}
                 textShadowColor={theme === 'dark' ? "unset" : 'transparent'}
-                textShadowRadius={isDesktop ? 20 : 15}
+                textShadowRadius={0}
                 textShadowOffset={{ width: 0, height: 0 }}
               >
                 {currentZeker.arabic}
