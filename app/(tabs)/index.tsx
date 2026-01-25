@@ -42,7 +42,8 @@ export default function DashboardScreen() {
     theme,
     language,
     setSettingsOpen,
-    showTranslation
+    showTranslation,
+    showNote
   } = useAzkarStore();
 
   const colors = THEME[theme];
@@ -146,6 +147,7 @@ export default function DashboardScreen() {
           <AzkarTextDisplay 
             currentZeker={currentZeker}
             showTranslation={showTranslation}
+            showNote={showNote}
             isDesktop={isDesktop}
             theme={theme}
           />
