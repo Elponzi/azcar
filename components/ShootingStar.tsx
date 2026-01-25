@@ -67,7 +67,7 @@ export const ShootingStar = () => {
 
     if (!isEnabled) return;
 
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: any;
 
     const scheduleNext = () => {
       const nextDelay = Math.random() * (maxDelay - minDelay) + minDelay;

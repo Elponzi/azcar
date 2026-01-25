@@ -4,7 +4,7 @@ import { YStack, XStack, Button, Text, ScrollView, View } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated from 'react-native-reanimated';
-import { Audio } from 'expo-av';
+import { setAudioModeAsync } from 'expo-audio';
 
 import { useAzkarStore } from '@/store/azkarStore';
 import { THEME } from '@/constants/Theme';
@@ -69,11 +69,11 @@ export default function DashboardScreen() {
   useEffect(() => {
     const configureAudio = async () => {
       try {
-        await Audio.setAudioModeAsync({
-          playsInSilentModeIOS: true,
-          allowsRecordingIOS: false,
-          staysActiveInBackground: false,
-          shouldDuckAndroid: true,
+        await setAudioModeAsync({
+          playsInSilentMode: true,
+          allowsRecording: false,
+          shouldPlayInBackground: false,
+          interruptionMode: 'duckOthers',
         });
       } catch (e) {
         console.warn('Error configuring audio', e);

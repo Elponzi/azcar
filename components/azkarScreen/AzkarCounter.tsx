@@ -3,7 +3,7 @@ import { Platform, Pressable } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { Text, YStack, XStack, Button } from 'tamagui';
 import { Ionicons } from '@expo/vector-icons';
-import { Audio } from 'expo-av';
+import { useAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 
 import { ProgressRing } from '@/components/ProgressRing';
@@ -54,23 +54,11 @@ export const AzkarCounter = ({
     opacity.value = withTiming(1, { duration: 150 });
   };
 
-  const playSuccessSound = async () => {
-    try {
-      const { sound } = await Audio.Sound.createAsync(
-        require('@/assets/sounds/2.mp3'),
-        { shouldPlay: false }
-      );
-      
-      sound.setOnPlaybackStatusUpdate(async (status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          await sound.unloadAsync();
-        }
-      });
+  const player = useAudioPlayer(require('@/assets/sounds/2.mp3'));
 
-      await sound.playAsync();
-    } catch (e) {
-      console.log('Error playing sound', e);
-    }
+  const playSuccessSound = () => {
+    player.seekTo(0);
+    player.play();
   };
 
   return (
