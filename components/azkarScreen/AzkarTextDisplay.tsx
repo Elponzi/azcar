@@ -1,5 +1,5 @@
-import { AzkarItem } from '@/data';
 import { THEME } from '@/constants/Theme';
+import { AzkarItem } from '@/data';
 import { removeTashkeel } from '@/utils';
 import React from 'react';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
@@ -30,11 +30,11 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
 
   return (
     <YStack f={1} px="$6" pb="$0" pt={isDesktop ? "0" : "$4"} jc="center" ai="center" space="$4">
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View 
+        <Animated.View
           key={currentZeker.id}
           entering={FadeInDown.duration(600).springify()}
           exiting={FadeOutUp.duration(400)}
@@ -43,11 +43,11 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
           {(() => {
             const fontSize = getDynamicFontSize(currentZeker.arabic, showTranslation);
             return (
-              <Text 
-                fontFamily="Amiri" 
+              <Text
+                fontFamily="Amiri"
                 fontSize={fontSize}
                 lineHeight={fontSize * 1.8}
-                textAlign="center" 
+                textAlign="center"
                 color={colors.textPrimary}
                 maw={isDesktop ? 800 : '100%'}
                 textShadowColor={theme === 'dark' ? "unset" : 'transparent'}
@@ -58,46 +58,47 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
               </Text>
             );
           })()}
-              <YStack py="$2" ai="center" opacity={0.8}>
-                <Text 
-                  color={colors.accent} 
-                  fontSize={24}
-                  textShadowColor={theme === 'dark' ? colors.accent : 'transparent'}
-                  textShadowRadius={15}
-                  textShadowOffset={{ width: 0, height: 0 }}
-                >
-                  ❖
-                </Text>
-              </YStack>
+          <YStack py="$2" ai="center" opacity={0.8}>
+            <Text
+              color={colors.accent}
+              fontSize={24}
+              textShadowColor={theme === 'dark' ? colors.accent : 'transparent'}
+              textShadowRadius={15}
+              textShadowOffset={{ width: 0, height: 0 }}
+            >
+              ❖
+            </Text>
+          </YStack>
 
-              {showNote && currentZeker.note && (
-                <Paragraph
-                  fontFamily="Tajawal"
-                  fontSize={isDesktop ? 18 : 14}
-                  lineHeight={isDesktop ? 28 : 22}
-                  color={colors.accent}
-                  textAlign="center"
-                  maw={600}
-                  mb={showTranslation ? "$2" : "$0"}
-                  opacity={0.9}
-                >
-                  ✨ {currentZeker.note}
-                </Paragraph>
-              )}
+          {showNote && currentZeker.note && (
+            <Text
+              fontFamily="Tajawal"
+              mt="$4"
+              fontSize={isDesktop ? 15 : 13}
+              lineHeight={isDesktop ? 24 : 20}
+              color={colors.textSecondary}
+              textAlign="center"
+              fontStyle="italic"
+              maw={550}
+              opacity={0.85}
+            >
+              ✦ {currentZeker.note}
+            </Text>
+          )}
 
-              {showTranslation && (
-              <Paragraph 
-                fontFamily="Tajawal"
-                mt="$1"
-                fontSize={isDesktop ? 20 : 16} 
-                lineHeight={isDesktop ? 32 : 26}
-                color={colors.textDim} 
-                textAlign="center"
-                maw={600}
-              >
-                  {currentZeker.translation}
-                </Paragraph>
-              )}
+          {showTranslation && (
+            <Paragraph
+              fontFamily="Tajawal"
+              mt="$1"
+              fontSize={isDesktop ? 20 : 16}
+              lineHeight={isDesktop ? 32 : 26}
+              color={colors.textDim}
+              textAlign="center"
+              maw={600}
+            >
+              {currentZeker.translation}
+            </Paragraph>
+          )}
         </Animated.View>
       </ScrollView>
     </YStack>
