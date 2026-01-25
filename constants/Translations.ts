@@ -13,6 +13,7 @@ export const TRANSLATIONS = {
     countPrompt: "Use Spacebar to Count",
     navPrompt: "Use Arrow Keys to Navigate",
     showTranslation: "Show Translation",
+    showBenefits: "Show Benefits",
     on: "On",
     off: "Off",
     hold: "Hold ➔"
@@ -31,6 +32,7 @@ export const TRANSLATIONS = {
     countPrompt: "استخدم المسافة للتسبيح",
     navPrompt: "استخدم الأسهم للتنقل",
     showTranslation: "إظهار الترجمة",
+    showBenefits: "إظهار الفضل",
     on: "تشغيل",
     off: "إيقاف",
     hold: "استمر ➔"

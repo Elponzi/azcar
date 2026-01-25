@@ -7,6 +7,7 @@ const STORAGE_KEYS = {
   theme: 'azkar:theme',
   language: 'azkar:language',
   showTranslation: 'azkar:showTranslation',
+  showNote: 'azkar:showNote',
 } as const;
 
 interface AzkarState {
@@ -18,6 +19,7 @@ interface AzkarState {
   language: 'en' | 'ar';
   isSettingsOpen: boolean;
   showTranslation: boolean;
+  showNote: boolean;
   isHydrated: boolean;
 
   // Actions
@@ -30,6 +32,7 @@ interface AzkarState {
   setLanguage: (lang: 'en' | 'ar') => void;
   setSettingsOpen: (isOpen: boolean) => void;
   setShowTranslation: (show: boolean) => void;
+  setShowNote: (show: boolean) => void;
   hydrate: () => Promise<void>;
 }
 
@@ -42,6 +45,7 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
   language: 'en',
   isSettingsOpen: false,
   showTranslation: false,
+  showNote: false,
   isHydrated: false,
 
   setCategory: (category) => {
@@ -107,18 +111,25 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
     AsyncStorage.setItem(STORAGE_KEYS.showTranslation, JSON.stringify(show));
   },
 
+  setShowNote: (show: boolean) => {
+    set({ showNote: show });
+    AsyncStorage.setItem(STORAGE_KEYS.showNote, JSON.stringify(show));
+  },
+
   hydrate: async () => {
     try {
-      const [theme, language, showTranslation] = await Promise.all([
+      const [theme, language, showTranslation, showNote] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.theme),
         AsyncStorage.getItem(STORAGE_KEYS.language),
         AsyncStorage.getItem(STORAGE_KEYS.showTranslation),
+        AsyncStorage.getItem(STORAGE_KEYS.showNote),
       ]);
 
       set({
         ...(theme && { theme: theme as 'light' | 'dark' }),
         ...(language && { language: language as 'en' | 'ar' }),
         ...(showTranslation !== null && { showTranslation: JSON.parse(showTranslation) }),
+        ...(showNote !== null && { showNote: JSON.parse(showNote) }),
         isHydrated: true,
       });
     } catch (error) {
