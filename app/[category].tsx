@@ -74,11 +74,8 @@ export default function CategoryScreen() {
 
   // Handle Category Change (Update URL)
   const handleCategoryChange = (cat: AzkarCategory) => {
-    // Determine if we should push or replace. Replace is usually better for tabs.
-    // Also ensuring we use lowercase for URL aesthetics if desired, but retaining Store case.
-    // Let's use the Store case for the URL to be safe, or mapped.
-    // User requested "selected category be part of url".
-    router.replace(`/${cat}`);
+    // Use setParams to update the current route's dynamic segment without a full navigation/transition
+    router.setParams({ category: cat });
   };
 
   const colors = THEME[theme];
