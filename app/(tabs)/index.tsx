@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Platform, useWindowDimensions, StyleSheet } from 'react-native';
 import { YStack, XStack, Button, Text, ScrollView, View } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,10 +10,12 @@ import { useAzkarStore } from '@/store/azkarStore';
 import { THEME } from '@/constants/Theme';
 import { TRANSLATIONS } from '@/constants/Translations';
 import { EFFECTS_CONFIG } from '@/constants/EffectsConfig';
+import { AzkarCategory } from '@/data/types';
 
 // Components
 import { SeoHead } from '@/components/SeoHead';
 import SettingsModal from '@/components/SettingsModal';
+import CategorySheet from '@/components/CategorySheet';
 import StarField from '@/components/StarField';
 import { CrescentMoon } from '@/components/CrescentMoon';
 import { AzkarTextDisplay } from '@/components/azkarScreen/AzkarTextDisplay';
@@ -24,10 +26,16 @@ import { NavButton, CategoryButton } from '@/components/azkarScreen/ScreenContro
 import { useParallax } from '@/hooks/useParallax';
 import { useWebKeyboard } from '@/hooks/useWebKeyboard';
 
+const CATEGORIES: AzkarCategory[] = [
+  'Morning', 'Evening', 'WakingUp', 'Sleep', 'Prayer', 'Mosque', 
+  'Travel', 'Food', 'Home', 'Hajj', 'Quran', 'Praises'
+];
+
 export default function DashboardScreen() {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const isDesktop = width > 768;
+  const [isCategorySheetOpen, setCategorySheetOpen] = useState(false);
 
   const {
     currentCategory,
@@ -106,29 +114,57 @@ export default function DashboardScreen() {
           fd={isRTL ? 'row-reverse' : 'row'}
           zIndex={10}
         >
-          {/* Left Spacer to balance Settings button */}
-          <XStack w={40} />
-          
-          <XStack 
-            bg={colors.cardBg} 
-            p="$1.5" 
-            br="$10" 
-            gap="$2" 
-            fd={isRTL ? 'row-reverse' : 'row'}
-          >
-            <CategoryButton 
-              label={t.morning} 
-              isActive={currentCategory === 'Morning'} 
-              onPress={() => setCategory('Morning')} 
-              colors={colors}
-            />
-            <CategoryButton 
-              label={t.evening} 
-              isActive={currentCategory === 'Evening'} 
-              onPress={() => setCategory('Evening')} 
-              colors={colors}
-            />
+          {/* Settings Button / Left Spacer */}
+          <XStack w={40} jc="flex-start">
+             {/* Spacer/Settings placeholder */}
           </XStack>
+
+          {/* Desktop: Categories ScrollView */}
+          {isDesktop ? (
+            <View f={1} mx="$2" overflow="hidden">
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                contentContainerStyle={{ 
+                  gap: 8, 
+                  paddingHorizontal: 4, 
+                  alignItems: 'center',
+                  flexDirection: isRTL ? 'row-reverse' : 'row'
+                }}
+              >
+                {CATEGORIES.map((cat) => {
+                  const key = (cat.charAt(0).toLowerCase() + cat.slice(1)) as keyof typeof t;
+                  const label = t[key] || cat;
+                  
+                  return (
+                    <CategoryButton 
+                      key={cat}
+                      label={label} 
+                      isActive={currentCategory === cat} 
+                      onPress={() => setCategory(cat)} 
+                      colors={colors}
+                    />
+                  );
+                })}
+              </ScrollView>
+            </View>
+          ) : (
+            /* Mobile: Category Trigger */
+            <Button
+              chromeless
+              onPress={() => setCategorySheetOpen(true)}
+              iconAfter={<Ionicons name="chevron-down" size={16} color={colors.accent} />}
+              pressStyle={{ opacity: 0.6 }}
+            >
+              <Text fontSize={18} fontWeight="700" color={colors.textPrimary}>
+                {(() => {
+                  const key = (currentCategory.charAt(0).toLowerCase() + currentCategory.slice(1)) as keyof typeof t;
+                  const label = t[key] || currentCategory;
+                  return isRTL ? `${t.adhkar} ${label}` : `${label} ${t.adhkar}`;
+                })()}
+              </Text>
+            </Button>
+          )}
 
           <XStack w={40} jc="flex-end">
             <Button 
@@ -163,7 +199,7 @@ export default function DashboardScreen() {
             bg={isDesktop ? colors.background : 'transparent'} 
             px="$6"
             pt="$4"
-            pb={isDesktop ? "$6" : insets.bottom}
+            pb={isDesktop ? "$6" : insets.bottom + 5}
             jc="center" 
             ai="center" 
             space="$6"
@@ -268,6 +304,11 @@ export default function DashboardScreen() {
         )}
       </YStack>
       <SettingsModal />
+      <CategorySheet 
+        isOpen={isCategorySheetOpen} 
+        onClose={() => setCategorySheetOpen(false)}
+        categories={CATEGORIES}
+      />
     </YStack>
   );
 }
