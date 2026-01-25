@@ -4,7 +4,7 @@ import { YStack, XStack, Button, Text, ScrollView, View } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated from 'react-native-reanimated';
-import { Audio } from 'expo-av';
+import { setAudioModeAsync } from 'expo-audio';
 
 import { useAzkarStore } from '@/store/azkarStore';
 import { THEME } from '@/constants/Theme';
@@ -54,6 +54,9 @@ export default function DashboardScreen() {
   const count = counts[currentZeker?.id] || 0;
   const progress = Math.min((count / currentZeker?.target) * 100, 100);
 
+  const isFirst = currentIndex === 0;
+  const isLast = currentIndex === filteredAzkar.length - 1;
+
   // Parallax Effects
   const starParallax = useParallax(EFFECTS_CONFIG.parallax.starsDepth);
   const moonParallax = useParallax(EFFECTS_CONFIG.parallax.moonDepth);
@@ -69,11 +72,11 @@ export default function DashboardScreen() {
   useEffect(() => {
     const configureAudio = async () => {
       try {
-        await Audio.setAudioModeAsync({
-          playsInSilentModeIOS: true,
-          allowsRecordingIOS: false,
-          staysActiveInBackground: false,
-          shouldDuckAndroid: true,
+        await setAudioModeAsync({
+          playsInSilentMode: true,
+          allowsRecording: false,
+          shouldPlayInBackground: false,
+          interruptionMode: 'duckOthers',
         });
       } catch (e) {
         console.warn('Error configuring audio', e);
@@ -179,6 +182,7 @@ export default function DashboardScreen() {
               onComplete={nextZeker}
               theme={theme}
               isDesktop={isDesktop}
+              language={language}
               t={t}
             />
 
@@ -189,6 +193,7 @@ export default function DashboardScreen() {
                 onPress={isRTL ? nextZeker : prevZeker}
                 colors={colors}
                 isDesktop={isDesktop}
+                disabled={isRTL ? isLast : isFirst}
               />
               
               {!isDesktop && (
@@ -208,6 +213,7 @@ export default function DashboardScreen() {
                 onPress={isRTL ? prevZeker : nextZeker}
                 colors={colors}
                 isDesktop={isDesktop}
+                disabled={isRTL ? isFirst : isLast}
               />
             </XStack>
           </YStack>

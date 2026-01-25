@@ -8,9 +8,10 @@ interface NavButtonProps {
   onPress: () => void;
   colors: ThemeColors;
   isDesktop: boolean;
+  disabled?: boolean;
 }
 
-export const NavButton = ({ iconName, onPress, colors, isDesktop }: NavButtonProps) => (
+export const NavButton = ({ iconName, onPress, colors, isDesktop, disabled }: NavButtonProps) => (
   <Button 
     size="$6" 
     circular 
@@ -22,9 +23,11 @@ export const NavButton = ({ iconName, onPress, colors, isDesktop }: NavButtonPro
     color={colors.textPrimary}
     icon={<Ionicons name={iconName} size={32} color={colors.textPrimary} />} 
     onPress={() => {
-      onPress();
-    }} 
-    pressStyle={{ opacity: 0.8 }}
+      if (!disabled) onPress();
+    }}
+    disabled={disabled}
+    opacity={disabled ? 0.3 : 1}
+    pressStyle={{ opacity: disabled ? 0.3 : 0.8 }}
   />
 );
 

@@ -58,14 +58,16 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
 
   nextZeker: () => {
     const { currentIndex, filteredAzkar } = get();
-    const nextIndex = (currentIndex + 1) % filteredAzkar.length;
-    set({ currentIndex: nextIndex });
+    if (currentIndex < filteredAzkar.length - 1) {
+      set({ currentIndex: currentIndex + 1 });
+    }
   },
 
   prevZeker: () => {
-    const { currentIndex, filteredAzkar } = get();
-    const prevIndex = currentIndex === 0 ? filteredAzkar.length - 1 : currentIndex - 1;
-    set({ currentIndex: prevIndex });
+    const { currentIndex } = get();
+    if (currentIndex > 0) {
+      set({ currentIndex: currentIndex - 1 });
+    }
   },
 
   incrementCount: () => {

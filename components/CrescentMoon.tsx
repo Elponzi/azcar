@@ -68,7 +68,7 @@ export const CrescentMoon = ({ color = '#FFD700', size: propSize, isRTL = false 
   // Dynamic Styles from Config
   const dynamicWrapperStyle = {
     top: position.top,
-    right: position.right,
+    left: position.left,
     width: size,
     height: size,
   };

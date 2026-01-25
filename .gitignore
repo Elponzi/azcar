@@ -45,3 +45,5 @@ requirments/
 .tamagui/
 
 .claude/
+
+*.apk
