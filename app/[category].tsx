@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo   } from 'react';
 import { useWindowDimensions, StyleSheet } from 'react-native';
 import { YStack, XStack, Button, Text, ScrollView, View } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -48,6 +48,7 @@ export default function CategoryScreen() {
     prevZeker,
     setCategory,
     resetCurrentCount,
+    resetCategoryCounts,
     theme,
     language,
     setSettingsOpen,
@@ -82,6 +83,8 @@ export default function CategoryScreen() {
   const currentZeker = filteredAzkar[currentIndex];
   const count = counts[currentZeker?.id] || 0;
   const progress = Math.min((count / currentZeker?.target) * 100, 100);
+  
+  const hasCategoryProgress = useMemo(() => filteredAzkar.some(z => (counts[z.id] || 0) > 0), [filteredAzkar, counts]);
 
   const isFirst = currentIndex === 0;
   const isLast = currentIndex === filteredAzkar.length - 1;
@@ -139,6 +142,20 @@ export default function CategoryScreen() {
           {/* Settings Button / Left Spacer */}
           <XStack w={40} jc="flex-start">
              {/* Spacer/Settings placeholder */}
+             {hasCategoryProgress && (
+              <Button 
+                size="$3" 
+                circular 
+                bg="transparent"
+                color={colors.textSecondary}
+                icon={<Ionicons name="refresh" size={20} color={colors.textSecondary} />} 
+                onPress={resetCategoryCounts}
+                hoverStyle={{ bg: colors.background }}
+                animation="quick"
+                enterStyle={{ opacity: 0, scale: 0.5 }}
+                exitStyle={{ opacity: 0, scale: 0.5 }}
+              />
+            )}
           </XStack>
 
           {/* Desktop: Categories ScrollView */}
@@ -159,7 +176,7 @@ export default function CategoryScreen() {
               iconAfter={<Ionicons name="chevron-down" size={16} color={colors.accent} />}
               pressStyle={{ opacity: 0.6 }}
             >
-              <Text fontSize={18} fontWeight="700" color={colors.textPrimary}>
+              <Text fontSize={18} fontWeight="700" color={colors.accent}>
                 {(() => {
                   const key = (currentCategory.charAt(0).toLowerCase() + currentCategory.slice(1)) as keyof typeof t;
                   const label = t[key] || currentCategory;
@@ -179,6 +196,7 @@ export default function CategoryScreen() {
               onPress={() => setSettingsOpen(true)}
               hoverStyle={{ bg: colors.background }}
             />
+            
           </XStack>
         </XStack>
 

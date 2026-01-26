@@ -43,13 +43,13 @@ export const CategoryButton = ({ label, isActive, onPress, colors, isDesktop }: 
   <Button 
     size={isDesktop ? "$4" : "$3"} 
     br="$10"
-    bg={isActive ? (isDesktop ? colors.accent : colors.cardBg) : 'transparent'}
-    color={isActive ? (isDesktop ? colors.background : colors.accent) : colors.textSecondary}
+    bg={isActive ? colors.accentDim : 'transparent'}
+    color={isActive ? colors.accent : colors.textSecondary}
     onPress={onPress}
     chromeless={!isActive && !isDesktop}
     pressStyle={{ opacity: 0.8, scale: 0.97 }}
     hoverStyle={isDesktop ? { 
-      bg: isActive ? colors.accent : colors.accentDim,
+      bg: colors.accentDim,
       bc: colors.accent,
       scale: 1.02,
     } : undefined}
