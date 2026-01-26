@@ -38,13 +38,18 @@ export const AzkarCounter = ({
   const colors = THEME[theme];
   const ringTrackColor = colors.cardBg;
 
-  // Animation for Press
+  // Animation for Press and Completion
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
+  const completionScale = useSharedValue(1);
+  const glowOpacity = useSharedValue(1);
+
   const animatedScaleStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [{ scale: scale.value * completionScale.value }],
     opacity: opacity.value,
   }));
+
+ 
 
   const handlePressIn = () => {
     scale.value = withTiming(0.98, { duration: 100 });
@@ -75,8 +80,6 @@ export const AzkarCounter = ({
     return target === 1 ? t.time : t.times;
   }, [t, language, remaining])
 
-
-
   return (
       <XStack ai="center" jc="center" position="relative">
         <Pressable 
@@ -86,7 +89,7 @@ export const AzkarCounter = ({
               
               if (Platform.OS !== 'web') {
                  if (isCompleting) {
-                   Haptics.selectionAsync();
+                   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); // Stronger haptic
                    playSuccessSound();
                  } else {
                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -96,9 +99,17 @@ export const AzkarCounter = ({
               onIncrement();
 
               if (isCompleting) {
+                // Trigger Celebration Animation
+                completionScale.value = withTiming(1.15, { duration: 150 }, () => {
+                  completionScale.value = withTiming(1, { duration: 250 });
+                });
+                glowOpacity.value = withTiming(1.5, { duration: 150 }, () => {
+                  glowOpacity.value = withTiming(1, { duration: 250 });
+                });
+
                 setTimeout(() => {
                   onComplete();
-                }, 300);
+                }, 400); // Slightly longer delay to let animation peak
               }
             }
           }}
@@ -115,7 +126,7 @@ export const AzkarCounter = ({
                 bgColor={ringTrackColor} 
             >
               <YStack ai="center" jc="center" position="relative">
-                <DivineLight color={colors.accent} size={isDesktop ? 320 : 240} />
+                  <DivineLight color={colors.accent} size={isDesktop ? 320 : 240} />
                 <Text fontSize={isDesktop ? 72 : 56} fontFamily="ReemKufi" color={progress >= 100 ? colors.accent : colors.textPrimary} zIndex={1}>
                   {remaining}
                 </Text>
