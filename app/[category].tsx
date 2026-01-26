@@ -1,33 +1,42 @@
-import React, { useEffect } from 'react';
-import { Platform, useWindowDimensions, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { useWindowDimensions, StyleSheet } from 'react-native';
 import { YStack, XStack, Button, Text, ScrollView, View } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated from 'react-native-reanimated';
 import { setAudioModeAsync } from 'expo-audio';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useAzkarStore } from '@/store/azkarStore';
 import { THEME } from '@/constants/Theme';
 import { TRANSLATIONS } from '@/constants/Translations';
 import { EFFECTS_CONFIG } from '@/constants/EffectsConfig';
+import { AzkarCategory } from '@/data/types';
+import { CATEGORIES } from '@/data';
 
 // Components
 import { SeoHead } from '@/components/SeoHead';
 import SettingsModal from '@/components/SettingsModal';
+import CategorySheet from '@/components/CategorySheet';
 import StarField from '@/components/StarField';
 import { CrescentMoon } from '@/components/CrescentMoon';
 import { AzkarTextDisplay } from '@/components/azkarScreen/AzkarTextDisplay';
 import { AzkarCounter } from '@/components/azkarScreen/AzkarCounter';
 import { NavButton, CategoryButton } from '@/components/azkarScreen/ScreenControls';
+import { DesktopCategoryNav } from '@/components/azkarScreen/DesktopCategoryNav';
 
 // Hooks
 import { useParallax } from '@/hooks/useParallax';
 import { useWebKeyboard } from '@/hooks/useWebKeyboard';
 
-export default function DashboardScreen() {
+export default function CategoryScreen() {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const isDesktop = width > 768;
+  const [isCategorySheetOpen, setCategorySheetOpen] = useState(false);
+  
+  const router = useRouter();
+  const { category: categoryParam } = useLocalSearchParams<{ category: string }>();
 
   const {
     currentCategory,
@@ -45,6 +54,26 @@ export default function DashboardScreen() {
     showTranslation,
     showNote
   } = useAzkarStore();
+
+  // Sync URL param with Store
+  useEffect(() => {
+    if (categoryParam) {
+      // Normalize param to match AzkarCategory type (capitalize first letter)
+      // Assuming URL is like /morning -> Morning
+      // But if user typed /Morning, it's fine.
+      // We should be case-insensitive or strict. Let's try to match.
+      const match = CATEGORIES.find(c => c.toLowerCase() === categoryParam.toLowerCase());
+      if (match && match !== currentCategory) {
+        setCategory(match);
+      }
+    }
+  }, [categoryParam]);
+
+  // Handle Category Change (Update URL)
+  const handleCategoryChange = (cat: AzkarCategory) => {
+    // Use setParams to update the current route's dynamic segment without a full navigation/transition
+    router.setParams({ category: cat });
+  };
 
   const colors = THEME[theme];
   const t = TRANSLATIONS[language];
@@ -96,8 +125,8 @@ export default function DashboardScreen() {
        
        {/* Header */}
        <XStack 
-          pt={isDesktop ? '$4' : insets.top + 30}
-          pb="$3"
+          pt={isDesktop ? '$6' : insets.top + 30}
+          pb={isDesktop ? '$6' : '$3'}
           px="$4"
           ai="center" 
           jc="space-between"
@@ -105,30 +134,40 @@ export default function DashboardScreen() {
           bbc={colors.borderColor}
           fd={isRTL ? 'row-reverse' : 'row'}
           zIndex={10}
+          minHeight={isDesktop ? 100 : 'auto'}
         >
-          {/* Left Spacer to balance Settings button */}
-          <XStack w={40} />
-          
-          <XStack 
-            bg={colors.cardBg} 
-            p="$1.5" 
-            br="$10" 
-            gap="$2" 
-            fd={isRTL ? 'row-reverse' : 'row'}
-          >
-            <CategoryButton 
-              label={t.morning} 
-              isActive={currentCategory === 'Morning'} 
-              onPress={() => setCategory('Morning')} 
-              colors={colors}
-            />
-            <CategoryButton 
-              label={t.evening} 
-              isActive={currentCategory === 'Evening'} 
-              onPress={() => setCategory('Evening')} 
-              colors={colors}
-            />
+          {/* Settings Button / Left Spacer */}
+          <XStack w={40} jc="flex-start">
+             {/* Spacer/Settings placeholder */}
           </XStack>
+
+          {/* Desktop: Categories ScrollView */}
+          {isDesktop ? (
+            <DesktopCategoryNav 
+              categories={CATEGORIES}
+              currentCategory={currentCategory}
+              onCategoryChange={handleCategoryChange}
+              colors={colors}
+              t={t}
+              isRTL={isRTL}
+            />
+          ) : (
+            /* Mobile: Category Trigger */
+            <Button
+              chromeless
+              onPress={() => setCategorySheetOpen(true)}
+              iconAfter={<Ionicons name="chevron-down" size={16} color={colors.accent} />}
+              pressStyle={{ opacity: 0.6 }}
+            >
+              <Text fontSize={18} fontWeight="700" color={colors.textPrimary}>
+                {(() => {
+                  const key = (currentCategory.charAt(0).toLowerCase() + currentCategory.slice(1)) as keyof typeof t;
+                  const label = t[key] || currentCategory;
+                  return isRTL ? `${t.adhkar} ${label}` : `${label} ${t.adhkar}`;
+                })()}
+              </Text>
+            </Button>
+          )}
 
           <XStack w={40} jc="flex-end">
             <Button 
@@ -268,6 +307,12 @@ export default function DashboardScreen() {
         )}
       </YStack>
       <SettingsModal />
+      <CategorySheet 
+        isOpen={isCategorySheetOpen} 
+        onClose={() => setCategorySheetOpen(false)}
+        categories={CATEGORIES}
+        onSelect={(cat) => handleCategoryChange(cat)}
+      />
     </YStack>
   );
 }
