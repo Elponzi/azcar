@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { AppState } from 'react-native';
+import { AppState, AppStateStatus, Platform } from 'react-native';
 import { useAzkarStore } from '@/store/azkarStore';
 import { MediaControlService } from '@/services/MediaControlService';
 import { MediaControlServiceInterface } from '@/services/MediaControlService.interface';
 import { TRANSLATIONS } from '@/constants/Translations';
+import { isExpoGo } from '@/utils';
 
 // Helper to switch between web/native implementations dynamically if needed, 
 // but metro usually handles .web.ts extension resolution automatically.
@@ -11,6 +12,8 @@ import { TRANSLATIONS } from '@/constants/Translations';
 const player: MediaControlServiceInterface = MediaControlService;
 
 export function useSilentDriveMode() {
+  if (isExpoGo) return;
+
   const {
     currentCategory,
     currentIndex,

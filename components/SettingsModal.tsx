@@ -12,6 +12,7 @@ import { TRANSLATIONS } from '@/constants/Translations';
 import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '@/constants/Theme';
 import DriveModeInfoModal from './DriveModeInfoModal';
+import { isExpoGo } from '@/utils';
 
 // --- Helper Component for Toggle Buttons ---
 interface ToggleButtonProps {
@@ -240,6 +241,7 @@ export default function SettingsModal() {
             </YStack>
 
             {/* Drive Mode Section */}
+            {!isExpoGo && (
             <YStack space="$4">
                 <XStack ai="center" space="$2">
                     <Text fontSize={12} fontWeight="600" textTransform="uppercase" color={colors.textSecondary} letterSpacing={1}>
@@ -270,6 +272,7 @@ export default function SettingsModal() {
                   />
                 </XStack>
             </YStack>
+            )}
 
             {/* Footer Hints */}
             <YStack mt="auto" ai="center" space="$2">

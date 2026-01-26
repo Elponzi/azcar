@@ -1,8 +1,3 @@
-import TrackPlayer, { 
-  Capability, 
-  Event,
-  RepeatMode,
-} from 'react-native-track-player';
 import { MediaControlServiceInterface, MediaMetadata } from './MediaControlService.interface';
 
 // The silent audio file
@@ -17,13 +12,24 @@ const SILENT_TRACK = {
 class MediaControlServiceNative implements MediaControlServiceInterface {
   private isSetup = false;
   private listeners: any[] = [];
+  private TrackPlayer: any = null;
+
+  private getTrackPlayer() {
+    if (!this.TrackPlayer) {
+      this.TrackPlayer = require('react-native-track-player');
+    }
+    return this.TrackPlayer;
+  }
 
   async setupPlayer() {
     if (this.isSetup) return;
 
     try {
-      await TrackPlayer.setupPlayer();
-      await TrackPlayer.updateOptions({
+      const TP = this.getTrackPlayer();
+      const { Capability, RepeatMode } = TP;
+
+      await TP.default.setupPlayer();
+      await TP.default.updateOptions({
         capabilities: [
           Capability.Play,
           Capability.Pause,
@@ -38,8 +44,8 @@ class MediaControlServiceNative implements MediaControlServiceInterface {
         ],
       });
 
-      await TrackPlayer.add([SILENT_TRACK]);
-      await TrackPlayer.setRepeatMode(RepeatMode.Track); // Track loop
+      await TP.default.add([SILENT_TRACK]);
+      await TP.default.setRepeatMode(RepeatMode.Track); // Track loop
       this.isSetup = true;
     } catch (e) {
       // Player might already be set up
@@ -53,7 +59,7 @@ class MediaControlServiceNative implements MediaControlServiceInterface {
     // We update the current track's metadata
     // TrackPlayer doesn't have a direct "updateMetadata" for the *session* independent of the track 
     // in the same way web does, but we can update the track info in the queue.
-    await TrackPlayer.updateMetadataForTrack(0, {
+    await this.getTrackPlayer().default.updateMetadataForTrack(0, {
       title: metadata.title,
       artist: metadata.artist,
       artwork: metadata.artwork,
@@ -62,12 +68,12 @@ class MediaControlServiceNative implements MediaControlServiceInterface {
 
   async play() {
     if (!this.isSetup) return;
-    await TrackPlayer.play();
+    await this.getTrackPlayer().default.play();
   }
 
   async pause() {
     if (!this.isSetup) return;
-    await TrackPlayer.pause();
+    await this.getTrackPlayer().default.pause();
   }
 
   registerRemoteEvents(
@@ -77,16 +83,18 @@ class MediaControlServiceNative implements MediaControlServiceInterface {
     onPause: () => void
   ) {
     this.cleanupListeners();
+    const TP = this.getTrackPlayer();
+    const { Event } = TP;
 
-    this.listeners.push(TrackPlayer.addEventListener(Event.RemoteNext, onNext));
-    this.listeners.push(TrackPlayer.addEventListener(Event.RemotePrevious, onPrevious));
-    this.listeners.push(TrackPlayer.addEventListener(Event.RemotePlay, () => {
+    this.listeners.push(TP.default.addEventListener(Event.RemoteNext, onNext));
+    this.listeners.push(TP.default.addEventListener(Event.RemotePrevious, onPrevious));
+    this.listeners.push(TP.default.addEventListener(Event.RemotePlay, () => {
         onPlay();
-        TrackPlayer.play();
+        TP.default.play();
     }));
-    this.listeners.push(TrackPlayer.addEventListener(Event.RemotePause, () => {
+    this.listeners.push(TP.default.addEventListener(Event.RemotePause, () => {
         onPause();
-        TrackPlayer.pause();
+        TP.default.pause();
     }));
   }
 

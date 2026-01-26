@@ -1,5 +1,8 @@
-import TrackPlayer from 'react-native-track-player';
+import { isExpoGo } from '@/utils';
 
 export const setupNativePlayer = () => {
-  TrackPlayer.registerPlaybackService(() => require('./playbackService').PlaybackService);
+  if (!isExpoGo) {
+    const TrackPlayer = require('react-native-track-player').default;
+    TrackPlayer.registerPlaybackService(() => require('./playbackService').PlaybackService);
+  }
 };
