@@ -1,16 +1,10 @@
 export type AzkarCategory = 
   | 'Morning' 
   | 'Evening'
-  | 'WakingUp'
+  | 'AfterPrayer'
+  | 'Tasbeeh'
   | 'Sleep'
-  | 'Prayer'
-  | 'Mosque'
-  | 'Travel'
-  | 'Food'
-  | 'Home'
-  | 'Hajj'
-  | 'Quran'
-  | 'Praises';
+  | 'Weakening'
 
 // Base item without category (used in category files)
 export interface AzkarItemBase {
