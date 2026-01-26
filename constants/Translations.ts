@@ -58,6 +58,7 @@ export const TRANSLATIONS = {
     on: "تشغيل",
     off: "إيقاف",
     times: "مرات",
+    times2: "مرتان",
     time: "مرة",
     adhkar: "أذكار"
   }
