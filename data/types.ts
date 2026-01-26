@@ -3,6 +3,8 @@ export type AzkarCategory =
   | 'Evening'
   | 'AfterPrayer'
   | 'Tasbeeh'
+  | 'Sleep'
+  | 'Weakening'
 
 // Base item without category (used in category files)
 export interface AzkarItemBase {
