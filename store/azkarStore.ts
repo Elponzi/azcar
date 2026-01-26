@@ -28,6 +28,7 @@ interface AzkarState {
   prevZeker: () => void;
   incrementCount: () => void;
   resetCurrentCount: () => void;
+  resetCategoryCounts: () => void;
   setTheme: (theme: 'light' | 'dark') => void;
   setLanguage: (lang: 'en' | 'ar') => void;
   setSettingsOpen: (isOpen: boolean) => void;
@@ -94,6 +95,20 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
         [currentZeker.id]: 0
       }
     });
+  },
+
+  resetCategoryCounts: () => {
+    const { filteredAzkar, counts } = get();
+    const newCounts = { ...counts };
+    
+    // Reset counts for all items in the current category
+    filteredAzkar.forEach(item => {
+      if (newCounts[item.id]) {
+        newCounts[item.id] = 0;
+      }
+    });
+
+    set({ counts: newCounts });
   },
 
   setTheme: (theme) => {
