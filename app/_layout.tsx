@@ -10,6 +10,8 @@ import { TamaguiProvider } from 'tamagui';
 import config from '../tamagui.config';
 
 import { useAzkarStore } from '@/store/azkarStore';
+import { useSilentDriveMode } from '@/hooks/useSilentDriveMode';
+import { setupNativePlayer } from '@/services/TrackPlayerSetup';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -24,6 +26,8 @@ export const unstable_settings = {
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
+setupNativePlayer();
+
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     Tajawal: require('../assets/fonts/Tajawal-Regular.ttf'),
@@ -33,6 +37,9 @@ export default function RootLayout() {
   });
 
   const isHydrated = useAzkarStore((state) => state.isHydrated);
+
+  // Initialize Silent Drive Mode
+  useSilentDriveMode();
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {

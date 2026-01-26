@@ -22,7 +22,9 @@ export const TRANSLATIONS = {
     off: "Off",
     time: "time",
     times: "times",
-    adhkar: "Adhkar"
+    adhkar: "Adhkar",
+    driveModeInfoTitle: "What is Drive Mode?",
+    driveModeInfoDesc: "This allows you to use your car's steering wheel buttons (Next/Previous) or headphone controls to navigate through the Adhkar without touching your phone."
   },
   ar: {
     morning: "الصباح",
@@ -48,7 +50,9 @@ export const TRANSLATIONS = {
     times: "مرات",
     times2: "مرتان",
     time: "مرة",
-    adhkar: "أذكار"
+    adhkar: "أذكار",
+    driveModeInfoTitle: "ما هو وضع القيادة؟",
+    driveModeInfoDesc: "يسمح لك باستخدام أزرار التحكم في مقود السيارة (التالي/السابق) أو سماعات الرأس للتنقل بين الأذكار دون الحاجة لمس الهاتف."
   }
 };
 

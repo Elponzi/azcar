@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { AZKAR_DATA, AzkarCategory, AzkarItem } from '../data';
 
 // Storage keys
@@ -8,6 +9,7 @@ const STORAGE_KEYS = {
   language: 'azkar:language',
   showTranslation: 'azkar:showTranslation',
   showNote: 'azkar:showNote',
+  driveMode: 'azkar:driveMode',
 } as const;
 
 interface AzkarState {
@@ -20,6 +22,7 @@ interface AzkarState {
   isSettingsOpen: boolean;
   showTranslation: boolean;
   showNote: boolean;
+  isDriveModeEnabled: boolean;
   isHydrated: boolean;
 
   // Actions
@@ -34,6 +37,7 @@ interface AzkarState {
   setSettingsOpen: (isOpen: boolean) => void;
   setShowTranslation: (show: boolean) => void;
   setShowNote: (show: boolean) => void;
+  setDriveMode: (enabled: boolean) => void;
   hydrate: () => Promise<void>;
 }
 
@@ -47,6 +51,7 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
   isSettingsOpen: false,
   showTranslation: false,
   showNote: false,
+  isDriveModeEnabled: Platform.OS !== 'web',
   isHydrated: false,
 
   setCategory: (category) => {
@@ -133,13 +138,19 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
     AsyncStorage.setItem(STORAGE_KEYS.showNote, JSON.stringify(show));
   },
 
+  setDriveMode: (enabled: boolean) => {
+    set({ isDriveModeEnabled: enabled });
+    AsyncStorage.setItem(STORAGE_KEYS.driveMode, JSON.stringify(enabled));
+  },
+
   hydrate: async () => {
     try {
-      const [theme, language, showTranslation, showNote] = await Promise.all([
+      const [theme, language, showTranslation, showNote, driveMode] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.theme),
         AsyncStorage.getItem(STORAGE_KEYS.language),
         AsyncStorage.getItem(STORAGE_KEYS.showTranslation),
         AsyncStorage.getItem(STORAGE_KEYS.showNote),
+        AsyncStorage.getItem(STORAGE_KEYS.driveMode),
       ]);
 
       set({
@@ -147,6 +158,7 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
         ...(language && { language: language as 'en' | 'ar' }),
         ...(showTranslation !== null && { showTranslation: JSON.parse(showTranslation) }),
         ...(showNote !== null && { showNote: JSON.parse(showNote) }),
+        ...(driveMode !== null && { isDriveModeEnabled: JSON.parse(driveMode) }),
         isHydrated: true,
       });
     } catch (error) {
