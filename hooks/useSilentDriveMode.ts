@@ -3,6 +3,7 @@ import { AppState, AppStateStatus, Platform } from 'react-native';
 import { useAzkarStore } from '@/store/azkarStore';
 import { MediaControlService } from '@/services/MediaControlService';
 import { MediaControlServiceInterface } from '@/services/MediaControlService.interface';
+import { TRANSLATIONS } from '@/constants/Translations';
 
 // Helper to switch between web/native implementations dynamically if needed, 
 // but metro usually handles .web.ts extension resolution automatically.
@@ -16,6 +17,7 @@ export function useSilentDriveMode() {
     filteredAzkar,
     nextZeker,
     prevZeker,
+    language,
   } = useAzkarStore();
 
   const appState = useRef(AppState.currentState);
@@ -65,14 +67,25 @@ export function useSilentDriveMode() {
   // 2. Sync Metadata
   useEffect(() => {
     const currentZeker = filteredAzkar[currentIndex];
+    const t = TRANSLATIONS[language];
+    
+    // Convert PascalCase category to camelCase key for translation lookup
+    const categoryKey = (currentCategory.charAt(0).toLowerCase() + currentCategory.slice(1)) as keyof typeof t;
+    const categoryName = t[categoryKey] || currentCategory;
+
+    const isRTL = language === 'ar';
+    const artistName = isRTL 
+      ? `${t.adhkar} ${categoryName}` 
+      : `${categoryName} ${t.adhkar}`;
+
     if (currentZeker) {
       player.updateMetadata({
         title: currentZeker.arabic, // Truncate if needed? Usually OS handles it.
-        artist: currentCategory,
+        artist: artistName,
         // artwork: ... // We could pass an icon
       });
     }
-  }, [currentCategory, currentIndex, filteredAzkar]);
+  }, [currentCategory, currentIndex, filteredAzkar, language]);
 
   // 3. Handle AppState (Background/Foreground)
   useEffect(() => {

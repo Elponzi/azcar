@@ -1,4 +1,4 @@
-import { MediaControlServiceInterface, MediaMetadata } from './MediaControlService.interface';
+import { MediaControlServiceInterface, MediaMetadata as IMediaMetadata } from './MediaControlService.interface';
 import { Asset } from 'expo-asset';
 
 class MediaControlServiceWeb implements MediaControlServiceInterface {
@@ -15,15 +15,34 @@ class MediaControlServiceWeb implements MediaControlServiceInterface {
       this.audio.loop = true;
       this.audio.volume = 0.2; // Not strictly 0, or browsers might think it's not "playing"
 
-      // Attempt to play immediately? 
-      // Browsers often block this. We might need a user interaction wrapper.
-      // But we will try.
-      try {
-        await this.audio.play();
-      } catch (e) {
-        console.log('Autoplay blocked. User interaction required.');
-      }
+      const playAudio = async () => {
+        if (!this.audio) return;
+        try {
+          await this.audio.play();
+          if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+        } catch (e) {
+          console.log('Autoplay blocked. Waiting for user interaction...');
+          const onInteract = async () => {
+            if (!this.audio) return;
+            try {
+              await this.audio.play();
+              if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+            } catch (err) {
+              // Ignore subsequent errors
+            }
+            // Cleanup
+            document.removeEventListener('click', onInteract);
+            document.removeEventListener('keydown', onInteract);
+            document.removeEventListener('touchstart', onInteract);
+          };
 
+          document.addEventListener('click', onInteract);
+          document.addEventListener('keydown', onInteract);
+          document.addEventListener('touchstart', onInteract);
+        }
+      };
+
+      await playAudio();
       this.setupMediaSession();
 
     } catch (e) {
@@ -42,8 +61,9 @@ class MediaControlServiceWeb implements MediaControlServiceInterface {
     }
   }
 
-  async updateMetadata(metadata: MediaMetadata) {
+  async updateMetadata(metadata: IMediaMetadata) {
     if ('mediaSession' in navigator) {
+      // @ts-ignore - MediaMetadata is global
       navigator.mediaSession.metadata = new MediaMetadata({
         title: metadata.title,
         artist: metadata.artist,
