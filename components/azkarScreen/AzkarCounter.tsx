@@ -56,7 +56,7 @@ export const AzkarCounter = ({
     opacity.value = withTiming(1, { duration: 150 });
   };
 
-  const player = useAudioPlayer(require('@/assets/sounds/2.mp3'));
+  const player = useAudioPlayer(require('@/assets/sounds/switch.mp3'));
 
   const playSuccessSound = () => {
     player.seekTo(0);

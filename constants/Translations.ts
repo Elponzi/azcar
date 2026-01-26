@@ -2,6 +2,16 @@ export const TRANSLATIONS = {
   en: {
     morning: "Morning",
     evening: "Evening",
+    wakingUp: "Waking Up",
+    sleep: "Sleep",
+    prayer: "Post Prayer",
+    mosque: "Mosque",
+    travel: "Travel",
+    food: "Food",
+    home: "Home",
+    hajj: "Hajj & Umrah",
+    quran: "Quran",
+    praises: "Praises",
     driveMode: "Drive Mode",
     settings: "Settings",
     appearance: "Appearance",
@@ -17,11 +27,22 @@ export const TRANSLATIONS = {
     on: "On",
     off: "Off",
     time: "time",
-    times: "times"
+    times: "times",
+    adhkar: "Adhkar"
   },
   ar: {
     morning: "الصباح",
     evening: "المساء",
+    wakingUp: "الاستيقاظ",
+    sleep: "النوم",
+    prayer: "بعد الصلاة",
+    mosque: "المسجد",
+    travel: "السفر",
+    food: "الطعام",
+    home: "المنزل",
+    hajj: "الحج والعمرة",
+    quran: "أدعية القرآن",
+    praises: "تسابيح",
     driveMode: "وضع القيادة",
     settings: "الإعدادات",
     appearance: "المظهر",
@@ -33,12 +54,13 @@ export const TRANSLATIONS = {
     countPrompt: "استخدم المسافة للتسبيح",
     navPrompt: "استخدم الأسهم للتنقل",
     showTranslation: "إظهار الترجمة",
-    showBenefits: "Show Benefits",
-    on: "On",
-    off: "Off",
+    showBenefits: "إظهار الفضل",
+    on: "تشغيل",
+    off: "إيقاف",
     times: "مرات",
     times2: "مرتان",
-    time: "مرة"
+    time: "مرة",
+    adhkar: "أذكار"
   }
 };
 
