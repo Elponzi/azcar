@@ -33,7 +33,8 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-audio"
+      "expo-audio",
+      "./plugins/withMediaService"
     ],
     "experiments": {
       "typedRoutes": true
