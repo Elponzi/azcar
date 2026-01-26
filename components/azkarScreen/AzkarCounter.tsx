@@ -100,7 +100,7 @@ export const AzkarCounter = ({
 
               if (isCompleting) {
                 // Trigger Celebration Animation
-                completionScale.value = withTiming(1.15, { duration: 150 }, () => {
+                completionScale.value = withTiming(1.05, { duration: 150 }, () => {
                   completionScale.value = withTiming(1, { duration: 250 });
                 });
                 glowOpacity.value = withTiming(1.5, { duration: 150 }, () => {
