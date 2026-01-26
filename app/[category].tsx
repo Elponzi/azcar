@@ -12,6 +12,7 @@ import { THEME } from '@/constants/Theme';
 import { TRANSLATIONS } from '@/constants/Translations';
 import { EFFECTS_CONFIG } from '@/constants/EffectsConfig';
 import { AzkarCategory } from '@/data/types';
+import { CATEGORIES } from '@/data';
 
 // Components
 import { SeoHead } from '@/components/SeoHead';
@@ -22,15 +23,11 @@ import { CrescentMoon } from '@/components/CrescentMoon';
 import { AzkarTextDisplay } from '@/components/azkarScreen/AzkarTextDisplay';
 import { AzkarCounter } from '@/components/azkarScreen/AzkarCounter';
 import { NavButton, CategoryButton } from '@/components/azkarScreen/ScreenControls';
+import { DesktopCategoryNav } from '@/components/azkarScreen/DesktopCategoryNav';
 
 // Hooks
 import { useParallax } from '@/hooks/useParallax';
 import { useWebKeyboard } from '@/hooks/useWebKeyboard';
-
-const CATEGORIES: AzkarCategory[] = [
-  'Morning', 'Evening', 'WakingUp', 'Sleep', 'Prayer', 'Mosque', 
-  'Travel', 'Food', 'Home', 'Hajj', 'Quran', 'Praises'
-];
 
 export default function CategoryScreen() {
   const { width } = useWindowDimensions();
@@ -146,34 +143,14 @@ export default function CategoryScreen() {
 
           {/* Desktop: Categories ScrollView */}
           {isDesktop ? (
-            <View f={1} mx="$2" overflow="hidden">
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false} 
-                contentContainerStyle={{ 
-                  gap: 8, 
-                  paddingHorizontal: 4, 
-                  alignItems: 'center',
-                  flexDirection: isRTL ? 'row-reverse' : 'row'
-                }}
-              >
-                {CATEGORIES.map((cat) => {
-                  const key = (cat.charAt(0).toLowerCase() + cat.slice(1)) as keyof typeof t;
-                  const label = t[key] || cat;
-                  
-                  return (
-                    <CategoryButton 
-                      key={cat}
-                      label={label} 
-                      isActive={currentCategory === cat} 
-                      onPress={() => handleCategoryChange(cat)} 
-                      colors={colors}
-                      isDesktop={isDesktop}
-                    />
-                  );
-                })}
-              </ScrollView>
-            </View>
+            <DesktopCategoryNav 
+              categories={CATEGORIES}
+              currentCategory={currentCategory}
+              onCategoryChange={handleCategoryChange}
+              colors={colors}
+              t={t}
+              isRTL={isRTL}
+            />
           ) : (
             /* Mobile: Category Trigger */
             <Button

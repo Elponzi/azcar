@@ -36,3 +36,8 @@ export const getAllAzkar = (): AzkarItem[] => [
   ...AZKAR_DATA.Quran,
   ...AZKAR_DATA.Praises,
 ];
+
+export const CATEGORIES: AzkarCategory[] = [
+  'Morning', 'Evening', 'WakingUp', 'Sleep', 'Prayer', 'Mosque', 
+  'Travel', 'Food', 'Home', 'Hajj', 'Quran', 'Praises'
+];
