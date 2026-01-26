@@ -63,12 +63,19 @@ export const AzkarCounter = ({
     player.play();
   };
 
+  const remaining = Math.max(target - count, 0);
+
   const timesLabel = useMemo(() => {
     if (language === 'ar') {
-      return target > 1 && target <= 10 ? t.times : t.time;
+      if(remaining === 2) {
+        return t.times2;
+      }
+      return (remaining > 1 && remaining <= 10) ? t.times : t.time;
     }
     return target === 1 ? t.time : t.times;
-  }, [target, t, language])
+  }, [t, language, remaining])
+
+
 
   return (
       <XStack ai="center" jc="center" position="relative">
@@ -110,12 +117,11 @@ export const AzkarCounter = ({
               <YStack ai="center" jc="center" position="relative">
                 <DivineLight color={colors.accent} size={isDesktop ? 320 : 240} />
                 <Text fontSize={isDesktop ? 72 : 56} fontFamily="ReemKufi" color={progress >= 100 ? colors.accent : colors.textPrimary} zIndex={1}>
-                  {count}
+                  {remaining}
                 </Text>
                 <YStack ai="center" zIndex={1}>
-                  <Text fontSize={isDesktop ? 20 : 16} color={colors.textSecondary}>/ {target}</Text>
                   <Text fontSize={isDesktop ? 14 : 12} color={colors.textSecondary} opacity={0.7} mt={-2}>
-                   {timesLabel}
+                    {timesLabel}
                   </Text>
                 </YStack>
               </YStack>

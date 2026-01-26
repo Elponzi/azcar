@@ -37,6 +37,7 @@ export const TRANSLATIONS = {
     on: "On",
     off: "Off",
     times: "مرات",
+    times2: "مرتان",
     time: "مرة"
   }
 };
