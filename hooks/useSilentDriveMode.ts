@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { AppState, AppStateStatus, Platform } from 'react-native';
+import { AppState } from 'react-native';
 import { useAzkarStore } from '@/store/azkarStore';
 import { MediaControlService } from '@/services/MediaControlService';
 import { MediaControlServiceInterface } from '@/services/MediaControlService.interface';
@@ -15,15 +15,19 @@ export function useSilentDriveMode() {
     currentCategory,
     currentIndex,
     filteredAzkar,
-    nextZeker,
-    prevZeker,
     language,
+    isDriveModeEnabled,
   } = useAzkarStore();
 
   const appState = useRef(AppState.currentState);
 
   // 1. Setup Player & Register Events (Run Once)
   useEffect(() => {
+    if (!isDriveModeEnabled) {
+      player.destroy();
+      return;
+    }
+
     const init = async () => {
       await player.setupPlayer();
       
@@ -62,10 +66,12 @@ export function useSilentDriveMode() {
         // Cleanup if needed
         // player.destroy(); 
     };
-  }, []);
+  }, [isDriveModeEnabled]);
 
   // 2. Sync Metadata
   useEffect(() => {
+    if (!isDriveModeEnabled) return;
+
     const currentZeker = filteredAzkar[currentIndex];
     const t = TRANSLATIONS[language];
     
@@ -85,10 +91,12 @@ export function useSilentDriveMode() {
         // artwork: ... // We could pass an icon
       });
     }
-  }, [currentCategory, currentIndex, filteredAzkar, language]);
+  }, [currentCategory, currentIndex, filteredAzkar, language, isDriveModeEnabled]);
 
   // 3. Handle AppState (Background/Foreground)
   useEffect(() => {
+    if (!isDriveModeEnabled) return;
+
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (
         appState.current.match(/inactive|background/) &&
@@ -107,5 +115,5 @@ export function useSilentDriveMode() {
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [isDriveModeEnabled]);
 }

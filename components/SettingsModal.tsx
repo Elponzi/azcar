@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useWindowDimensions, TouchableWithoutFeedback } from 'react-native';
 import { YStack, XStack, H4, Text, Button } from 'tamagui';
 import Animated, { 
@@ -11,6 +11,7 @@ import { useAzkarStore } from '@/store/azkarStore';
 import { TRANSLATIONS } from '@/constants/Translations';
 import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '@/constants/Theme';
+import DriveModeInfoModal from './DriveModeInfoModal';
 
 // --- Helper Component for Toggle Buttons ---
 interface ToggleButtonProps {
@@ -44,10 +45,13 @@ const ToggleButton = ({ label, isActive, onPress, colors }: ToggleButtonProps) =
 export default function SettingsModal() {
   const { width, height } = useWindowDimensions();
   const isDesktop = width > 768;
-  const { theme, setTheme, language, setLanguage, isSettingsOpen, setSettingsOpen, showTranslation, setShowTranslation, showNote, setShowNote } = useAzkarStore();
+  const { theme, setTheme, language, setLanguage, isSettingsOpen, setSettingsOpen, showTranslation, setShowTranslation, showNote, setShowNote, isDriveModeEnabled, setDriveMode } = useAzkarStore();
   const t = TRANSLATIONS[language];
   const isRTL = language === 'ar';
   
+  // Local state for info modal
+  const [isInfoOpen, setInfoOpen] = useState(false);
+
   // Use centralized theme
   const colors = THEME[theme];
 
@@ -235,6 +239,38 @@ export default function SettingsModal() {
                 </XStack>
             </YStack>
 
+            {/* Drive Mode Section */}
+            <YStack space="$4">
+                <XStack ai="center" space="$2">
+                    <Text fontSize={12} fontWeight="600" textTransform="uppercase" color={colors.textSecondary} letterSpacing={1}>
+                        {t.driveMode}
+                    </Text>
+                    <Button 
+                        size="$1.5"
+                        circular
+                        chromeless
+                        onPress={() => setInfoOpen(true)}
+                        icon={<Ionicons name="information-circle-outline" size={16} color={colors.accent} />}
+                        p={0}
+                    />
+                </XStack>
+                
+                <XStack bg={colors.cardBg} p="$1" br="$4" bw={0}>
+                   <ToggleButton 
+                    label={t.off} 
+                    isActive={!isDriveModeEnabled} 
+                    onPress={() => setDriveMode(false)} 
+                    colors={colors} 
+                  />
+                  <ToggleButton 
+                    label={t.on} 
+                    isActive={isDriveModeEnabled} 
+                    onPress={() => setDriveMode(true)} 
+                    colors={colors} 
+                  />
+                </XStack>
+            </YStack>
+
             {/* Footer Hints */}
             <YStack mt="auto" ai="center" space="$2">
                 <Text color={colors.textSecondary} fontSize={12}>{t.countPrompt}</Text>
@@ -242,6 +278,12 @@ export default function SettingsModal() {
             </YStack>
         </YStack>
       </Animated.View>
+      
+      {/* Nested Info Modal */}
+      <DriveModeInfoModal 
+        isOpen={isInfoOpen} 
+        onClose={() => setInfoOpen(false)} 
+      />
     </YStack>
   );
 }

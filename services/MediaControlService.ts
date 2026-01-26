@@ -1,8 +1,7 @@
 import TrackPlayer, { 
   Capability, 
-  AppKilledPlaybackBehavior,
   Event,
-  State
+  RepeatMode,
 } from 'react-native-track-player';
 import { MediaControlServiceInterface, MediaMetadata } from './MediaControlService.interface';
 
@@ -25,7 +24,6 @@ class MediaControlServiceNative implements MediaControlServiceInterface {
     try {
       await TrackPlayer.setupPlayer();
       await TrackPlayer.updateOptions({
-        stopWithApp: true,
         capabilities: [
           Capability.Play,
           Capability.Pause,
@@ -38,11 +36,10 @@ class MediaControlServiceNative implements MediaControlServiceInterface {
           Capability.SkipToNext,
           Capability.SkipToPrevious,
         ],
-        // notificationCapabilities: ...
       });
 
       await TrackPlayer.add([SILENT_TRACK]);
-      await TrackPlayer.setRepeatMode(1); // Track loop
+      await TrackPlayer.setRepeatMode(RepeatMode.Track); // Track loop
       this.isSetup = true;
     } catch (e) {
       // Player might already be set up
