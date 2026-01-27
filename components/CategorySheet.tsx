@@ -1,12 +1,6 @@
-import React, { useEffect } from 'react';
-import { useWindowDimensions, TouchableWithoutFeedback } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { useWindowDimensions, TouchableWithoutFeedback, Animated, Easing } from 'react-native';
 import { YStack, XStack, H4, Text, Button, ScrollView } from 'tamagui';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withTiming, 
-  Easing
-} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useAzkarStore } from '@/store/azkarStore';
@@ -29,34 +23,55 @@ export default function CategorySheet({ isOpen, onClose, categories, onSelect }:
   
   const colors = THEME[theme];
 
-  const opacity = useSharedValue(0);
-  const translation = useSharedValue(height);
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translation = useRef(new Animated.Value(height)).current;
 
   useEffect(() => {
     if (isOpen) {
-      opacity.value = withTiming(1, { duration: 200 });
-      translation.value = withTiming(0, { 
-        duration: 250, 
-        easing: Easing.out(Easing.cubic) 
-      });
+      Animated.parallel([
+        Animated.timing(opacity, { 
+            toValue: 1, 
+            duration: 200, 
+            useNativeDriver: true 
+        }),
+        Animated.timing(translation, { 
+            toValue: 0, 
+            duration: 250, 
+            easing: Easing.out(Easing.cubic), 
+            useNativeDriver: true 
+        })
+      ]).start();
     } else {
-      opacity.value = withTiming(0, { duration: 150 });
-      translation.value = withTiming(height, { 
-        duration: 200, 
-        easing: Easing.in(Easing.cubic) 
-      });
+      Animated.parallel([
+        Animated.timing(opacity, { 
+            toValue: 0, 
+            duration: 150, 
+            useNativeDriver: true 
+        }),
+        Animated.timing(translation, { 
+            toValue: height, 
+            duration: 200, 
+            easing: Easing.in(Easing.cubic), 
+            useNativeDriver: true 
+        })
+      ]).start();
     }
   }, [isOpen, height]);
 
-  const animatedBackdropStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
-
-  const animatedPanelStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translation.value }],
-  }));
-
-  if (!isOpen && opacity.value === 0) return null;
+  // If closed and opacity is 0 (we need to track state or assume initial render is closed)
+  // Since we don't have a state for "animation finished", we can rely on isOpen prop for rendering 
+  // but better to keep it mounted until animation finishes? 
+  // For simplicity, we'll return null if !isOpen AND we are not animating out?
+  // Or just rely on pointerEvents and opacity. The original code returned null if opacity.value === 0.
+  // We can't easily check animated value synchronously. 
+  // We'll let it render but use pointerEvents. If performance is issue, we'd add state.
+  
+  // Actually, standard optimization:
+  // if (!isOpen) we might want to unmount after delay.
+  // But let's stick to pointerEvents logic for now or just standard rendering.
+  // The original had: if (!isOpen && opacity.value === 0) return null;
+  // We can approximate this by not rendering if !isOpen (but that breaks exit animation).
+  // So we should keep it mounted.
 
   const handleCategorySelect = (cat: AzkarCategory) => {
     onSelect(cat);
@@ -76,17 +91,17 @@ export default function CategorySheet({ isOpen, onClose, categories, onSelect }:
       {/* Backdrop */}
       <TouchableWithoutFeedback onPress={onClose}>
         <Animated.View 
-          style={[
-            { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
-            animatedBackdropStyle
-          ]} 
+          style={{
+            flex: 1, 
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            opacity
+          }} 
         />
       </TouchableWithoutFeedback>
 
       {/* Panel */}
       <Animated.View
-        style={[
-          {
+        style={{
             position: 'absolute',
             bottom: 0,
             left: 0,
@@ -103,9 +118,8 @@ export default function CategorySheet({ isOpen, onClose, categories, onSelect }:
             padding: 20,
             borderTopWidth: 1,
             borderColor: colors.borderColor,
-          },
-          animatedPanelStyle
-        ]}
+            transform: [{ translateY: translation }]
+        }}
       >
         <YStack space="$4" f={1}>
             {/* Header */}

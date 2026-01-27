@@ -1,13 +1,5 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withRepeat, 
-  withTiming, 
-  withSequence,
-  Easing
-} from 'react-native-reanimated';
+import React, { useEffect, useRef } from 'react';
+import { StyleSheet, View, Animated, Easing } from 'react-native';
 import Svg, { Path, Defs, RadialGradient, Stop, Circle } from 'react-native-svg';
 import { EFFECTS_CONFIG } from '@/constants/EffectsConfig';
 import { useAzkarStore } from '@/store/azkarStore';
@@ -25,38 +17,54 @@ export const CrescentMoon = ({ color = '#FFD700', size: propSize, isRTL = false 
   const size = propSize || configSize;
 
   // Animation Values
-  const glowOpacity = useSharedValue(0.4);
-  const floatY = useSharedValue(0);
+  const glowOpacity = useRef(new Animated.Value(0.4)).current;
+  const floatY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // 1. Breathing Glow Effect
-    glowOpacity.value = withRepeat(
-      withSequence(
-        withTiming(0.10, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
-        withTiming(0.2, { duration: 4000, easing: Easing.inOut(Easing.ease) })
-      ),
-      -1, 
-      true 
+    const glowAnim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowOpacity, { 
+            toValue: 0.10, 
+            duration: 4000, 
+            easing: Easing.inOut(Easing.ease), 
+            useNativeDriver: true 
+        }),
+        Animated.timing(glowOpacity, { 
+            toValue: 0.2, 
+            duration: 4000, 
+            easing: Easing.inOut(Easing.ease), 
+            useNativeDriver: true 
+        })
+      ])
     );
 
     // 2. Floating Motion
-    floatY.value = withRepeat(
-      withSequence(
-        withTiming(-10, { duration: 6000, easing: Easing.inOut(Easing.ease) }),
-        withTiming(0, { duration: 6000, easing: Easing.inOut(Easing.ease) })
-      ),
-      -1,
-      true
+    const floatAnim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatY, { 
+            toValue: -10, 
+            duration: 6000, 
+            easing: Easing.inOut(Easing.ease), 
+            useNativeDriver: true 
+        }),
+        Animated.timing(floatY, { 
+            toValue: 0, 
+            duration: 6000, 
+            easing: Easing.inOut(Easing.ease), 
+            useNativeDriver: true 
+        })
+      ])
     );
-  }, []);
 
-  const animatedGlowStyle = useAnimatedStyle(() => ({
-    opacity: glowEnabled ? glowOpacity.value : 0,
-  }));
+    if (glowEnabled) glowAnim.start();
+    floatAnim.start();
 
-  const containerStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: floatY.value }]
-  }));
+    return () => {
+        glowAnim.stop();
+        floatAnim.stop();
+    }
+  }, [glowEnabled]);
 
   // Logic Check
   const isEnabled = EFFECTS_CONFIG.masterEnabled && 
@@ -79,11 +87,11 @@ export const CrescentMoon = ({ color = '#FFD700', size: propSize, isRTL = false 
 
   return (
     <View style={[styles.wrapper, dynamicWrapperStyle]} pointerEvents="none">
-      <Animated.View style={[StyleSheet.absoluteFill, containerStyle]}>
+      <Animated.View style={[StyleSheet.absoluteFill, { transform: [{ translateY: floatY }] }]}>
         
         {/* The Glow (Behind) */}
         {glowEnabled && (
-          <Animated.View style={[StyleSheet.absoluteFill, animatedGlowStyle]}>
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: glowOpacity }]}>
             {/* Outer Soft Glow */}
             <Svg height="100%" width="100%" viewBox="0 0 200 200" style={StyleSheet.absoluteFill}>
               <Defs>

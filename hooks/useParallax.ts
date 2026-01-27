@@ -1,11 +1,6 @@
-import { Platform } from 'react-native';
-import { 
-  useAnimatedSensor, 
-  SensorType, 
-  useAnimatedStyle, 
-  withSpring,
-  SharedValue
-} from 'react-native-reanimated';
+import { useEffect, useRef } from 'react';
+import { Platform, Animated } from 'react-native';
+import { DeviceMotion } from 'expo-sensors';
 import { EFFECTS_CONFIG } from '@/constants/EffectsConfig';
 import { useAzkarStore } from '@/store/azkarStore';
 
@@ -16,45 +11,52 @@ import { useAzkarStore } from '@/store/azkarStore';
  */
 export function useParallax(depth?: number) {
   const currentTheme = useAzkarStore(state => state.theme);
-
+  
   // Config Check
   const isEnabled = EFFECTS_CONFIG.masterEnabled && 
                     EFFECTS_CONFIG.parallax.enabled &&
                     EFFECTS_CONFIG.parallax.themes.includes(currentTheme);
 
-  // Always call the hook to satisfy Rules of Hooks
-  const sensor = useAnimatedSensor(SensorType.GRAVITY, { interval: 20 });
-  
-  const animatedStyle = useAnimatedStyle(() => {
+  const translate = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+
+  useEffect(() => {
     if (!isEnabled || Platform.OS === 'web') {
-      return { transform: [{ translateX: 0 }, { translateY: 0 }] };
+      return;
     }
 
-    const { x, y } = sensor.sensor.value;
-    const finalDepth = depth ?? EFFECTS_CONFIG.parallax.starsDepth;
+    const subscription = DeviceMotion.addListener((data) => {
+      const { rotation } = data;
+      if (rotation) {
+        const finalDepth = depth ?? EFFECTS_CONFIG.parallax.starsDepth;
+        
+        // Simple tilt mapping
+        // rotation.gamma is left/right (roughly -pi/2 to pi/2)
+        // rotation.beta is forward/back
+        
+        const x = (rotation.gamma || 0) * 5; 
+        const y = (rotation.beta || 0) * 5;
 
-    // Gravity Logic
-    const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max);
-    
-    // Smooth out the sensor noise with dividing by range
-    const xTilt = clamp(x, -5, 5) / 5; 
-    const yTilt = clamp(y, -5, 5) / 5; 
+        Animated.spring(translate, {
+          toValue: { x: -x * finalDepth, y: -y * finalDepth },
+          useNativeDriver: true,
+          friction: 7,
+          tension: 40
+        }).start();
+      }
+    });
 
-    // Physics Configuration for "Space Float" feel
-    const springConfig = {
-      damping: 20,    
-      stiffness: 60,  
-      mass: 1
+    DeviceMotion.setUpdateInterval(50);
+
+    return () => {
+      subscription.remove();
     };
+  }, [isEnabled, depth]);
 
-    // Invert direction (-xTilt) for "Window" depth effect
-    return {
-      transform: [
-        { translateX: withSpring(-xTilt * finalDepth, springConfig) },
-        { translateY: withSpring(-yTilt * finalDepth, springConfig) }
-      ]
-    };
-  });
+  if (!isEnabled || Platform.OS === 'web') {
+    return { transform: [{ translateX: 0 }, { translateY: 0 }] };
+  }
 
-  return animatedStyle;
+  return {
+    transform: translate.getTranslateTransform()
+  };
 }

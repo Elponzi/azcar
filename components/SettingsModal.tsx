@@ -1,12 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { useWindowDimensions, TouchableWithoutFeedback } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { useWindowDimensions, TouchableWithoutFeedback, Animated, Easing } from 'react-native';
 import { YStack, XStack, H4, Text, Button } from 'tamagui';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withTiming, 
-  Easing
-} from 'react-native-reanimated';
 import { useAzkarStore } from '@/store/azkarStore';
 import { TRANSLATIONS } from '@/constants/Translations';
 import { Ionicons } from '@expo/vector-icons';
@@ -55,47 +49,51 @@ export default function SettingsModal() {
   // Use centralized theme
   const colors = THEME[theme];
 
-  const opacity = useSharedValue(0);
-  const translation = useSharedValue(isDesktop ? (isRTL ? -350 : 350) : height);
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translation = useRef(new Animated.Value(isDesktop ? (isRTL ? -350 : 350) : height)).current;
 
   useEffect(() => {
     if (isSettingsOpen) {
-      opacity.value = withTiming(1, { duration: 200 });
-      translation.value = withTiming(0, { 
-        duration: 250, 
-        easing: Easing.out(Easing.cubic) 
-      });
+      Animated.parallel([
+        Animated.timing(opacity, { 
+            toValue: 1, 
+            duration: 200, 
+            useNativeDriver: true 
+        }),
+        Animated.timing(translation, { 
+            toValue: 0, 
+            duration: 250, 
+            easing: Easing.out(Easing.cubic), 
+            useNativeDriver: true 
+        })
+      ]).start();
     } else {
-      opacity.value = withTiming(0, { duration: 150 });
-      // Add extra buffer to height to ensure it's completely off-screen on all devices
       const hiddenVal = isDesktop ? (isRTL ? -350 : 350) : (height + 100);
-      translation.value = withTiming(hiddenVal, { 
-        duration: 200, 
-        easing: Easing.in(Easing.cubic) 
-      });
+      Animated.parallel([
+        Animated.timing(opacity, { 
+            toValue: 0, 
+            duration: 150, 
+            useNativeDriver: true 
+        }),
+        Animated.timing(translation, { 
+            toValue: hiddenVal, 
+            duration: 200, 
+            easing: Easing.in(Easing.cubic), 
+            useNativeDriver: true 
+        })
+      ]).start();
     }
   }, [isSettingsOpen, isDesktop, isRTL, height]);
 
-  const animatedBackdropStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
-
-  const animatedPanelStyle = useAnimatedStyle(() => {
-    if (isDesktop) {
-        return {
-            transform: [{ translateX: translation.value }],
-            right: isRTL ? undefined : 0,
-            left: isRTL ? 0 : undefined,
-        }
-    } else {
-        return {
-            transform: [{ translateY: translation.value }],
-            bottom: 0,
-        }
-    }
-  }, [isDesktop, isRTL]);
-
-  if (!isSettingsOpen && opacity.value === 0) return null;
+  // Dynamic panel styles
+  const panelStyle = isDesktop ? {
+      transform: [{ translateX: translation }],
+      right: isRTL ? undefined : 0,
+      left: isRTL ? 0 : undefined,
+  } : {
+      transform: [{ translateY: translation }],
+      bottom: 0,
+  };
 
   return (
     <YStack 
@@ -110,10 +108,11 @@ export default function SettingsModal() {
       {/* Backdrop */}
       <TouchableWithoutFeedback onPress={() => setSettingsOpen(false)}>
         <Animated.View 
-          style={[
-            { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
-            animatedBackdropStyle
-          ]} 
+          style={{ 
+              flex: 1, 
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              opacity
+          }} 
         />
       </TouchableWithoutFeedback>
 
@@ -135,7 +134,7 @@ export default function SettingsModal() {
             borderRightWidth: isDesktop && isRTL ? 1 : 0,
             borderColor: colors.borderColor,
           },
-          animatedPanelStyle
+          panelStyle
         ]}
       >
         <YStack space="$6" f={1}>

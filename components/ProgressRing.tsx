@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Circle, Svg } from 'react-native-svg';
-import { View } from 'react-native';
-import Animated, { useAnimatedProps, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
+import { View, Animated, Easing } from 'react-native';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -25,22 +24,17 @@ export const ProgressRing: React.FC<ProgressRingProps> = ({
   const normalizedRadius = radius - stroke / 2;
   const circumference = normalizedRadius * 2 * Math.PI;
   
-  const strokeDashoffset = useSharedValue(circumference);
+  const strokeDashoffset = useRef(new Animated.Value(circumference)).current;
 
   useEffect(() => {
     const offset = circumference - (progress / 100) * circumference;
-    // Match CSS: transition: stroke-dashoffset 0.35s ease-out;
-    strokeDashoffset.value = withTiming(offset, { 
+    Animated.timing(strokeDashoffset, { 
+      toValue: offset,
       duration: 350,
-      easing: Easing.out(Easing.ease)
-    });
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: false // SVG props often require JS driver
+    }).start();
   }, [progress, circumference]);
-
-  const animatedProps = useAnimatedProps(() => {
-    return {
-      strokeDashoffset: strokeDashoffset.value,
-    };
-  });
 
   return (
     <View style={{ width: radius * 2, height: radius * 2, justifyContent: 'center', alignItems: 'center' }}>
@@ -66,7 +60,7 @@ export const ProgressRing: React.FC<ProgressRingProps> = ({
           r={normalizedRadius}
           fill="transparent"
           strokeDasharray={`${circumference} ${circumference}`}
-          animatedProps={animatedProps}
+          strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
         />
       </Svg>

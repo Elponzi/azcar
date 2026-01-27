@@ -4,7 +4,6 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import 'react-native-reanimated';
 
 import { TamaguiProvider } from 'tamagui';
 import config from '../tamagui.config';
@@ -37,9 +36,15 @@ export default function RootLayout() {
   });
 
   const isHydrated = useAzkarStore((state) => state.isHydrated);
+  const hydrate = useAzkarStore((state) => state.hydrate);
 
   // Initialize Silent Drive Mode
   useSilentDriveMode();
+
+  // Trigger hydration on mount (client-side only)
+  useEffect(() => {
+    hydrate();
+  }, []);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {

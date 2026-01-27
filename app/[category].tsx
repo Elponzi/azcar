@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useMemo   } from 'react';
-import { useWindowDimensions, StyleSheet } from 'react-native';
+import { useWindowDimensions, StyleSheet, Animated } from 'react-native';
 import { YStack, XStack, Button, Text, ScrollView, View } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import Animated from 'react-native-reanimated';
 import { setAudioModeAsync } from 'expo-audio';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
@@ -22,12 +21,13 @@ import StarField from '@/components/StarField';
 import { CrescentMoon } from '@/components/CrescentMoon';
 import { AzkarTextDisplay } from '@/components/azkarScreen/AzkarTextDisplay';
 import { AzkarCounter } from '@/components/azkarScreen/AzkarCounter';
-import { NavButton, CategoryButton } from '@/components/azkarScreen/ScreenControls';
+import { NavButton, CategoryButton, SmartReadingButton } from '@/components/azkarScreen/ScreenControls';
 import { DesktopCategoryNav } from '@/components/azkarScreen/DesktopCategoryNav';
 
 // Hooks
 import { useParallax } from '@/hooks/useParallax';
 import { useWebKeyboard } from '@/hooks/useWebKeyboard';
+import { useSmartReading } from '@/hooks/useSmartReading';
 
 export default function CategoryScreen() {
   const { width } = useWindowDimensions();
@@ -53,8 +53,12 @@ export default function CategoryScreen() {
     language,
     setSettingsOpen,
     showTranslation,
-    showNote
+    showNote,
+    isSmartReadingEnabled,
+    setSmartReadingEnabled
   } = useAzkarStore();
+
+  const { transcript } = useSmartReading();
 
   // Sync URL param with Store
   useEffect(() => {
@@ -253,17 +257,12 @@ export default function CategoryScreen() {
                 disabled={isRTL ? isLast : isFirst}
               />
               
-              {!isDesktop && (
-                <Text 
-                  textTransform="uppercase" 
-                  letterSpacing={1} 
-                  fontSize={12} 
-                  color={colors.textSecondary}
-                  fontWeight="600"
-                >
-                  {t.driveMode}
-                </Text>
-              )}
+              <SmartReadingButton 
+                isActive={isSmartReadingEnabled}
+                onToggle={() => setSmartReadingEnabled(!isSmartReadingEnabled)}
+                colors={colors}
+                isDesktop={isDesktop}
+              />
 
               <NavButton 
                 iconName={isRTL ? "chevron-back" : "chevron-forward"}
@@ -273,6 +272,18 @@ export default function CategoryScreen() {
                 disabled={isRTL ? isFirst : isLast}
               />
             </XStack>
+
+            {isSmartReadingEnabled && (
+              <Text 
+                fontSize={14} 
+                color={colors.textSecondary} 
+                textAlign="center" 
+                opacity={0.8}
+                height={20}
+              >
+                {transcript}
+              </Text>
+            )}
           </YStack>
 
         </XStack>

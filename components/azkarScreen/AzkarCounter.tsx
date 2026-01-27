@@ -1,9 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
-import React, { useMemo } from 'react';
-import { Platform, Pressable } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import React, { useMemo, useRef } from 'react';
+import { Platform, Pressable, Animated, Easing } from 'react-native';
 import { Button, Text, XStack, YStack } from 'tamagui';
 
 import DivineLight from '@/components/DivineLight';
@@ -39,26 +38,23 @@ export const AzkarCounter = ({
   const ringTrackColor = colors.cardBg;
 
   // Animation for Press and Completion
-  const scale = useSharedValue(1);
-  const opacity = useSharedValue(1);
-  const completionScale = useSharedValue(1);
-  const glowOpacity = useSharedValue(1);
-
-  const animatedScaleStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value * completionScale.value }],
-    opacity: opacity.value,
-  }));
-
- 
+  const scale = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
+  const completionScale = useRef(new Animated.Value(1)).current;
+  const glowOpacity = useRef(new Animated.Value(0)).current; // Default 0 for glow
 
   const handlePressIn = () => {
-    scale.value = withTiming(0.98, { duration: 100 });
-    opacity.value = withTiming(0.9, { duration: 100 });
+    Animated.parallel([
+        Animated.timing(scale, { toValue: 0.98, duration: 100, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.9, duration: 100, useNativeDriver: true })
+    ]).start();
   };
 
   const handlePressOut = () => {
-    scale.value = withTiming(1, { duration: 150 });
-    opacity.value = withTiming(1, { duration: 150 });
+    Animated.parallel([
+        Animated.timing(scale, { toValue: 1, duration: 150, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 150, useNativeDriver: true })
+    ]).start();
   };
 
   const player = useAudioPlayer(require('@/assets/sounds/switch.mp3'));
@@ -100,12 +96,15 @@ export const AzkarCounter = ({
 
               if (isCompleting) {
                 // Trigger Celebration Animation
-                completionScale.value = withTiming(1.05, { duration: 150 }, () => {
-                  completionScale.value = withTiming(1, { duration: 250 });
-                });
-                glowOpacity.value = withTiming(1.5, { duration: 150 }, () => {
-                  glowOpacity.value = withTiming(1, { duration: 250 });
-                });
+                Animated.sequence([
+                    Animated.timing(completionScale, { toValue: 1.05, duration: 150, useNativeDriver: true }),
+                    Animated.timing(completionScale, { toValue: 1, duration: 250, useNativeDriver: true })
+                ]).start();
+
+                Animated.sequence([
+                    Animated.timing(glowOpacity, { toValue: 1.5, duration: 150, useNativeDriver: true }),
+                    Animated.timing(glowOpacity, { toValue: 0, duration: 250, useNativeDriver: true })
+                ]).start();
 
                 setTimeout(() => {
                   onComplete();
@@ -117,7 +116,12 @@ export const AzkarCounter = ({
           onPressOut={handlePressOut}
           style={{ alignItems: 'center', justifyContent: 'center' }}
         >
-          <Animated.View style={animatedScaleStyle}>
+          <Animated.View style={{ 
+              transform: [
+                  { scale: Animated.multiply(scale, completionScale) } // Combine scales
+              ], 
+              opacity 
+          }}>
             <ProgressRing 
                 radius={isDesktop ? 140 : 90} 
                 stroke={6} 

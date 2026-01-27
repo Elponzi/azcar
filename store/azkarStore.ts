@@ -23,6 +23,8 @@ interface AzkarState {
   showTranslation: boolean;
   showNote: boolean;
   isDriveModeEnabled: boolean;
+  isSmartReadingEnabled: boolean;
+  activeWordIndex: number;
   isHydrated: boolean;
 
   // Actions
@@ -38,6 +40,8 @@ interface AzkarState {
   setShowTranslation: (show: boolean) => void;
   setShowNote: (show: boolean) => void;
   setDriveMode: (enabled: boolean) => void;
+  setSmartReadingEnabled: (enabled: boolean) => void;
+  setActiveWordIndex: (index: number) => void;
   hydrate: () => Promise<void>;
 }
 
@@ -52,27 +56,30 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
   showTranslation: false,
   showNote: false,
   isDriveModeEnabled: Platform.OS !== 'web',
+  isSmartReadingEnabled: false,
+  activeWordIndex: -1,
   isHydrated: false,
 
   setCategory: (category) => {
     set({
       currentCategory: category,
       currentIndex: 0,
-      filteredAzkar: AZKAR_DATA[category]
+      filteredAzkar: AZKAR_DATA[category],
+      activeWordIndex: -1
     });
   },
 
   nextZeker: () => {
     const { currentIndex, filteredAzkar } = get();
     if (currentIndex < filteredAzkar.length - 1) {
-      set({ currentIndex: currentIndex + 1 });
+      set({ currentIndex: currentIndex + 1, activeWordIndex: -1 });
     }
   },
 
   prevZeker: () => {
     const { currentIndex } = get();
     if (currentIndex > 0) {
-      set({ currentIndex: currentIndex - 1 });
+      set({ currentIndex: currentIndex - 1, activeWordIndex: -1 });
     }
   },
 
@@ -143,6 +150,17 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
     AsyncStorage.setItem(STORAGE_KEYS.driveMode, JSON.stringify(enabled));
   },
 
+  setSmartReadingEnabled: (enabled: boolean) => {
+    set({ isSmartReadingEnabled: enabled });
+    if (!enabled) {
+      set({ activeWordIndex: -1 });
+    }
+  },
+
+  setActiveWordIndex: (index: number) => {
+    set({ activeWordIndex: index });
+  },
+
   hydrate: async () => {
     try {
       const [theme, language, showTranslation, showNote, driveMode] = await Promise.all([
@@ -168,5 +186,3 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
   },
 }));
 
-// Auto-hydrate on app start
-useAzkarStore.getState().hydrate();

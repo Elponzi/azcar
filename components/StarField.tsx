@@ -1,14 +1,6 @@
-import React, { useEffect, useMemo } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
-import Svg, { Polygon, Defs, RadialGradient, Stop, Circle } from 'react-native-svg';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withRepeat, 
-  withTiming, 
-  Easing,
-  cancelAnimation
-} from 'react-native-reanimated';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { StyleSheet, View, useWindowDimensions, Animated, Easing } from 'react-native';
+import Svg, { Polygon } from 'react-native-svg';
 import { ShootingStar } from './ShootingStar';
 import { EFFECTS_CONFIG } from '@/constants/EffectsConfig';
 import { useAzkarStore } from '@/store/azkarStore';
@@ -76,24 +68,25 @@ const InfiniteLayer = ({
   speed: number,
   blockHeight: number
 }) => {
-  const translateY = useSharedValue(0);
+  const translateY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    cancelAnimation(translateY);
-    translateY.value = 0;
-    translateY.value = withRepeat(
-      withTiming(-blockHeight, { duration: speed, easing: Easing.linear }),
-      -1,
-      false
+    translateY.setValue(0);
+    const anim = Animated.loop(
+      Animated.timing(translateY, {
+        toValue: -blockHeight,
+        duration: speed,
+        easing: Easing.linear,
+        useNativeDriver: true
+      })
     );
+    anim.start();
+
+    return () => anim.stop();
   }, [blockHeight, speed]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }]
-  }));
-
   return (
-    <Animated.View style={[StyleSheet.absoluteFill, { flexDirection: 'column', height: blockHeight * 2 }, animatedStyle]}>
+    <Animated.View style={[StyleSheet.absoluteFill, { flexDirection: 'column', height: blockHeight * 2, transform: [{ translateY }] }]}>
       <View style={{ width: '100%', height: blockHeight }}>
         <StarBlock data={data} />
       </View>

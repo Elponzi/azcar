@@ -1,12 +1,6 @@
-import React, { useEffect } from 'react';
-import { useWindowDimensions, TouchableWithoutFeedback } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { useWindowDimensions, TouchableWithoutFeedback, Animated, Easing } from 'react-native';
 import { YStack, XStack, H4, Text, Button, Paragraph } from 'tamagui';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withTiming, 
-  Easing
-} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useAzkarStore } from '@/store/azkarStore';
 import { TRANSLATIONS } from '@/constants/Translations';
@@ -23,32 +17,39 @@ export default function DriveModeInfoModal({ isOpen, onClose }: DriveModeInfoMod
   const isRTL = language === 'ar';
   const colors = THEME[theme];
 
-  const opacity = useSharedValue(0);
-  const scale = useSharedValue(0.9);
+  const opacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.9)).current;
 
   useEffect(() => {
     if (isOpen) {
-      opacity.value = withTiming(1, { duration: 200 });
-      scale.value = withTiming(1, { 
-        duration: 250, 
-        easing: Easing.out(Easing.back(1.5)) 
-      });
+      Animated.parallel([
+        Animated.timing(opacity, { 
+            toValue: 1, 
+            duration: 200, 
+            useNativeDriver: true 
+        }),
+        Animated.timing(scale, { 
+            toValue: 1, 
+            duration: 250, 
+            easing: Easing.out(Easing.back(1.5)), 
+            useNativeDriver: true 
+        })
+      ]).start();
     } else {
-      opacity.value = withTiming(0, { duration: 150 });
-      scale.value = withTiming(0.9, { duration: 150 });
+      Animated.parallel([
+        Animated.timing(opacity, { 
+            toValue: 0, 
+            duration: 150, 
+            useNativeDriver: true 
+        }),
+        Animated.timing(scale, { 
+            toValue: 0.9, 
+            duration: 150, 
+            useNativeDriver: true 
+        })
+      ]).start();
     }
   }, [isOpen]);
-
-  const animatedBackdropStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
-
-  const animatedContentStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: opacity.value,
-  }));
-
-  if (!isOpen && opacity.value === 0) return null;
 
   return (
     <YStack 
@@ -65,21 +66,24 @@ export default function DriveModeInfoModal({ isOpen, onClose }: DriveModeInfoMod
     >
       <TouchableWithoutFeedback onPress={onClose}>
         <Animated.View 
-          style={[
-            { 
+          style={{ 
               position: 'absolute', 
               top: 0, 
               left: 0, 
               right: 0, 
               bottom: 0, 
-              backgroundColor: 'rgba(0,0,0,0.6)' 
-            },
-            animatedBackdropStyle
-          ]} 
+              backgroundColor: 'rgba(0,0,0,0.6)',
+              opacity
+          }} 
         />
       </TouchableWithoutFeedback>
 
-      <Animated.View style={[{ width: '100%', maxWidth: 400 }, animatedContentStyle]}>
+      <Animated.View style={{ 
+          width: '100%', 
+          maxWidth: 400,
+          opacity,
+          transform: [{ scale }]
+      }}>
         <YStack 
             bg={colors.modalBg} 
             p="$6" 
