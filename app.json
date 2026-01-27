@@ -34,7 +34,14 @@
       "expo-router",
       "expo-font",
       "expo-audio",
-      "./plugins/withMediaService"
+      "./plugins/withMediaService",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow Azkar Drive to listen to your recitation for hands-free counting.",
+          "speechRecognitionPermission": "Allow Azkar Drive to recognize your speech."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

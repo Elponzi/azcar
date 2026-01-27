@@ -10,6 +10,7 @@ const STORAGE_KEYS = {
   showTranslation: 'azkar:showTranslation',
   showNote: 'azkar:showNote',
   driveMode: 'azkar:driveMode',
+  smartReading: 'azkar:smartReading',
 } as const;
 
 interface AzkarState {
@@ -25,6 +26,11 @@ interface AzkarState {
   isDriveModeEnabled: boolean;
   isHydrated: boolean;
 
+  // Smart Reading state
+  isListening: boolean;
+  currentWordIndex: number;
+  smartReadingEnabled: boolean;
+
   // Actions
   setCategory: (category: AzkarCategory) => void;
   nextZeker: () => void;
@@ -39,6 +45,13 @@ interface AzkarState {
   setShowNote: (show: boolean) => void;
   setDriveMode: (enabled: boolean) => void;
   hydrate: () => Promise<void>;
+
+  // Smart Reading actions
+  startListening: () => void;
+  stopListening: () => void;
+  setCurrentWordIndex: (index: number) => void;
+  resetWordProgress: () => void;
+  setSmartReadingEnabled: (enabled: boolean) => void;
 }
 
 export const useAzkarStore = create<AzkarState>((set, get) => ({
@@ -53,6 +66,11 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
   showNote: false,
   isDriveModeEnabled: Platform.OS !== 'web',
   isHydrated: false,
+
+  // Smart Reading initial state
+  isListening: false,
+  currentWordIndex: 0,
+  smartReadingEnabled: true,
 
   setCategory: (category) => {
     set({
@@ -143,14 +161,29 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
     AsyncStorage.setItem(STORAGE_KEYS.driveMode, JSON.stringify(enabled));
   },
 
+  // Smart Reading actions
+  startListening: () => set({ isListening: true }),
+
+  stopListening: () => set({ isListening: false }),
+
+  setCurrentWordIndex: (index: number) => set({ currentWordIndex: index }),
+
+  resetWordProgress: () => set({ currentWordIndex: 0 }),
+
+  setSmartReadingEnabled: (enabled: boolean) => {
+    set({ smartReadingEnabled: enabled });
+    AsyncStorage.setItem(STORAGE_KEYS.smartReading, JSON.stringify(enabled));
+  },
+
   hydrate: async () => {
     try {
-      const [theme, language, showTranslation, showNote, driveMode] = await Promise.all([
+      const [theme, language, showTranslation, showNote, driveMode, smartReading] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.theme),
         AsyncStorage.getItem(STORAGE_KEYS.language),
         AsyncStorage.getItem(STORAGE_KEYS.showTranslation),
         AsyncStorage.getItem(STORAGE_KEYS.showNote),
         AsyncStorage.getItem(STORAGE_KEYS.driveMode),
+        AsyncStorage.getItem(STORAGE_KEYS.smartReading),
       ]);
 
       set({
@@ -159,6 +192,7 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
         ...(showTranslation !== null && { showTranslation: JSON.parse(showTranslation) }),
         ...(showNote !== null && { showNote: JSON.parse(showNote) }),
         ...(driveMode !== null && { isDriveModeEnabled: JSON.parse(driveMode) }),
+        ...(smartReading !== null && { smartReadingEnabled: JSON.parse(smartReading) }),
         isHydrated: true,
       });
     } catch (error) {

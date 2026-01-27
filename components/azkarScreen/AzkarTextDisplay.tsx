@@ -4,6 +4,7 @@ import { removeTashkeel } from '@/utils';
 import React from 'react';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { Paragraph, ScrollView, Text, YStack } from 'tamagui';
+import { HighlightedAzkarText } from './HighlightedAzkarText';
 
 interface AzkarTextDisplayProps {
   currentZeker: AzkarItem;
@@ -11,9 +12,20 @@ interface AzkarTextDisplayProps {
   showNote: boolean;
   isDesktop: boolean;
   theme: 'light' | 'dark';
+  // Smart reading props
+  isListening?: boolean;
+  currentWordIndex?: number;
 }
 
-export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDesktop, theme }: AzkarTextDisplayProps) => {
+export const AzkarTextDisplay = ({
+  currentZeker,
+  showTranslation,
+  showNote,
+  isDesktop,
+  theme,
+  isListening = false,
+  currentWordIndex = 0,
+}: AzkarTextDisplayProps) => {
   const colors = THEME[theme];
 
   // Dynamic Font Size
@@ -40,24 +52,35 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
           exiting={FadeOutUp.duration(400)}
           style={{ alignItems: 'center', width: '100%' }}
         >
-          {(() => {
-            const fontSize = getDynamicFontSize(currentZeker.arabic, showTranslation);
-            return (
-              <Text
-                fontFamily="Amiri"
-                fontSize={fontSize}
-                lineHeight={fontSize * 1.8}
-                textAlign="center"
-                color={colors.textPrimary}
-                maw={isDesktop ? 800 : '100%'}
-                textShadowColor={theme === 'dark' ? "unset" : 'transparent'}
-                textShadowRadius={0}
-                textShadowOffset={{ width: 0, height: 0 }}
-              >
-                {currentZeker.arabic}
-              </Text>
-            );
-          })()}
+          {isListening ? (
+            <HighlightedAzkarText
+              text={currentZeker.arabic}
+              currentWordIndex={currentWordIndex}
+              isListening={isListening}
+              colors={colors}
+              isDesktop={isDesktop}
+              showTranslation={showTranslation}
+            />
+          ) : (
+            (() => {
+              const fontSize = getDynamicFontSize(currentZeker.arabic, showTranslation);
+              return (
+                <Text
+                  fontFamily="Amiri"
+                  fontSize={fontSize}
+                  lineHeight={fontSize * 1.8}
+                  textAlign="center"
+                  color={colors.textPrimary}
+                  maw={isDesktop ? 800 : '100%'}
+                  textShadowColor={theme === 'dark' ? "unset" : 'transparent'}
+                  textShadowRadius={0}
+                  textShadowOffset={{ width: 0, height: 0 }}
+                >
+                  {currentZeker.arabic}
+                </Text>
+              );
+            })()
+          )}
           <YStack py="$2" ai="center" opacity={0.8}>
             <Text
               color={colors.accent}

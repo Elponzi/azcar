@@ -45,7 +45,7 @@ const ToggleButton = ({ label, isActive, onPress, colors }: ToggleButtonProps) =
 export default function SettingsModal() {
   const { width, height } = useWindowDimensions();
   const isDesktop = width > 768;
-  const { theme, setTheme, language, setLanguage, isSettingsOpen, setSettingsOpen, showTranslation, setShowTranslation, showNote, setShowNote, isDriveModeEnabled, setDriveMode } = useAzkarStore();
+  const { theme, setTheme, language, setLanguage, isSettingsOpen, setSettingsOpen, showTranslation, setShowTranslation, showNote, setShowNote, isDriveModeEnabled, setDriveMode, smartReadingEnabled, setSmartReadingEnabled } = useAzkarStore();
   const t = TRANSLATIONS[language];
   const isRTL = language === 'ar';
   
@@ -245,7 +245,7 @@ export default function SettingsModal() {
                     <Text fontSize={12} fontWeight="600" textTransform="uppercase" color={colors.textSecondary} letterSpacing={1}>
                         {t.driveMode}
                     </Text>
-                    <Button 
+                    <Button
                         size="$1.5"
                         circular
                         chromeless
@@ -254,19 +254,46 @@ export default function SettingsModal() {
                         p={0}
                     />
                 </XStack>
-                
+
                 <XStack bg={colors.cardBg} p="$1" br="$4" bw={0}>
-                   <ToggleButton 
-                    label={t.off} 
-                    isActive={!isDriveModeEnabled} 
-                    onPress={() => setDriveMode(false)} 
-                    colors={colors} 
+                   <ToggleButton
+                    label={t.off}
+                    isActive={!isDriveModeEnabled}
+                    onPress={() => setDriveMode(false)}
+                    colors={colors}
                   />
-                  <ToggleButton 
-                    label={t.on} 
-                    isActive={isDriveModeEnabled} 
-                    onPress={() => setDriveMode(true)} 
-                    colors={colors} 
+                  <ToggleButton
+                    label={t.on}
+                    isActive={isDriveModeEnabled}
+                    onPress={() => setDriveMode(true)}
+                    colors={colors}
+                  />
+                </XStack>
+            </YStack>
+
+            {/* Smart Reading Section */}
+            <YStack space="$4">
+                <YStack space="$1">
+                    <Text fontSize={12} fontWeight="600" textTransform="uppercase" color={colors.textSecondary} letterSpacing={1}>
+                        {t.smartReading}
+                    </Text>
+                    <Text fontSize={10} color={colors.textDim}>
+                        {t.smartReadingDesc}
+                    </Text>
+                </YStack>
+
+                <XStack bg={colors.cardBg} p="$1" br="$4" bw={0}>
+                   <ToggleButton
+                    label={t.off}
+                    isActive={!smartReadingEnabled}
+                    onPress={() => setSmartReadingEnabled(false)}
+                    colors={colors}
+                  />
+                  <ToggleButton
+                    label={t.on}
+                    isActive={smartReadingEnabled}
+                    onPress={() => setSmartReadingEnabled(true)}
+                    colors={colors}
                   />
                 </XStack>
             </YStack>

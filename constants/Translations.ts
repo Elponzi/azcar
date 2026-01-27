@@ -24,7 +24,13 @@ export const TRANSLATIONS = {
     times: "times",
     adhkar: "Adhkar",
     driveModeInfoTitle: "What is Drive Mode?",
-    driveModeInfoDesc: "This allows you to use your car's steering wheel buttons (Next/Previous) or headphone controls to navigate through the Adhkar without touching your phone."
+    driveModeInfoDesc: "This allows you to use your car's steering wheel buttons (Next/Previous) or headphone controls to navigate through the Adhkar without touching your phone.",
+    smartReading: "Smart Reading",
+    smartReadingDesc: "Voice-activated counting - speak the Azkar and the app will count for you",
+    startListening: "Tap to start listening",
+    listeningActive: "Listening...",
+    listeningPaused: "Paused - tap to resume",
+    micPermissionRequired: "Microphone permission required"
   },
   ar: {
     morning: "الصباح",
@@ -52,7 +58,13 @@ export const TRANSLATIONS = {
     time: "مرة",
     adhkar: "أذكار",
     driveModeInfoTitle: "ما هو وضع القيادة؟",
-    driveModeInfoDesc: "يسمح لك باستخدام أزرار التحكم في مقود السيارة (التالي/السابق) أو سماعات الرأس للتنقل بين الأذكار دون الحاجة لمس الهاتف."
+    driveModeInfoDesc: "يسمح لك باستخدام أزرار التحكم في مقود السيارة (التالي/السابق) أو سماعات الرأس للتنقل بين الأذكار دون الحاجة لمس الهاتف.",
+    smartReading: "القراءة الذكية",
+    smartReadingDesc: "العد الصوتي - اقرأ الأذكار وسيعد التطبيق لك تلقائياً",
+    startListening: "انقر لبدء الاستماع",
+    listeningActive: "جاري الاستماع...",
+    listeningPaused: "متوقف - انقر للاستئناف",
+    micPermissionRequired: "يتطلب إذن الميكروفون"
   }
 };
 

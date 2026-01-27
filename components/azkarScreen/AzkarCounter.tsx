@@ -7,6 +7,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 import { Button, Text, XStack, YStack } from 'tamagui';
 
 import DivineLight from '@/components/DivineLight';
+import { MicrophoneButton } from '@/components/MicrophoneButton';
 import { ProgressRing } from '@/components/ProgressRing';
 import { THEME } from '@/constants/Theme';
 
@@ -21,19 +22,33 @@ interface AzkarCounterProps {
   isDesktop: boolean;
   language: 'en' | 'ar';
   t: any;
+  // Smart reading props
+  isListening?: boolean;
+  isAvailable?: boolean;
+  hasPermission?: boolean | null;
+  onToggleListening?: () => void;
+  smartReadingEnabled?: boolean;
+  // Debug
+  debugTranscript?: string;
 }
 
-export const AzkarCounter = ({ 
-  count, 
-  target, 
-  progress, 
-  onIncrement, 
-  onReset, 
-  onComplete, 
-  theme, 
+export const AzkarCounter = ({
+  count,
+  target,
+  progress,
+  onIncrement,
+  onReset,
+  onComplete,
+  theme,
   isDesktop,
   language,
-  t 
+  t,
+  isListening = false,
+  isAvailable = false,
+  hasPermission = null,
+  onToggleListening,
+  smartReadingEnabled = false,
+  debugTranscript = '',
 }: AzkarCounterProps) => {
   const colors = THEME[theme];
   const ringTrackColor = colors.cardBg;
@@ -81,6 +96,7 @@ export const AzkarCounter = ({
   }, [t, language, remaining])
 
   return (
+    <YStack ai="center" space="$4">
       <XStack ai="center" jc="center" position="relative">
         <Pressable 
           onPress={() => {
@@ -140,13 +156,32 @@ export const AzkarCounter = ({
           </Animated.View>
         </Pressable>
 
+        {/* Microphone Button - Left side */}
+        {smartReadingEnabled && isAvailable && onToggleListening && (
+          <YStack
+            position="absolute"
+            bottom={-10}
+            left={isDesktop ? -40 : -20}
+          >
+            <MicrophoneButton
+              isListening={isListening}
+              isAvailable={isAvailable}
+              hasPermission={hasPermission}
+              onPress={onToggleListening}
+              colors={colors}
+              isDesktop={isDesktop}
+            />
+          </YStack>
+        )}
+
+        {/* Reset Button - Right side */}
         {count > 0 && (
-          <Button 
-            size="$3" 
-            circular 
+          <Button
+            size="$3"
+            circular
             bg={colors.cardBg}
             color={colors.textSecondary}
-            icon={<Ionicons name="refresh" size={20} color={colors.textSecondary} />} 
+            icon={<Ionicons name="refresh" size={20} color={colors.textSecondary} />}
             onPress={onReset}
             position="absolute"
             bottom={-10}
@@ -157,5 +192,31 @@ export const AzkarCounter = ({
           />
         )}
       </XStack>
+
+      {/* Debug: Speech Recognition Transcript */}
+      {isListening && (
+        <YStack
+          bg={colors.cardBg}
+          px="$4"
+          py="$2"
+          br="$4"
+          maw={300}
+          bw={1}
+          bc={colors.accent}
+        >
+          <Text fontSize={10} color={colors.textSecondary} mb="$1">
+            Speech Recognition:
+          </Text>
+          <Text
+            fontSize={14}
+            color={colors.textPrimary}
+            textAlign="center"
+            fontFamily="Amiri"
+          >
+            {debugTranscript || '(waiting for speech...)'}
+          </Text>
+        </YStack>
+      )}
+    </YStack>
   );
 };

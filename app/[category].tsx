@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo   } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useWindowDimensions, StyleSheet } from 'react-native';
 import { YStack, XStack, Button, Text, ScrollView, View } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,6 +28,7 @@ import { DesktopCategoryNav } from '@/components/azkarScreen/DesktopCategoryNav'
 // Hooks
 import { useParallax } from '@/hooks/useParallax';
 import { useWebKeyboard } from '@/hooks/useWebKeyboard';
+import { useSmartReading } from '@/hooks/useSmartReading';
 
 export default function CategoryScreen() {
   const { width } = useWindowDimensions();
@@ -53,7 +54,15 @@ export default function CategoryScreen() {
     language,
     setSettingsOpen,
     showTranslation,
-    showNote
+    showNote,
+    // Smart reading state
+    isListening,
+    currentWordIndex,
+    smartReadingEnabled,
+    startListening,
+    stopListening,
+    setCurrentWordIndex,
+    resetWordProgress,
   } = useAzkarStore();
 
   // Sync URL param with Store
@@ -89,6 +98,120 @@ export default function CategoryScreen() {
   const isFirst = currentIndex === 0;
   const isLast = currentIndex === filteredAzkar.length - 1;
 
+  // Track if we're in the middle of auto-advancing to prevent loops
+  const isAutoAdvancingRef = useRef(false);
+
+  // Handle word match - update word index in store
+  const handleWordMatched = useCallback((newIndex: number) => {
+    setCurrentWordIndex(newIndex);
+  }, [setCurrentWordIndex]);
+
+  // Handle recitation complete - increment count and manage navigation
+  const handleRecitationComplete = useCallback(() => {
+    if (isAutoAdvancingRef.current) return;
+
+    const currentCount = counts[currentZeker?.id] || 0;
+    const target = currentZeker?.target || 1;
+
+    // Increment the count
+    incrementCount();
+
+    const newCount = currentCount + 1;
+
+    if (newCount >= target) {
+      // Target reached - stop listening and advance to next zeker after delay
+      isAutoAdvancingRef.current = true;
+      stopListening();
+
+      setTimeout(() => {
+        if (!isLast) {
+          nextZeker();
+          resetWordProgress();
+          // Resume listening for the next zeker
+          setTimeout(() => {
+            isAutoAdvancingRef.current = false;
+            if (smartReadingEnabled) {
+              startListening();
+            }
+          }, 500);
+        } else {
+          isAutoAdvancingRef.current = false;
+        }
+      }, 1500);
+    } else {
+      // Target not reached - reset word progress and continue
+      resetWordProgress();
+    }
+  }, [
+    counts,
+    currentZeker,
+    incrementCount,
+    stopListening,
+    isLast,
+    nextZeker,
+    resetWordProgress,
+    smartReadingEnabled,
+    startListening,
+  ]);
+
+  // Handle silence timeout
+  const handleSilenceTimeout = useCallback(() => {
+    stopListening();
+  }, [stopListening]);
+
+  // Smart reading hook
+  const {
+    isAvailable: smartReadingAvailable,
+    hasPermission: smartReadingPermission,
+    startListening: startSmartReading,
+    stopListening: stopSmartReading,
+    requestPermission: requestSmartReadingPermission,
+    lastTranscript,
+  } = useSmartReading({
+    text: currentZeker?.arabic || '',
+    isEnabled: smartReadingEnabled && isListening,
+    currentWordIndex,
+    onWordMatched: handleWordMatched,
+    onRecitationComplete: handleRecitationComplete,
+    onSilenceTimeout: handleSilenceTimeout,
+  });
+
+  // Toggle listening - IMPORTANT: Keep this synchronous for Web Speech API
+  const handleToggleListening = useCallback(() => {
+    console.log('[handleToggleListening] Called, isListening:', isListening);
+    if (isListening) {
+      console.log('[handleToggleListening] Stopping...');
+      stopListening();
+      stopSmartReading();
+    } else {
+      // Start synchronously to maintain user gesture context
+      console.log('[handleToggleListening] Starting...');
+      startListening();
+      resetWordProgress();
+      startSmartReading();
+    }
+  }, [
+    isListening,
+    stopListening,
+    stopSmartReading,
+    startListening,
+    resetWordProgress,
+    startSmartReading,
+  ]);
+
+  // Reset word progress when changing zeker
+  useEffect(() => {
+    resetWordProgress();
+  }, [currentIndex, resetWordProgress]);
+
+  // Stop listening when changing category
+  useEffect(() => {
+    if (isListening) {
+      stopListening();
+      stopSmartReading();
+    }
+  }, [currentCategory]);
+
   // Parallax Effects
   const starParallax = useParallax(EFFECTS_CONFIG.parallax.starsDepth);
   const moonParallax = useParallax(EFFECTS_CONFIG.parallax.moonDepth);
@@ -106,7 +229,7 @@ export default function CategoryScreen() {
       try {
         await setAudioModeAsync({
           playsInSilentMode: true,
-          allowsRecording: false,
+          allowsRecording: true, // Enable for speech recognition
           shouldPlayInBackground: false,
           interruptionMode: 'duckOthers',
         });
@@ -204,12 +327,14 @@ export default function CategoryScreen() {
         <XStack f={1} fd={isDesktop ? (isRTL ? 'row-reverse' : 'row') : 'column'}>
           
           {/* Text Section */}
-          <AzkarTextDisplay 
+          <AzkarTextDisplay
             currentZeker={currentZeker}
             showTranslation={showTranslation}
             showNote={showNote}
             isDesktop={isDesktop}
             theme={theme}
+            isListening={isListening}
+            currentWordIndex={currentWordIndex}
           />
 
           {/* Controls Section Container */}
@@ -230,7 +355,7 @@ export default function CategoryScreen() {
             brw={isDesktop ? (isRTL ? 1 : 0) : 0}
             zIndex={10}
           >
-            <AzkarCounter 
+            <AzkarCounter
               count={count}
               target={currentZeker.target}
               progress={progress}
@@ -241,6 +366,12 @@ export default function CategoryScreen() {
               isDesktop={isDesktop}
               language={language}
               t={t}
+              isListening={isListening}
+              isAvailable={smartReadingAvailable}
+              hasPermission={smartReadingPermission}
+              onToggleListening={handleToggleListening}
+              smartReadingEnabled={smartReadingEnabled}
+              debugTranscript={lastTranscript}
             />
 
             {/* Nav Controls */}
