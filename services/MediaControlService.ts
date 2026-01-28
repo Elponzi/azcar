@@ -19,8 +19,7 @@ class MediaControlServiceNative implements MediaControlServiceInterface {
   private listeners: any[] = [];
 
   async setupPlayer() {
-    if (this.isSetup) return;
-
+    // 1. Initialize Player if needed (idempotent)
     try {
       await TrackPlayer.setupPlayer();
       await TrackPlayer.updateOptions({
@@ -37,13 +36,20 @@ class MediaControlServiceNative implements MediaControlServiceInterface {
           Capability.SkipToPrevious,
         ],
       });
+    } catch (e) {
+      // Player already setup, ignore
+    }
 
+    // 2. Prepare Session (Reset to clear old state, then add track)
+    try {
+      if (this.isSetup) {
+         await TrackPlayer.reset();
+      }
       await TrackPlayer.add([SILENT_TRACK]);
-      await TrackPlayer.setRepeatMode(RepeatMode.Track); // Track loop
+      await TrackPlayer.setRepeatMode(RepeatMode.Track);
       this.isSetup = true;
     } catch (e) {
-      // Player might already be set up
-      this.isSetup = true;
+      console.warn('MediaControlService: Setup failed', e);
     }
   }
 
@@ -51,8 +57,6 @@ class MediaControlServiceNative implements MediaControlServiceInterface {
     if (!this.isSetup) return;
     
     // We update the current track's metadata
-    // TrackPlayer doesn't have a direct "updateMetadata" for the *session* independent of the track 
-    // in the same way web does, but we can update the track info in the queue.
     await TrackPlayer.updateMetadataForTrack(0, {
       title: metadata.title,
       artist: metadata.artist,
@@ -90,9 +94,14 @@ class MediaControlServiceNative implements MediaControlServiceInterface {
     }));
   }
 
-  destroy() {
+  async destroy() {
     this.cleanupListeners();
-    // We generally don't destroy the player instance in RN-TrackPlayer unless strictly needed
+    try {
+      await TrackPlayer.reset(); // Stops playback and clears the notification
+    } catch (e) {
+      // Ignore
+    }
+    this.isSetup = false;
   }
 
   private cleanupListeners() {
