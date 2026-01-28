@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
+import { useKeepAwake } from 'expo-keep-awake';
 import { TamaguiProvider } from 'tamagui';
 import config from '../tamagui.config';
 
@@ -29,6 +30,7 @@ SplashScreen.preventAutoHideAsync();
 setupNativePlayer();
 
 export default function RootLayout() {
+  useKeepAwake();
   const [loaded, error] = useFonts({
     Tajawal: require('../assets/fonts/Tajawal-Regular.ttf'),
     Amiri: require('../assets/fonts/Amiri-Bold.ttf'),
