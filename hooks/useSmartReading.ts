@@ -48,47 +48,49 @@ export const useSmartReading = () => {
     }, 30000);
   }, [isSmartReadingEnabled, setSmartReadingEnabled]);
 
-  const handleMatch = useCallback((spokenText: string) => {
+  const handleMatch = useCallback((spokenText: string, baseIndex: number) => {
+    if (!spokenText) return;
+
     resetSilenceTimer();
-    setTranscript(spokenText);
+    setTranscript(prev => (prev !== spokenText ? spokenText : prev));
     
     if (activeWordIndex >= expectedWords.length) return;
 
     const normalizedSpoken = normalizeArabic(spokenText);
     const spokenWords = normalizedSpoken.split(/\s+/);
 
-    let nextIndex = activeWordIndex;
-    if (nextIndex === -1) nextIndex = 0;
+    let nextIndex = Math.max(0, baseIndex);
     
-    let matchesFound = 0;
-
     // Greedy sequential matching
     for (const word of spokenWords) {
         if (nextIndex >= expectedWords.length) break;
         
         const expected = expectedWords[nextIndex];
         
+        // Safety check for expected word
+        if (!expected) {
+            nextIndex++;
+            continue;
+        }
+        
         // 1. Exact Match
         if (word === expected) {
              nextIndex++;
-             matchesFound++;
              continue;
         }
 
         // 2. Fuzzy Match (Constrained)
-        // Only allow substring matching for longer words to avoid false positives with short particles
         if (word.length > 3 && expected.length > 3) {
             const isSubstring = word.includes(expected) || expected.includes(word);
             const lengthDiff = Math.abs(word.length - expected.length);
 
             if (isSubstring && lengthDiff <= 2) {
                 nextIndex++;
-                matchesFound++;
             }
         }
     }
     
-    if (matchesFound > 0) {
+    if (nextIndex > activeWordIndex) {
        setActiveWordIndex(nextIndex);
 
        // Check completion
@@ -108,12 +110,16 @@ export const useSmartReading = () => {
                  // Next Zeker
                  setTimeout(() => {
                      nextZeker();
-                     // Recognition will restart via useEffect because isSmartReadingEnabled is still true
                  }, 1500);
              } else {
                  // Reset for next repetition
                  setActiveWordIndex(0);
                  setTranscript("");
+                 
+                 // Reset segment tracking
+                 segmentBaseIndex.current = 0;
+                 lastResultIndex.current = -1;
+
                  // For web, if we stopped it, restart it now
                  if (isWeb && isSmartReadingEnabled && recognitionRef.current) {
                      try { recognitionRef.current.start(); } catch(e){}
@@ -128,6 +134,15 @@ export const useSmartReading = () => {
 
   const handleMatchRef = useRef(handleMatch);
   const isStopping = useRef(false);
+  const segmentBaseIndex = useRef(0);
+  const lastResultIndex = useRef(-1);
+
+  // Reset segments when Zeker changes
+  useEffect(() => {
+      segmentBaseIndex.current = 0;
+      lastResultIndex.current = -1;
+      setTranscript("");
+  }, [currentIndex]);
 
   useEffect(() => {
     handleMatchRef.current = handleMatch;
@@ -153,9 +168,17 @@ export const useSmartReading = () => {
 
     recognition.onresult = (event: any) => {
       const results = event.results;
-      const lastResult = results[results.length - 1];
+      const currentResultIndex = results.length - 1;
+      const lastResult = results[currentResultIndex];
       const text = lastResult[0].transcript;
-      handleMatchRef.current(text);
+
+      // Detect new segment
+      if (currentResultIndex > lastResultIndex.current) {
+          segmentBaseIndex.current = Math.max(0, activeWordIndex);
+          lastResultIndex.current = currentResultIndex;
+      }
+
+      handleMatchRef.current(text, segmentBaseIndex.current);
     };
 
     recognition.onerror = (event: any) => {
@@ -197,18 +220,29 @@ export const useSmartReading = () => {
 
     const onSpeechPartialResults = (e: SpeechResultsEvent) => {
       if (e.value && e.value.length > 0) {
-        handleMatch(e.value[0]);
+        // Native is assumed cumulative for the session
+        handleMatchRef.current(e.value[0], 0);
       }
     };
     
     const onSpeechError = (e: any) => {
         console.log("Voice Error", e);
-        // Don't auto-disable immediately on simple errors, but maybe on specific ones
+        // Restart on error (e.g. timeout/no match) if enabled
+        if (isSmartReadingEnabled && !isStopping.current) {
+            try { Voice.start('ar-SA'); } catch (e) {}
+        }
+    };
+
+    const onSpeechEnd = () => {
+        if (isSmartReadingEnabled && !isStopping.current) {
+            try { Voice.start('ar-SA'); } catch (e) {}
+        }
     };
 
     if (isSmartReadingEnabled) {
       Voice.onSpeechPartialResults = onSpeechPartialResults;
       Voice.onSpeechError = onSpeechError;
+      Voice.onSpeechEnd = onSpeechEnd;
       
       Voice.start('ar-SA').catch(e => {
           console.error("Failed to start Voice", e);
@@ -225,7 +259,7 @@ export const useSmartReading = () => {
       Voice.destroy().then(Voice.removeAllListeners);
       if (silenceTimer.current) clearTimeout(silenceTimer.current);
     };
-  }, [isWeb, isSmartReadingEnabled, handleMatch]);
+  }, [isWeb, isSmartReadingEnabled]); // Removed handleMatch from dependencies
 
   return { transcript };
 };

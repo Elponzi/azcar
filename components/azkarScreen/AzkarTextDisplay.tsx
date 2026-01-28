@@ -95,6 +95,7 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
              return (
                <Text 
                  key={index} 
+                 fontFamily="Amiri"
                  color={highlightColor}
                  textDecorationLine={textDecorationLine}
                  opacity={opacity}
