@@ -39,8 +39,6 @@ export default function CategoryScreen() {
   const router = useRouter();
   const { category: categoryParam } = useLocalSearchParams<{ category: string }>();
 
-  const { isListening, transcript, startRecognition, stopRecognition } = useSmartTrack();
-
   const {
     currentCategory,
     currentIndex,
@@ -58,6 +56,17 @@ export default function CategoryScreen() {
     showTranslation,
     showNote
   } = useAzkarStore();
+
+
+  const currentZeker = filteredAzkar[currentIndex];
+
+  const { isListening, transcript, startRecognition, stopRecognition, activeWordIndex } = useSmartTrack({
+    targetText: currentZeker?.arabic,
+    onComplete: () => {
+       // Optional: Auto increment or feedback
+       // incrementCount(); 
+    }
+  });
 
   // Sync URL param with Store
   useEffect(() => {
@@ -83,7 +92,6 @@ export default function CategoryScreen() {
   const t = TRANSLATIONS[language];
   const isRTL = language === 'ar';
   
-  const currentZeker = filteredAzkar[currentIndex];
   const count = counts[currentZeker?.id] || 0;
   const progress = Math.min((count / currentZeker?.target) * 100, 100);
   
@@ -213,6 +221,7 @@ export default function CategoryScreen() {
             showNote={showNote}
             isDesktop={isDesktop}
             theme={theme}
+            activeWordIndex={isListening ? activeWordIndex : -1}
           />
 
           {/* Controls Section Container */}

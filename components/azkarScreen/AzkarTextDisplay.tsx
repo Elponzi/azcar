@@ -11,9 +11,10 @@ interface AzkarTextDisplayProps {
   showNote: boolean;
   isDesktop: boolean;
   theme: 'light' | 'dark';
+  activeWordIndex?: number;
 }
 
-export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDesktop, theme }: AzkarTextDisplayProps) => {
+export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDesktop, theme, activeWordIndex = -1 }: AzkarTextDisplayProps) => {
   const colors = THEME[theme];
 
   // Dynamic Font Size
@@ -27,6 +28,8 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
     if (len < 300) return (isDesktop ? 24 : 18) * boost;
     return (isDesktop ? 20 : 18) * boost;
   };
+
+  const words = React.useMemo(() => currentZeker.arabic.split(' '), [currentZeker.arabic]);
 
   return (
     <YStack f={1} px="$6" pb="$0" pt={isDesktop ? "0" : "$4"} jc="center" ai="center" space="$4">
@@ -42,19 +45,43 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
         >
           {(() => {
             const fontSize = getDynamicFontSize(currentZeker.arabic, showTranslation);
+            
             return (
               <Text
                 fontFamily="Amiri"
                 fontSize={fontSize}
                 lineHeight={fontSize * 1.8}
                 textAlign="center"
-                color={colors.textPrimary}
                 maw={isDesktop ? 800 : '100%'}
                 textShadowColor={theme === 'dark' ? "unset" : 'transparent'}
                 textShadowRadius={0}
                 textShadowOffset={{ width: 0, height: 0 }}
               >
-                {currentZeker.arabic}
+                {activeWordIndex === -1 ? (
+                   // Default rendering
+                   <Text fontFamily="Amiri" color={colors.textPrimary}>{currentZeker.arabic}</Text>
+                ) : (
+                   // Word-by-word rendering
+                   words.map((word, index) => {
+                     const isRead = index < activeWordIndex;
+                     const isCurrent = index === activeWordIndex;
+                     
+                     return (
+                       <Text
+                         key={`${currentZeker.id}-${index}`}
+                         color={isRead ? colors.accent : (isCurrent ? colors.textPrimary : colors.textDim)}
+                         opacity={isRead ? 1 : (isCurrent ? 1 : 0.3)}
+                         fontWeight={isCurrent ? 'bold' : 'normal'}
+                         scale={isCurrent ? 1.1 : 1}
+                         textShadowRadius={isCurrent ? 10 : 0}
+                         textShadowColor={isCurrent ? colors.accentGlow : 'transparent'}
+                         fontFamily="Amiri"
+                       >
+                         {word}{' '}
+                       </Text>
+                     );
+                   })
+                )}
               </Text>
             );
           })()}
