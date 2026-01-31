@@ -34,9 +34,10 @@ export function useSmartTrack({ targetText = "", onComplete }: UseSmartTrackProp
 
   useEffect(() => {
     if (targetText) {
-      // Split first, then normalize each word to preserve tokenization
-      // normalizeArabic removes spaces, so we must split before normalizing
-      targetWordsRef.current = targetText.split(/\s+/).map(w => normalizeArabic(w)).filter(w => w.length > 0);
+      // Split raw text into tokens by whitespace
+      const rawTokens = targetText.split(/\s+/).filter(Boolean);
+      // Normalize each token (this removes commas/punctuation from the comparison base)
+      targetWordsRef.current = rawTokens.map(w => normalizeArabic(w)).filter(w => w.length > 0);
     } else {
       targetWordsRef.current = [];
     }

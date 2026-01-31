@@ -1,7 +1,7 @@
 import { THEME } from '@/constants/Theme';
 import { AzkarItem } from '@/data';
-import { removeTashkeel } from '@/utils';
-import React from 'react';
+import { removeTashkeel, normalizeArabic } from '@/utils';
+import React, { useMemo } from 'react';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { Paragraph, ScrollView, Text, YStack } from 'tamagui';
 
@@ -29,7 +29,21 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
     return (isDesktop ? 20 : 18) * boost;
   };
 
-  const words = React.useMemo(() => currentZeker.arabic.split(' '), [currentZeker.arabic]);
+  // Map visual words to logical indices (skipping punctuation)
+  const wordsWithLogicalIndex = useMemo(() => {
+    const rawWords = currentZeker.arabic.split(/\s+/).filter(Boolean);
+    let counter = 0;
+    
+    return rawWords.map((word) => {
+      const normalized = normalizeArabic(word);
+      const isValid = normalized.length > 0;
+      // If valid word, use current counter and increment.
+      // If punctuation (invalid), attach to previous word (counter - 1).
+      const logicalIndex = isValid ? counter++ : Math.max(0, counter - 1);
+      
+      return { word, logicalIndex };
+    });
+  }, [currentZeker.arabic]);
 
   return (
     <YStack f={1} px="$6" pb="$0" pt={isDesktop ? "0" : "$4"} jc="center" ai="center" space="$4">
@@ -62,22 +76,20 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
                    <Text fontFamily="Amiri" color={colors.textPrimary}>{currentZeker.arabic}</Text>
                 ) : (
                    // Word-by-word rendering
-                   words.map((word, index) => {
-                     const isRead = index < activeWordIndex;
-                     const isCurrent = index === activeWordIndex;
+                   wordsWithLogicalIndex.map((item, index) => {
+                     const isRead = item.logicalIndex < activeWordIndex;
+                     const isCurrent = item.logicalIndex === activeWordIndex;
                      
                      return (
                        <Text
                          key={`${currentZeker.id}-${index}`}
-                         color={isRead ? colors.accent : (isCurrent ? colors.textPrimary : colors.textDim)}
-                         opacity={isRead ? 1 : (isCurrent ? 1 : 0.3)}
-                         fontWeight={isCurrent ? 'bold' : 'normal'}
-                         scale={isCurrent ? 1.1 : 1}
+                         color={isCurrent ? colors.accent : colors.textPrimary}
+                         opacity={isRead ? 1 : (isCurrent ? 1 : 0.8)}
                          textShadowRadius={isCurrent ? 10 : 0}
                          textShadowColor={isCurrent ? colors.accentGlow : 'transparent'}
                          fontFamily="Amiri"
-                       >
-                         {word}{' '}
+                      >
+                         {item.word}{' '}
                        </Text>
                      );
                    })
