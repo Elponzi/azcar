@@ -40,14 +40,15 @@ const AzkarWord = memo(({
   // Apply opacity directly to color
   const finalColor = isRead 
     ? baseColor 
-    : (isCurrent ? baseColor : withOpacity(baseColor, 0.6)); // Using 0.6 for better contrast, 0.8 is too subtle
+    : (isCurrent ? baseColor : withOpacity(baseColor, 0.3)); // Using 0.6 for better contrast, 0.8 is too subtle
 
   return (
     <Text
       color={finalColor}
-      textShadowRadius={isCurrent ? 10 : 0}
-      textShadowColor={isCurrent ? colors.accentGlow : 'transparent'}
+      textShadowRadius={isCurrent ? 5 : 0}
+      textShadowOffset={{ width: 0, height: 0 }}
       fontFamily="Amiri"
+      scale={4}
     >
       {word}{' '}
     </Text>

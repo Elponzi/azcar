@@ -267,20 +267,25 @@ export default function CategoryScreen() {
               
               {!isDesktop && (
                 <Button
-                  size="$3"
-                  height={36}
-                  bg={isListening ? colors.danger : 'rgba(0,0,0,0.05)'} // Subtle background
-                  borderColor={colors.borderColor}
+                  size="$3.5"
+                  bg={isListening ? colors.accent : colors.cardBg}
+                  borderColor={isListening ? colors.accent : colors.borderColor}
                   borderWidth={1}
                   br="$10"
-                  pressStyle={{ opacity: 0.8, scale: 0.98 }}
+                  pressStyle={{ opacity: 0.8, scale: 0.96 }}
+                  hoverStyle={{
+                    bg: isListening ? colors.accent : colors.accentDim,
+                    borderColor: colors.accent 
+                  }}
                   onPress={isListening ? stopRecognition : startRecognition}
-                  icon={<Ionicons name={isListening ? "mic" : "mic-outline"} size={16} color={isListening ? "white" : colors.textSecondary} />}
+                  icon={<Ionicons name={isListening ? "mic" : "mic-outline"} size={18} color={isListening ? colors.background : colors.textPrimary} />}
                   space="$2"
+                  animation="quick"
+                  elevation={isListening ? "$2" : "$0"}
                 >
                   <Text 
-                    color={isListening ? "white" : colors.textSecondary} 
-                    fontSize={12} 
+                    color={isListening ? colors.background : colors.textPrimary} 
+                    fontSize={13} 
                     fontWeight="600"
                   >
                     {t.startReading}
@@ -296,21 +301,6 @@ export default function CategoryScreen() {
                 disabled={isRTL ? isFirst : isLast}
               />
             </XStack>
-
-            {/* Debug Transcript */}
-            {isListening && (
-              <YStack ai="center" mt="$2" h={20}>
-                <Text 
-                  fontSize={12} 
-                  color={colors.accent} 
-                  textAlign="center" 
-                  opacity={0.8} 
-                  fontStyle="italic"
-                >
-                   {transcript ? `"${transcript}"` : "..."}
-                </Text>
-              </YStack>
-            )}
           </YStack>
 
         </XStack>
