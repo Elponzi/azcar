@@ -28,6 +28,7 @@ import { DesktopCategoryNav } from '@/components/azkarScreen/DesktopCategoryNav'
 // Hooks
 import { useParallax } from '@/hooks/useParallax';
 import { useWebKeyboard } from '@/hooks/useWebKeyboard';
+import { useSmartTrack } from '@/hooks/useSmartTrack';
 
 export default function CategoryScreen() {
   const { width } = useWindowDimensions();
@@ -37,6 +38,8 @@ export default function CategoryScreen() {
   
   const router = useRouter();
   const { category: categoryParam } = useLocalSearchParams<{ category: string }>();
+
+  const { isListening, transcript, startRecognition, stopRecognition } = useSmartTrack();
 
   const {
     currentCategory,
@@ -254,15 +257,26 @@ export default function CategoryScreen() {
               />
               
               {!isDesktop && (
-                <Text 
-                  textTransform="uppercase" 
-                  letterSpacing={1} 
-                  fontSize={12} 
-                  color={colors.textSecondary}
-                  fontWeight="600"
+                <Button
+                  size="$3"
+                  height={36}
+                  bg={isListening ? colors.danger : 'rgba(0,0,0,0.05)'} // Subtle background
+                  borderColor={colors.borderColor}
+                  borderWidth={1}
+                  br="$10"
+                  pressStyle={{ opacity: 0.8, scale: 0.98 }}
+                  onPress={isListening ? stopRecognition : startRecognition}
+                  icon={<Ionicons name={isListening ? "mic" : "mic-outline"} size={16} color={isListening ? "white" : colors.textSecondary} />}
+                  space="$2"
                 >
-                  {t.driveMode}
-                </Text>
+                  <Text 
+                    color={isListening ? "white" : colors.textSecondary} 
+                    fontSize={12} 
+                    fontWeight="600"
+                  >
+                    {t.startReading}
+                  </Text>
+                </Button>
               )}
 
               <NavButton 
@@ -273,6 +287,21 @@ export default function CategoryScreen() {
                 disabled={isRTL ? isFirst : isLast}
               />
             </XStack>
+
+            {/* Debug Transcript */}
+            {isListening && (
+              <YStack ai="center" mt="$2" h={20}>
+                <Text 
+                  fontSize={12} 
+                  color={colors.accent} 
+                  textAlign="center" 
+                  opacity={0.8} 
+                  fontStyle="italic"
+                >
+                   {transcript ? `"${transcript}"` : "..."}
+                </Text>
+              </YStack>
+            )}
           </YStack>
 
         </XStack>
