@@ -232,7 +232,7 @@ export default function CategoryScreen() {
             bg={isDesktop ? colors.background : 'transparent'} 
             px="$6"
             pt="$4"
-            pb={isDesktop ? "$6" : insets.bottom}
+            pb={isDesktop ? "$6" : insets.bottom + 10}
             jc="center" 
             ai="center" 
             space="$6"
@@ -256,7 +256,7 @@ export default function CategoryScreen() {
             />
 
             {/* Nav Controls */}
-            <XStack w="100%" jc={isDesktop ? "center" : "space-between"} gap={isDesktop ? "$6" : "$0"} ai="center" px="$2" fd={isRTL ? 'row-reverse' : 'row'}>
+            <XStack w="100%" jc={isDesktop ? "center" : "space-between"} gap={isDesktop ? "$6" : "$0"} ai="center" px="$2" fd={'row'}>
               <NavButton 
                 iconName={isRTL ? "chevron-forward" : "chevron-back"}
                 onPress={isRTL ? nextZeker : prevZeker}
@@ -265,7 +265,6 @@ export default function CategoryScreen() {
                 disabled={isRTL ? isLast : isFirst}
               />
               
-              {!isDesktop && (
                 <Button
                   size="$3.5"
                   bg={isListening ? colors.accent : colors.cardBg}
@@ -278,7 +277,7 @@ export default function CategoryScreen() {
                     borderColor: colors.accent 
                   }}
                   onPress={isListening ? stopRecognition : startRecognition}
-                  icon={<Ionicons name={isListening ? "mic" : "mic-outline"} size={18} color={isListening ? colors.background : colors.textPrimary} />}
+                  icon={<Ionicons name={isListening ? "mic-off" : "mic-outline"} size={18} color={isListening ? colors.background : colors.textPrimary} />}
                   space="$2"
                   animation="quick"
                   elevation={isListening ? "$2" : "$0"}
@@ -291,7 +290,6 @@ export default function CategoryScreen() {
                     {t.startReading}
                   </Text>
                 </Button>
-              )}
 
               <NavButton 
                 iconName={isRTL ? "chevron-back" : "chevron-forward"}

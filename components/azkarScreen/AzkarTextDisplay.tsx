@@ -1,8 +1,8 @@
 import { THEME } from '@/constants/Theme';
 import { AzkarItem } from '@/data';
 import { removeTashkeel, normalizeArabic, tokenizeArabicText } from '@/utils';
-import React, { useMemo, memo } from 'react';
-import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
+import React, { useMemo, memo, useEffect } from 'react';
+import Animated, { FadeInDown, FadeOutUp, useSharedValue, useAnimatedStyle, withTiming, interpolateColor, withDelay } from 'react-native-reanimated';
 import { Paragraph, ScrollView, Text, YStack } from 'tamagui';
 
 interface AzkarTextDisplayProps {
@@ -13,6 +13,9 @@ interface AzkarTextDisplayProps {
   theme: 'light' | 'dark';
   activeWordIndex?: number;
 }
+
+// Create Animated version of Tamagui Text
+const AnimatedText = Animated.createAnimatedComponent(Text);
 
 // Helper to apply opacity to hex color
 const withOpacity = (hex: string, alpha: number) => {
@@ -25,33 +28,66 @@ const withOpacity = (hex: string, alpha: number) => {
 const AzkarWord = memo(({ 
   word, 
   status, 
-  colors 
+  textPrimary,
+  accent,
+  accentGlow
 }: { 
   word: string, 
   status: 'read' | 'current' | 'upcoming', 
-  colors: any 
+  textPrimary: string,
+  accent: string,
+  accentGlow: string
 }) => {
-  const isRead = status === 'read';
-  const isCurrent = status === 'current';
+  // State representation: 0 = Upcoming, 1 = Current, 2 = Read
+  const progress = useSharedValue(0);
 
-  // Determine base color
-  const baseColor = isCurrent ? colors.accent : colors.textPrimary;
-  
-  // Apply opacity directly to color
-  const finalColor = isRead 
-    ? baseColor 
-    : (isCurrent ? baseColor : withOpacity(baseColor, 0.3)); // Using 0.6 for better contrast, 0.8 is too subtle
+  // Pre-calculate colors on JS thread to avoid worklet issues with helper functions
+  const upcomingColor = useMemo(() => withOpacity(textPrimary, 0.6), [textPrimary]);
+  const currentColor = accent;
+  const readColor = textPrimary;
+  const glowColorVal = accentGlow;
+
+  useEffect(() => {
+    if (status === 'upcoming') {
+      progress.value = withTiming(0, { duration: 300 });
+    } else if (status === 'current') {
+      progress.value = withTiming(1, { duration: 150 }); 
+    } else if (status === 'read') {
+      progress.value = withTiming(2, { duration: 800 }); 
+    }
+  }, [status]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    const color = interpolateColor(
+      progress.value,
+      [0, 1, 2],
+      [upcomingColor, currentColor, readColor]
+    );
+
+    const shadowOpacity = 1 - Math.abs(progress.value - 1); 
+    const shadowRadius = shadowOpacity * 10;
+    
+    const glowColor = interpolateColor(
+        progress.value,
+        [0.8, 1, 1.2], 
+        ['transparent', glowColorVal, 'transparent']
+    );
+
+    return {
+      color,
+      textShadowRadius: shadowRadius,
+      textShadowColor: glowColor,
+    };
+  });
 
   return (
-    <Text
-      color={finalColor}
-      textShadowRadius={isCurrent ? 5 : 0}
+    <AnimatedText
+      style={animatedStyle}
       textShadowOffset={{ width: 0, height: 0 }}
       fontFamily="Amiri"
-      scale={4}
     >
       {word}{' '}
-    </Text>
+    </AnimatedText>
   );
 });
 
@@ -82,13 +118,11 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
         result.push({ word: '\n', logicalIndex: -1, isNewline: true });
       } else {
         // 2. Split segments by other whitespace
-        const segmentWords = segment.split(/\s+/);
+        const segmentWords = tokenizeArabicText(segment); // Use helper!
         segmentWords.forEach(word => {
            if (!word) return;
            const normalized = normalizeArabic(word);
            const isValid = normalized.length > 0;
-           // If valid word, use current counter and increment.
-           // If punctuation (invalid), attach to previous word.
            const logicalIndex = isValid ? counter++ : Math.max(0, counter - 1);
            result.push({ word, logicalIndex, isNewline: false });
         });
@@ -133,7 +167,10 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
                      }
 
                      let status: 'read' | 'current' | 'upcoming' = 'upcoming';
-                     if (item.logicalIndex < activeWordIndex) status = 'read';
+
+                     if (item.logicalIndex < activeWordIndex) {
+                        status = 'read';
+                     }
                      else if (item.logicalIndex === activeWordIndex) status = 'current';
 
                      return (
@@ -141,7 +178,9 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
                          key={`${currentZeker.id}-${index}`}
                          word={item.word}
                          status={status}
-                         colors={colors}
+                         textPrimary={colors.textPrimary}
+                         accent={colors.accent}
+                         accentGlow={colors.accentGlow}
                        />
                      );
                    })

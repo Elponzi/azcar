@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { Platform } from 'react-native';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import { normalizeArabic, levenshtein, tokenizeArabicText } from '@/utils';
 
@@ -75,6 +76,7 @@ export function useSmartTrack({ targetText = "", onComplete }: UseSmartTrackProp
   const currentWordIndexRef = useRef(0);
   const targetWordsRef = useRef<string[]>([]);
   const onCompleteRef = useRef(onComplete);
+  const webRecognitionRef = useRef<any>(null);
 
   // Sync refs and reset on new target
   useEffect(() => {
@@ -110,7 +112,11 @@ export function useSmartTrack({ targetText = "", onComplete }: UseSmartTrackProp
       if (newIndex >= targetWordsRef.current.length) {
         onCompleteRef.current?.();
         setIsListening(false);
-        ExpoSpeechRecognitionModule.stop();
+        if (Platform.OS === 'web') {
+           webRecognitionRef.current?.stop();
+        } else {
+           ExpoSpeechRecognitionModule.stop();
+        }
       }
     } else {
       // Only update preview if we moved forward
@@ -120,36 +126,75 @@ export function useSmartTrack({ targetText = "", onComplete }: UseSmartTrackProp
     }
   }, []);
 
-  useSpeechRecognitionEvent("start", () => setIsListening(true));
-  useSpeechRecognitionEvent("end", () => setIsListening(false));
-  
-  useSpeechRecognitionEvent("result", (event: any) => {
-    const text = event?.results?.[0]?.transcript || event?.transcript || "";
-    const isFinal = event?.isFinal || false;
-    
-    setTranscript(text);
-    processResult(text, isFinal);
-  });
+  // Web Initialization
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'ar-SA';
+        
+        recognition.onstart = () => setIsListening(true);
+        recognition.onend = () => setIsListening(false);
+        recognition.onerror = (e: any) => { console.error("Web Speech Error:", e); setIsListening(false); };
+        
+        recognition.onresult = (event: any) => {
+           for (let i = event.resultIndex; i < event.results.length; ++i) {
+              const res = event.results[i];
+              const text = res[0].transcript;
+              const isFinal = res.isFinal;
+              setTranscript(text);
+              processResult(text, isFinal);
+           }
+        };
+        
+        webRecognitionRef.current = recognition;
+        setPermissionStatus('granted'); // Assume granted or prompt will show
+      } else {
+        console.warn("Web Speech API not supported in this browser.");
+      }
+    }
+  }, [processResult]);
 
-  useSpeechRecognitionEvent("error", (event: any) => {
-    console.log("Speech recognition error:", event);
-    setIsListening(false);
-  });
+  // Native Events
+  if (Platform.OS !== 'web') {
+    useSpeechRecognitionEvent("start", () => setIsListening(true));
+    useSpeechRecognitionEvent("end", () => setIsListening(false));
+    
+    useSpeechRecognitionEvent("result", (event: any) => {
+      const text = event?.results?.[0]?.transcript || event?.transcript || "";
+      const isFinal = event?.isFinal || false;
+      
+      setTranscript(text);
+      processResult(text, isFinal);
+    });
+
+    useSpeechRecognitionEvent("error", (event: any) => {
+      console.log("Speech recognition error:", event);
+      setIsListening(false);
+    });
+  }
 
   const requestPermissions = useCallback(async () => {
+    if (Platform.OS === 'web') return true;
     const { status } = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
     setPermissionStatus(status);
     return status === 'granted';
   }, []);
 
   const startRecognition = useCallback(async () => {
+    if (Platform.OS === 'web') {
+        try {
+          webRecognitionRef.current?.start();
+        } catch(e) { console.error(e); }
+        return;
+    }
+
     const hasPermission = await requestPermissions();
     if (!hasPermission) return;
 
-    // Reset loop index ONLY if we finished previous or user manually reset? 
-    // Usually we want to continue from where we left off if paused.
-    // But if we are starting fresh on a new Zeker, useEffect handles that.
-    
     try {
       setIsListening(true);
       ExpoSpeechRecognitionModule.start({
@@ -164,6 +209,10 @@ export function useSmartTrack({ targetText = "", onComplete }: UseSmartTrackProp
   }, [requestPermissions]);
 
   const stopRecognition = useCallback(() => {
+    if (Platform.OS === 'web') {
+        webRecognitionRef.current?.stop();
+        return;
+    }
     try {
       ExpoSpeechRecognitionModule.stop();
       setIsListening(false);
