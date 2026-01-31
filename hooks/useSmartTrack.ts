@@ -1,6 +1,6 @@
-import { levenshtein, normalizeArabic } from '@/utils';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { normalizeArabic, levenshtein, tokenizeArabicText } from '@/utils';
 
 interface UseSmartTrackProps {
   targetText?: string;
@@ -16,11 +16,60 @@ function maxAllowedDistance(length: number): number {
   return 2;
 }
 
+/**
+ * Pure matching logic.
+ * Returns the new index based on spoken words and current target state.
+ */
+function calculateMatchIndex(
+  spokenWords: string[], 
+  targetWords: string[], 
+  startIndex: number
+): number {
+  let idx = startIndex;
+  const total = targetWords.length;
+
+  for (const spoken of spokenWords) {
+    if (idx >= total) break;
+    const normalizedSpoken = normalizeArabic(spoken);
+
+    // 1. Exact match at current position
+    if (normalizedSpoken === targetWords[idx]) {
+      idx++;
+      continue;
+    }
+
+    // 2. Fuzzy match at current position
+    const currentRef = targetWords[idx];
+    const currentMaxDist = maxAllowedDistance(currentRef.length);
+    if (currentMaxDist > 0 && levenshtein(normalizedSpoken, currentRef) <= currentMaxDist) {
+      idx++;
+      continue;
+    }
+
+    // 3. Look-ahead for skipped words
+    const maxLook = Math.min(MAX_SKIP, total - idx - 1);
+    for (let skip = 1; skip <= maxLook; skip++) {
+      const candidate = targetWords[idx + skip];
+      const isExact = normalizedSpoken === candidate;
+      const candidateMaxDist = maxAllowedDistance(candidate.length);
+      const isFuzzy =
+        !isExact && candidateMaxDist > 0 &&
+        levenshtein(normalizedSpoken, candidate) <= candidateMaxDist;
+
+      if (isExact || isFuzzy) {
+        idx = idx + skip + 1;
+        break;
+      }
+    }
+  }
+  return idx;
+}
+
 export function useSmartTrack({ targetText = "", onComplete }: UseSmartTrackProps = {}) {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [permissionStatus, setPermissionStatus] = useState<string | null>(null);
-  const [activeWordIndex, setActiveWordIndex] = useState(0); // This represents the "committed" index
+  const [activeWordIndex, setActiveWordIndex] = useState(0); 
   
   // Refs
   const currentWordIndexRef = useRef(0);
@@ -34,87 +83,42 @@ export function useSmartTrack({ targetText = "", onComplete }: UseSmartTrackProp
 
   useEffect(() => {
     if (targetText) {
-      // Split raw text into tokens by whitespace
-      const rawTokens = targetText.split(/\s+/).filter(Boolean);
-      // Normalize each token (this removes commas/punctuation from the comparison base)
-      targetWordsRef.current = rawTokens.map(w => normalizeArabic(w)).filter(w => w.length > 0);
+      // Split raw text first, then normalize each word to preserve punctuation alignment
+      targetWordsRef.current = tokenizeArabicText(targetText).map(w => normalizeArabic(w));
     } else {
       targetWordsRef.current = [];
     }
-    // Reset state when target changes
     setActiveWordIndex(0);
     currentWordIndexRef.current = 0;
     setTranscript("");
   }, [targetText]);
 
-  // Matching Logic (Adapted from temp.ts)
-  const matchWords = useCallback(
-    (transcriptText: string, isFinal: boolean) => {
-      const spokenWords = transcriptText.trim().split(/\s+/).filter(Boolean);
-      if (spokenWords.length === 0) return;
+  const processResult = useCallback((transcriptText: string, isFinal: boolean) => {
+    const spokenWords = tokenizeArabicText(transcriptText);
+    if (spokenWords.length === 0) return;
 
-      let idx = currentWordIndexRef.current;
-      const total = targetWordsRef.current.length;
-      const normalizedTargetWords = targetWordsRef.current; // Already normalized in ref? No, ref stores normalized?
-      // Wait, in useEffect I did normalizeArabic(targetText). So they are normalized.
+    const newIndex = calculateMatchIndex(
+      spokenWords,
+      targetWordsRef.current,
+      currentWordIndexRef.current
+    );
 
-      for (const spoken of spokenWords) {
-        if (idx >= total) break;
-        const normalizedSpoken = normalizeArabic(spoken);
-
-        // 1. Exact match at current position
-        console.log("normalizedSpoken", normalizedSpoken, "normalizedTargetWords[idx]", normalizedTargetWords[idx]);
-        if (normalizedSpoken === normalizedTargetWords[idx]) {
-          idx++;
-          continue;
-        }
-
-        // 2. Fuzzy match at current position
-        const currentRef = normalizedTargetWords[idx];
-        const currentMaxDist = maxAllowedDistance(currentRef.length);
-        if (currentMaxDist > 0 && levenshtein(normalizedSpoken, currentRef) <= currentMaxDist) {
-          idx++;
-          continue;
-        }
-
-        // 3. Look-ahead for skipped words
-        const maxLook = Math.min(MAX_SKIP, total - idx - 1);
-        for (let skip = 1; skip <= maxLook; skip++) {
-          const candidate = normalizedTargetWords[idx + skip];
-          const isExact = normalizedSpoken === candidate;
-          const candidateMaxDist = maxAllowedDistance(candidate.length);
-          const isFuzzy =
-            !isExact && candidateMaxDist > 0 &&
-            levenshtein(normalizedSpoken, candidate) <= candidateMaxDist;
-
-          if (isExact || isFuzzy) {
-            idx = idx + skip + 1;
-            break;
-          }
-        }
-        // No match found → ignore this spoken word
+    if (isFinal) {
+      currentWordIndexRef.current = newIndex;
+      setActiveWordIndex(newIndex);
+      
+      if (newIndex >= targetWordsRef.current.length) {
+        onCompleteRef.current?.();
+        setIsListening(false);
+        ExpoSpeechRecognitionModule.stop();
       }
-
-      if (isFinal) {
-        currentWordIndexRef.current = idx;
-        setActiveWordIndex(idx);
-        
-        if (idx >= total) {
-          onCompleteRef.current?.();
-          setIsListening(false);
-          ExpoSpeechRecognitionModule.stop(); // Use stop instead of abort for cleaner end?
-        }
-      } else {
-        // Preview logic: We can update activeWordIndex strictly or use a separate preview state
-        // For now, let's update activeWordIndex to give real-time feedback
-        // But prevent it from going backward if previous final was higher (which shouldn't happen with correct logic)
-        if (idx > currentWordIndexRef.current) {
-             setActiveWordIndex(idx);
-        }
+    } else {
+      // Only update preview if we moved forward
+      if (newIndex > currentWordIndexRef.current) {
+        setActiveWordIndex(newIndex);
       }
-    },
-    []
-  );
+    }
+  }, []);
 
   useSpeechRecognitionEvent("start", () => setIsListening(true));
   useSpeechRecognitionEvent("end", () => setIsListening(false));
@@ -123,8 +127,8 @@ export function useSmartTrack({ targetText = "", onComplete }: UseSmartTrackProp
     const text = event?.results?.[0]?.transcript || event?.transcript || "";
     const isFinal = event?.isFinal || false;
     
-    setTranscript(text); // Keep showing raw transcript for debug
-    matchWords(text, isFinal);
+    setTranscript(text);
+    processResult(text, isFinal);
   });
 
   useSpeechRecognitionEvent("error", (event: any) => {

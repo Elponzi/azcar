@@ -1,7 +1,7 @@
 import { THEME } from '@/constants/Theme';
 import { AzkarItem } from '@/data';
-import { removeTashkeel, normalizeArabic } from '@/utils';
-import React, { useMemo } from 'react';
+import { removeTashkeel, normalizeArabic, tokenizeArabicText } from '@/utils';
+import React, { useMemo, memo } from 'react';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { Paragraph, ScrollView, Text, YStack } from 'tamagui';
 
@@ -13,6 +13,31 @@ interface AzkarTextDisplayProps {
   theme: 'light' | 'dark';
   activeWordIndex?: number;
 }
+
+const AzkarWord = memo(({ 
+  word, 
+  status, 
+  colors 
+}: { 
+  word: string, 
+  status: 'read' | 'current' | 'upcoming', 
+  colors: any 
+}) => {
+  const isRead = status === 'read';
+  const isCurrent = status === 'current';
+
+  return (
+    <Text
+      color={isCurrent ? colors.accent : colors.textPrimary}
+      opacity={isRead ? 1 : (isCurrent ? 1 : 0.8)}
+      textShadowRadius={isCurrent ? 10 : 0}
+      textShadowColor={isCurrent ? colors.accentGlow : 'transparent'}
+      fontFamily="Amiri"
+    >
+      {word}{' '}
+    </Text>
+  );
+});
 
 export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDesktop, theme, activeWordIndex = -1 }: AzkarTextDisplayProps) => {
   const colors = THEME[theme];
@@ -31,18 +56,30 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
 
   // Map visual words to logical indices (skipping punctuation)
   const wordsWithLogicalIndex = useMemo(() => {
-    const rawWords = currentZeker.arabic.split(/\s+/).filter(Boolean);
+    // 1. Split by newlines to preserve explicit line breaks
+    const segments = currentZeker.arabic.split(/(\n)/g);
     let counter = 0;
-    
-    return rawWords.map((word) => {
-      const normalized = normalizeArabic(word);
-      const isValid = normalized.length > 0;
-      // If valid word, use current counter and increment.
-      // If punctuation (invalid), attach to previous word (counter - 1).
-      const logicalIndex = isValid ? counter++ : Math.max(0, counter - 1);
-      
-      return { word, logicalIndex };
+    const result: { word: string, logicalIndex: number, isNewline: boolean }[] = [];
+
+    segments.forEach(segment => {
+      if (segment === '\n') {
+        result.push({ word: '\n', logicalIndex: -1, isNewline: true });
+      } else {
+        // 2. Split segments by other whitespace
+        const segmentWords = segment.split(/\s+/);
+        segmentWords.forEach(word => {
+           if (!word) return;
+           const normalized = normalizeArabic(word);
+           const isValid = normalized.length > 0;
+           // If valid word, use current counter and increment.
+           // If punctuation (invalid), attach to previous word.
+           const logicalIndex = isValid ? counter++ : Math.max(0, counter - 1);
+           result.push({ word, logicalIndex, isNewline: false });
+        });
+      }
     });
+    
+    return result;
   }, [currentZeker.arabic]);
 
   return (
@@ -72,25 +109,24 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
                 textShadowOffset={{ width: 0, height: 0 }}
               >
                 {activeWordIndex === -1 ? (
-                   // Default rendering
                    <Text fontFamily="Amiri" color={colors.textPrimary}>{currentZeker.arabic}</Text>
                 ) : (
-                   // Word-by-word rendering
                    wordsWithLogicalIndex.map((item, index) => {
-                     const isRead = item.logicalIndex < activeWordIndex;
-                     const isCurrent = item.logicalIndex === activeWordIndex;
-                     
+                     if (item.isNewline) {
+                        return <Text key={`nl-${index}`}>{'\n'}</Text>;
+                     }
+
+                     let status: 'read' | 'current' | 'upcoming' = 'upcoming';
+                     if (item.logicalIndex < activeWordIndex) status = 'read';
+                     else if (item.logicalIndex === activeWordIndex) status = 'current';
+
                      return (
-                       <Text
+                       <AzkarWord 
                          key={`${currentZeker.id}-${index}`}
-                         color={isCurrent ? colors.accent : colors.textPrimary}
-                         opacity={isRead ? 1 : (isCurrent ? 1 : 0.8)}
-                         textShadowRadius={isCurrent ? 10 : 0}
-                         textShadowColor={isCurrent ? colors.accentGlow : 'transparent'}
-                         fontFamily="Amiri"
-                      >
-                         {item.word}{' '}
-                       </Text>
+                         word={item.word}
+                         status={status}
+                         colors={colors}
+                       />
                      );
                    })
                 )}

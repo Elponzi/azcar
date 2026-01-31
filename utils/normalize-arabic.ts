@@ -88,8 +88,15 @@ export function normalizeArabic(text: string): string {
 }
 
 /**
- * Removes Arabic diacritical marks (tashkeel) from a string
+ * Strip diacritics and tatweel from Arabic text.
  */
 export function removeTashkeel(text: string): string {
-  return text.replace(DIACRITICS, '');
+  return text.replace(DIACRITICS, '').replace(TATWEEL, '');
+}
+
+/**
+ * Split Arabic text into tokens using whitespace, filtering out empty strings.
+ */
+export function tokenizeArabicText(text: string): string[] {
+  return text.split(/\s+/).filter(w => w.length > 0);
 }
