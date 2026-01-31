@@ -4,7 +4,7 @@ import { YStack, XStack, Button, Text, ScrollView, View } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated from 'react-native-reanimated';
-import { setAudioModeAsync } from 'expo-audio';
+import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useAzkarStore } from '@/store/azkarStore';
@@ -59,12 +59,33 @@ export default function CategoryScreen() {
 
 
   const currentZeker = filteredAzkar[currentIndex];
+  const player = useAudioPlayer(require('@/assets/sounds/switch.mp3'));
 
   const { isListening, transcript, startRecognition, stopRecognition, activeWordIndex } = useSmartTrack({
     targetText: currentZeker?.arabic,
+    autoReset: true,
     onComplete: () => {
-       // Optional: Auto increment or feedback
-       // incrementCount(); 
+       incrementCount();
+       
+       // Check if target reached
+       const state = useAzkarStore.getState();
+       const activeZeker = state.filteredAzkar[state.currentIndex];
+       const currentCount = state.counts[activeZeker.id] || 0;
+       
+       if (currentCount >= activeZeker.target) {
+          // Play success sound
+          player.seekTo(0);
+          player.play();
+
+          // Delay navigation to match manual UX (allow ring animation/sound)
+          setTimeout(() => {
+             if (state.currentIndex < state.filteredAzkar.length - 1) {
+                nextZeker();
+             } else {
+                stopRecognition();
+             }
+          }, 600);
+       }
     }
   });
 

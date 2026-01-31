@@ -63,9 +63,10 @@ interface UseAzkarMatcherProps {
   targetText?: string;
   onComplete?: () => void;
   onStopRequest?: () => void; // Callback to request stopping recognition
+  autoReset?: boolean; // If true, resets index on complete instead of requesting stop
 }
 
-export function useAzkarMatcher({ targetText = "", onComplete, onStopRequest }: UseAzkarMatcherProps) {
+export function useAzkarMatcher({ targetText = "", onComplete, onStopRequest, autoReset = false }: UseAzkarMatcherProps) {
   const [activeWordIndex, setActiveWordIndex] = useState(0);
   
   // Refs
@@ -102,12 +103,24 @@ export function useAzkarMatcher({ targetText = "", onComplete, onStopRequest }: 
     );
 
     if (isFinal) {
-      currentWordIndexRef.current = newIndex;
-      setActiveWordIndex(newIndex);
-      
+      // Logic for completion
       if (newIndex >= targetWordsRef.current.length) {
         onCompleteRef.current?.();
-        onStopRequestRef.current?.();
+        
+        if (autoReset) {
+           // Reset for next repetition
+           currentWordIndexRef.current = 0;
+           setActiveWordIndex(0);
+        } else {
+           // Commit final index and request stop
+           currentWordIndexRef.current = newIndex;
+           setActiveWordIndex(newIndex);
+           onStopRequestRef.current?.();
+        }
+      } else {
+        // Not complete, just commit index
+        currentWordIndexRef.current = newIndex;
+        setActiveWordIndex(newIndex);
       }
     } else {
       // Only update preview if we moved forward
@@ -115,7 +128,7 @@ export function useAzkarMatcher({ targetText = "", onComplete, onStopRequest }: 
         setActiveWordIndex(newIndex);
       }
     }
-  }, []);
+  }, [autoReset]); // Add autoReset dependency
 
   return {
     activeWordIndex,

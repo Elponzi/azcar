@@ -6,9 +6,10 @@ import { useAzkarMatcher } from './useAzkarMatcher';
 interface UseSmartTrackProps {
   targetText?: string;
   onComplete?: () => void;
+  autoReset?: boolean;
 }
 
-export function useSmartTrack({ targetText = "", onComplete }: UseSmartTrackProps = {}) {
+export function useSmartTrack({ targetText = "", onComplete, autoReset = false }: UseSmartTrackProps = {}) {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [permissionStatus, setPermissionStatus] = useState<string | null>(null);
@@ -33,7 +34,8 @@ export function useSmartTrack({ targetText = "", onComplete }: UseSmartTrackProp
   const { activeWordIndex, processTranscript } = useAzkarMatcher({
     targetText,
     onComplete,
-    onStopRequest: stopRecognition
+    onStopRequest: stopRecognition,
+    autoReset
   });
 
   // Web Initialization
