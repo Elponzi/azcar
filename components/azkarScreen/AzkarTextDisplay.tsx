@@ -14,6 +14,14 @@ interface AzkarTextDisplayProps {
   activeWordIndex?: number;
 }
 
+// Helper to apply opacity to hex color
+const withOpacity = (hex: string, alpha: number) => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 const AzkarWord = memo(({ 
   word, 
   status, 
@@ -26,10 +34,17 @@ const AzkarWord = memo(({
   const isRead = status === 'read';
   const isCurrent = status === 'current';
 
+  // Determine base color
+  const baseColor = isCurrent ? colors.accent : colors.textPrimary;
+  
+  // Apply opacity directly to color
+  const finalColor = isRead 
+    ? baseColor 
+    : (isCurrent ? baseColor : withOpacity(baseColor, 0.6)); // Using 0.6 for better contrast, 0.8 is too subtle
+
   return (
     <Text
-      color={isCurrent ? colors.accent : colors.textPrimary}
-      opacity={isRead ? 1 : (isCurrent ? 1 : 0.8)}
+      color={finalColor}
       textShadowRadius={isCurrent ? 10 : 0}
       textShadowColor={isCurrent ? colors.accentGlow : 'transparent'}
       fontFamily="Amiri"
