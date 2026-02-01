@@ -12,18 +12,27 @@ function maxAllowedDistance(length: number): number {
 
 /**
  * Pure matching logic.
- * Returns the new index based on spoken words and current target state.
+ * Returns the number of full completions and the current index within the target.
+ * Wraps around when the end of the target is reached, counting each completion.
  */
 function calculateMatchIndex(
-  spokenWords: string[], 
-  targetWords: string[], 
+  spokenWords: string[],
+  targetWords: string[],
   startIndex: number
-): number {
+): { completions: number; currentIndex: number } {
   let idx = startIndex;
   const total = targetWords.length;
+  let completions = 0;
+
+  if (total === 0) return { completions: 0, currentIndex: 0 };
 
   for (const spoken of spokenWords) {
-    if (idx >= total) break;
+    // Wrap around if we completed the target
+    if (idx >= total) {
+      completions++;
+      idx = 0;
+    }
+
     const normalizedSpoken = normalizeArabic(spoken);
 
     // 1. Exact match at current position
@@ -56,7 +65,14 @@ function calculateMatchIndex(
       }
     }
   }
-  return idx;
+
+  // Final boundary check after loop
+  if (idx >= total) {
+    completions++;
+    idx = 0;
+  }
+
+  return { completions, currentIndex: idx };
 }
 
 interface UseAzkarMatcherProps {
@@ -72,6 +88,7 @@ export function useAzkarMatcher({ targetText = "", onComplete, onStopRequest, au
   // Refs
   const currentWordIndexRef = useRef(0);
   const targetWordsRef = useRef<string[]>([]);
+  const completionsFiredRef = useRef(0);
   const onCompleteRef = useRef(onComplete);
   const onStopRequestRef = useRef(onStopRequest);
 
@@ -90,45 +107,64 @@ export function useAzkarMatcher({ targetText = "", onComplete, onStopRequest, au
     }
     setActiveWordIndex(0);
     currentWordIndexRef.current = 0;
+    completionsFiredRef.current = 0;
   }, [targetText]);
 
   const processTranscript = useCallback((transcriptText: string, isFinal: boolean) => {
     const spokenWords = tokenizeArabicText(transcriptText);
     if (spokenWords.length === 0) return;
 
-    const newIndex = calculateMatchIndex(
-      spokenWords,
-      targetWordsRef.current,
-      currentWordIndexRef.current
-    );
+    if (autoReset) {
+      // --- autoReset path: cumulative transcript, wrap-around counting ---
+      // Start from committed position so long zikrs spanning multiple speech
+      // segments continue from where the previous segment left off.
+      const { completions, currentIndex } = calculateMatchIndex(
+        spokenWords,
+        targetWordsRef.current,
+        currentWordIndexRef.current
+      );
 
-    if (isFinal) {
-      // Logic for completion
-      if (newIndex >= targetWordsRef.current.length) {
+      // Fire onComplete only for NEW completions (delta from what we already fired)
+      const newCompletions = completions - completionsFiredRef.current;
+      for (let i = 0; i < newCompletions; i++) {
         onCompleteRef.current?.();
-        
-        if (autoReset) {
-           // Reset for next repetition
-           currentWordIndexRef.current = 0;
-           setActiveWordIndex(0);
-        } else {
-           // Commit final index and request stop
-           currentWordIndexRef.current = newIndex;
-           setActiveWordIndex(newIndex);
-           onStopRequestRef.current?.();
-        }
-      } else {
-        // Not complete, just commit index
-        currentWordIndexRef.current = newIndex;
-        setActiveWordIndex(newIndex);
+      }
+      completionsFiredRef.current = completions;
+
+      // Update visual highlight to show wrap-around progress
+      setActiveWordIndex(currentIndex);
+
+      if (isFinal) {
+        // Speech segment ended — commit position and reset completion tracking
+        currentWordIndexRef.current = currentIndex;
+        completionsFiredRef.current = 0;
       }
     } else {
-      // Only update preview if we moved forward
-      if (newIndex > currentWordIndexRef.current) {
-        setActiveWordIndex(newIndex);
+      // --- non-autoReset path: original behavior (complete once, then stop) ---
+      const { completions, currentIndex } = calculateMatchIndex(
+        spokenWords,
+        targetWordsRef.current,
+        currentWordIndexRef.current
+      );
+
+      if (isFinal) {
+        if (completions > 0) {
+          onCompleteRef.current?.();
+          currentWordIndexRef.current = currentIndex;
+          setActiveWordIndex(currentIndex);
+          onStopRequestRef.current?.();
+        } else {
+          currentWordIndexRef.current = currentIndex;
+          setActiveWordIndex(currentIndex);
+        }
+      } else {
+        // Preview: update highlight if we moved forward
+        if (currentIndex > currentWordIndexRef.current || completions > 0) {
+          setActiveWordIndex(currentIndex);
+        }
       }
     }
-  }, [autoReset]); // Add autoReset dependency
+  }, [autoReset]);
 
   return {
     activeWordIndex,
