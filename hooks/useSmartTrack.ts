@@ -11,9 +11,6 @@ interface UseSmartTrackProps {
 
 export function useSmartTrack({ targetText = "", onComplete, autoReset = false }: UseSmartTrackProps = {}) {
   const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState("");
-  const [permissionStatus, setPermissionStatus] = useState<string | null>(null);
-  
   const webRecognitionRef = useRef<any>(null);
 
   // Define stop first so we can pass it to matcher
@@ -57,42 +54,40 @@ export function useSmartTrack({ targetText = "", onComplete, autoReset = false }
               const res = event.results[i];
               const text = res[0].transcript;
               const isFinal = res.isFinal;
-              setTranscript(text);
               processTranscript(text, isFinal);
            }
         };
         
         webRecognitionRef.current = recognition;
-        setPermissionStatus('granted'); 
       } else {
         console.warn("Web Speech API not supported in this browser.");
       }
+
+      return () => {
+        webRecognitionRef.current?.stop();
+      };
     }
   }, [processTranscript]);
 
-  // Native Events
-  if (Platform.OS !== 'web') {
-    useSpeechRecognitionEvent("start", () => setIsListening(true));
-    useSpeechRecognitionEvent("end", () => setIsListening(false));
-    
-    useSpeechRecognitionEvent("result", (event: any) => {
-      const text = event?.results?.[0]?.transcript || event?.transcript || "";
-      const isFinal = event?.isFinal || false;
-      
-      setTranscript(text);
-      processTranscript(text, isFinal);
-    });
+  // Native Events (safe to call unconditionally — on web the native events never fire)
+  useSpeechRecognitionEvent("start", () => setIsListening(true));
+  useSpeechRecognitionEvent("end", () => setIsListening(false));
 
-    useSpeechRecognitionEvent("error", (event: any) => {
-      console.log("Speech recognition error:", event);
-      setIsListening(false);
-    });
-  }
+  useSpeechRecognitionEvent("result", (event: any) => {
+    const text = event?.results?.[0]?.transcript || event?.transcript || "";
+    const isFinal = event?.isFinal || false;
+
+    processTranscript(text, isFinal);
+  });
+
+  useSpeechRecognitionEvent("error", (event: any) => {
+    console.log("Speech recognition error:", event);
+    setIsListening(false);
+  });
 
   const requestPermissions = useCallback(async () => {
     if (Platform.OS === 'web') return true;
     const { status } = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-    setPermissionStatus(status);
     return status === 'granted';
   }, []);
 
@@ -122,8 +117,6 @@ export function useSmartTrack({ targetText = "", onComplete, autoReset = false }
 
   return {
     isListening,
-    transcript,
-    permissionStatus,
     activeWordIndex,
     startRecognition,
     stopRecognition,
