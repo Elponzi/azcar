@@ -35,6 +35,10 @@ export function useSmartTrack({ targetText = "", onComplete, autoReset = false }
     autoReset
   });
 
+  // Keep processTranscript in a ref so the web effect doesn't re-run when it changes
+  const processTranscriptRef = useRef(processTranscript);
+  processTranscriptRef.current = processTranscript;
+
   // Web Initialization
   useEffect(() => {
     if (Platform.OS === 'web') {
@@ -44,20 +48,20 @@ export function useSmartTrack({ targetText = "", onComplete, autoReset = false }
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = 'ar-SA';
-        
+
         recognition.onstart = () => setIsListening(true);
         recognition.onend = () => setIsListening(false);
         recognition.onerror = (e: any) => { console.error("Web Speech Error:", e); setIsListening(false); };
-        
+
         recognition.onresult = (event: any) => {
            for (let i = event.resultIndex; i < event.results.length; ++i) {
               const res = event.results[i];
               const text = res[0].transcript;
               const isFinal = res.isFinal;
-              processTranscript(text, isFinal);
+              processTranscriptRef.current(text, isFinal);
            }
         };
-        
+
         webRecognitionRef.current = recognition;
       } else {
         console.warn("Web Speech API not supported in this browser.");
@@ -67,7 +71,7 @@ export function useSmartTrack({ targetText = "", onComplete, autoReset = false }
         webRecognitionRef.current?.stop();
       };
     }
-  }, [processTranscript]);
+  }, []);
 
   // Native Events (safe to call unconditionally — on web the native events never fire)
   useSpeechRecognitionEvent("start", () => setIsListening(true));

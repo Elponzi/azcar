@@ -59,7 +59,7 @@ export default function CategoryScreen() {
 
   const currentZeker = filteredAzkar[currentIndex];
 
-  const { handleAutoComplete, stopRecognitionRef } = useAutoComplete();
+  const { handleAutoComplete, stopRecognitionRef, playSuccessSound } = useAutoComplete();
 
   const { isListening, startRecognition, stopRecognition, activeWordIndex } = useSmartTrack({
     targetText: currentZeker?.arabic,
@@ -185,6 +185,7 @@ export default function CategoryScreen() {
               onIncrement={incrementCount}
               onReset={resetCurrentCount}
               onComplete={nextZeker}
+              playSuccessSound={playSuccessSound}
               theme={theme}
               isDesktop={isDesktop}
               language={language}

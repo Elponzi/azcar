@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 import React, { useMemo } from 'react';
 import { Platform, Pressable } from 'react-native';
@@ -17,23 +16,25 @@ interface AzkarCounterProps {
   onIncrement: () => void;
   onReset: () => void;
   onComplete: () => void;
+  playSuccessSound: () => void;
   theme: 'light' | 'dark';
   isDesktop: boolean;
   language: 'en' | 'ar';
   t: any;
 }
 
-export const AzkarCounter = ({ 
-  count, 
-  target, 
-  progress, 
-  onIncrement, 
-  onReset, 
-  onComplete, 
-  theme, 
+export const AzkarCounter = ({
+  count,
+  target,
+  progress,
+  onIncrement,
+  onReset,
+  onComplete,
+  playSuccessSound,
+  theme,
   isDesktop,
   language,
-  t 
+  t
 }: AzkarCounterProps) => {
   const colors = THEME[theme];
   const ringTrackColor = colors.cardBg;
@@ -59,13 +60,6 @@ export const AzkarCounter = ({
   const handlePressOut = () => {
     scale.value = withTiming(1, { duration: 150 });
     opacity.value = withTiming(1, { duration: 150 });
-  };
-
-  const player = useAudioPlayer(require('@/assets/sounds/switch.mp3'));
-
-  const playSuccessSound = () => {
-    player.seekTo(0);
-    player.play();
   };
 
   const remaining = Math.max(target - count, 0);

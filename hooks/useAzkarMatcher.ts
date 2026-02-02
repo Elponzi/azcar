@@ -33,10 +33,8 @@ function calculateMatchIndex(
       idx = 0;
     }
 
-    const normalizedSpoken = normalizeArabic(spoken);
-
-    // 1. Exact match at current position
-    if (normalizedSpoken === targetWords[idx]) {
+    // 1. Exact match at current position (spoken words are already pre-normalized by caller)
+    if (spoken === targetWords[idx]) {
       idx++;
       continue;
     }
@@ -44,7 +42,7 @@ function calculateMatchIndex(
     // 2. Fuzzy match at current position
     const currentRef = targetWords[idx];
     const currentMaxDist = maxAllowedDistance(currentRef.length);
-    if (currentMaxDist > 0 && levenshtein(normalizedSpoken, currentRef) <= currentMaxDist) {
+    if (currentMaxDist > 0 && levenshtein(spoken, currentRef, currentMaxDist) <= currentMaxDist) {
       idx++;
       continue;
     }
@@ -53,11 +51,11 @@ function calculateMatchIndex(
     const maxLook = Math.min(MAX_SKIP, total - idx - 1);
     for (let skip = 1; skip <= maxLook; skip++) {
       const candidate = targetWords[idx + skip];
-      const isExact = normalizedSpoken === candidate;
+      const isExact = spoken === candidate;
       const candidateMaxDist = maxAllowedDistance(candidate.length);
       const isFuzzy =
         !isExact && candidateMaxDist > 0 &&
-        levenshtein(normalizedSpoken, candidate) <= candidateMaxDist;
+        levenshtein(spoken, candidate, candidateMaxDist) <= candidateMaxDist;
 
       if (isExact || isFuzzy) {
         idx = idx + skip + 1;
@@ -111,7 +109,7 @@ export function useAzkarMatcher({ targetText = "", onComplete, onStopRequest, au
   }, [targetText]);
 
   const processTranscript = useCallback((transcriptText: string, isFinal: boolean) => {
-    const spokenWords = tokenizeArabicText(transcriptText);
+    const spokenWords = tokenizeArabicText(transcriptText).map(normalizeArabic);
     if (spokenWords.length === 0) return;
 
     if (autoReset) {

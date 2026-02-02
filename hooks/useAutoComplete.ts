@@ -43,5 +43,10 @@ export function useAutoComplete() {
     }
   }, [player]);
 
-  return { handleAutoComplete, stopRecognitionRef };
+  const playSuccessSound = useCallback(() => {
+    player.seekTo(0);
+    player.play();
+  }, [player]);
+
+  return { handleAutoComplete, stopRecognitionRef, playSuccessSound };
 }
