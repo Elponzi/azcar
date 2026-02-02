@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button, Text } from 'tamagui';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { ThemeColors } from '@/constants/Theme';
 
 interface NavButtonProps {
@@ -46,33 +47,57 @@ interface MicButtonProps {
   label: string;
 }
 
-export const MicButton = ({ isListening, onPress, colors, label }: MicButtonProps) => (
-  <Button
-    size="$3.5"
-    bg={isListening ? colors.accent : colors.cardBg}
-    borderColor={isListening ? colors.accent : colors.borderColor}
-    borderWidth={1}
-    br="$10"
-    pressStyle={{ opacity: 0.8, scale: 0.96 }}
-    hoverStyle={{
-      bg: isListening ? colors.accent : colors.accentDim,
-      borderColor: colors.accent
-    }}
-    onPress={onPress}
-    icon={<Ionicons name={isListening ? "mic-off" : "mic-outline"} size={18} color={isListening ? colors.background : colors.textPrimary} />}
-    space="$2"
-    animation="quick"
-    elevation={isListening ? "$2" : "$0"}
-  >
-    <Text
-      color={isListening ? colors.background : colors.textPrimary}
-      fontSize={13}
-      fontWeight="600"
-    >
-      {label}
-    </Text>
-  </Button>
-);
+export const MicButton = ({ isListening, onPress, colors, label }: MicButtonProps) => {
+  const pulseScale = useSharedValue(1);
+
+  useEffect(() => {
+    if (isListening) {
+      pulseScale.value = withRepeat(
+        withSequence(
+          withTiming(1.05, { duration: 800 }),
+          withTiming(1.0, { duration: 800 }),
+        ),
+        -1,
+      );
+    } else {
+      pulseScale.value = withTiming(1, { duration: 200 });
+    }
+  }, [isListening]);
+
+  const pulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+  }));
+
+  return (
+    <Animated.View style={pulseStyle}>
+      <Button
+        size="$3.5"
+        bg={isListening ? colors.accent : colors.cardBg}
+        borderColor={isListening ? colors.accent : colors.borderColor}
+        borderWidth={1}
+        br="$10"
+        pressStyle={{ opacity: 0.8, scale: 0.96 }}
+        hoverStyle={{
+          bg: isListening ? colors.accent : colors.accentDim,
+          borderColor: colors.accent
+        }}
+        onPress={onPress}
+        icon={<Ionicons name={isListening ? "mic-off" : "mic-outline"} size={18} color={isListening ? colors.background : colors.textPrimary} />}
+        space="$2"
+        animation="quick"
+        elevation={isListening ? "$2" : "$0"}
+      >
+        <Text
+          color={isListening ? colors.background : colors.textPrimary}
+          fontSize={13}
+          fontWeight="600"
+        >
+          {label}
+        </Text>
+      </Button>
+    </Animated.View>
+  );
+};
 
 export const CategoryButton = ({ label, isActive, onPress, colors, isDesktop }: CategoryButtonProps) => (
   <Button 

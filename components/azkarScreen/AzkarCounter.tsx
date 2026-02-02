@@ -23,6 +23,26 @@ interface AzkarCounterProps {
   t: any;
 }
 
+const ResetButton = ({ onReset, colors, isDesktop }: { onReset: () => void; colors: any; isDesktop: boolean }) => (
+  <Pressable
+    onPress={onReset}
+    style={({ pressed }) => ({
+      position: 'absolute' as const,
+      bottom: -10,
+      right: isDesktop ? -40 : -20,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.cardBg,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      opacity: pressed ? 0.5 : 1,
+    })}
+  >
+    <Ionicons name="refresh" size={20} color={colors.textSecondary} />
+  </Pressable>
+);
+
 export const AzkarCounter = ({
   count,
   target,
@@ -135,19 +155,10 @@ export const AzkarCounter = ({
         </Pressable>
 
         {count > 0 && (
-          <Button 
-            size="$3" 
-            circular 
-            bg={colors.cardBg}
-            color={colors.textSecondary}
-            icon={<Ionicons name="refresh" size={20} color={colors.textSecondary} />} 
-            onPress={onReset}
-            position="absolute"
-            bottom={-10}
-            right={isDesktop ? -40 : -20}
-            elevation={0}
-            hoverStyle={{ bg: colors.accentDim }}
-            pressStyle={{ bg: colors.accentDim }}
+          <ResetButton
+            onReset={onReset}
+            colors={colors}
+            isDesktop={isDesktop}
           />
         )}
       </XStack>
