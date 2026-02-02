@@ -1,8 +1,8 @@
 import { THEME } from '@/constants/Theme';
 import { AzkarItem } from '@/data';
-import { removeTashkeel } from '@/utils';
-import React from 'react';
-import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
+import { removeTashkeel, normalizeArabic, tokenizeArabicText } from '@/utils';
+import React, { useMemo, memo, useEffect } from 'react';
+import Animated, { FadeInDown, FadeOutUp, useSharedValue, useAnimatedStyle, withTiming, interpolateColor, withDelay } from 'react-native-reanimated';
 import { Paragraph, ScrollView, Text, YStack } from 'tamagui';
 
 interface AzkarTextDisplayProps {
@@ -11,9 +11,87 @@ interface AzkarTextDisplayProps {
   showNote: boolean;
   isDesktop: boolean;
   theme: 'light' | 'dark';
+  activeWordIndex?: number;
 }
 
-export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDesktop, theme }: AzkarTextDisplayProps) => {
+// Create Animated version of Tamagui Text
+const AnimatedText = Animated.createAnimatedComponent(Text);
+
+// Helper to apply opacity to hex color
+const withOpacity = (hex: string, alpha: number) => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+const AzkarWord = memo(({ 
+  word, 
+  status, 
+  textPrimary,
+  accent,
+  accentGlow
+}: { 
+  word: string, 
+  status: 'read' | 'current' | 'upcoming', 
+  textPrimary: string,
+  accent: string,
+  accentGlow: string
+}) => {
+  // State representation: 0 = Upcoming, 1 = Current, 2 = Read
+  const progress = useSharedValue(0);
+
+  // Pre-calculate colors on JS thread to avoid worklet issues with helper functions
+  const upcomingColor = useMemo(() => withOpacity(textPrimary, 0.6), [textPrimary]);
+  const currentColor = accent;
+  const readColor = textPrimary;
+  const glowColorVal = accentGlow;
+
+  useEffect(() => {
+    if (status === 'upcoming') {
+      progress.value = withTiming(0, { duration: 300 });
+    } else if (status === 'current') {
+      progress.value = withTiming(1, { duration: 150 }); 
+    } else if (status === 'read') {
+      progress.value = withTiming(2, { duration: 800 }); 
+    }
+  }, [status]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    const color = interpolateColor(
+      progress.value,
+      [0, 1, 2],
+      [upcomingColor, currentColor, readColor]
+    );
+
+    const shadowOpacity = 1 - Math.abs(progress.value - 1); 
+    const shadowRadius = shadowOpacity * 10;
+    
+    const glowColor = interpolateColor(
+        progress.value,
+        [0.8, 1, 1.2], 
+        ['transparent', glowColorVal, 'transparent']
+    );
+
+    return {
+      color,
+      textShadowRadius: shadowRadius,
+      textShadowColor: glowColor,
+    };
+  });
+
+  return (
+    <AnimatedText
+      style={animatedStyle}
+      textShadowOffset={{ width: 0, height: 0 }}
+      fontFamily="Amiri"
+    >
+      {word}{' '}
+    </AnimatedText>
+  );
+});
+
+export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDesktop, theme, activeWordIndex = -1 }: AzkarTextDisplayProps) => {
   const colors = THEME[theme];
 
   // Dynamic Font Size
@@ -27,6 +105,32 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
     if (len < 300) return (isDesktop ? 24 : 18) * boost;
     return (isDesktop ? 20 : 18) * boost;
   };
+
+  // Map visual words to logical indices (skipping punctuation)
+  const wordsWithLogicalIndex = useMemo(() => {
+    // 1. Split by newlines to preserve explicit line breaks
+    const segments = currentZeker.arabic.split(/(\n)/g);
+    let counter = 0;
+    const result: { word: string, logicalIndex: number, isNewline: boolean }[] = [];
+
+    segments.forEach(segment => {
+      if (segment === '\n') {
+        result.push({ word: '\n', logicalIndex: -1, isNewline: true });
+      } else {
+        // 2. Split segments by other whitespace
+        const segmentWords = tokenizeArabicText(segment); // Use helper!
+        segmentWords.forEach(word => {
+           if (!word) return;
+           const normalized = normalizeArabic(word);
+           const isValid = normalized.length > 0;
+           const logicalIndex = isValid ? counter++ : Math.max(0, counter - 1);
+           result.push({ word, logicalIndex, isNewline: false });
+        });
+      }
+    });
+    
+    return result;
+  }, [currentZeker.arabic]);
 
   return (
     <YStack f={1} px="$6" pb="$0" pt={isDesktop ? "0" : "$4"} jc="center" ai="center" space="$4">
@@ -42,19 +146,45 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
         >
           {(() => {
             const fontSize = getDynamicFontSize(currentZeker.arabic, showTranslation);
+            
             return (
               <Text
                 fontFamily="Amiri"
                 fontSize={fontSize}
                 lineHeight={fontSize * 1.8}
                 textAlign="center"
-                color={colors.textPrimary}
                 maw={isDesktop ? 800 : '100%'}
                 textShadowColor={theme === 'dark' ? "unset" : 'transparent'}
                 textShadowRadius={0}
                 textShadowOffset={{ width: 0, height: 0 }}
               >
-                {currentZeker.arabic}
+                {activeWordIndex === -1 ? (
+                   <Text fontFamily="Amiri" color={colors.textPrimary}>{currentZeker.arabic}</Text>
+                ) : (
+                   wordsWithLogicalIndex.map((item, index) => {
+                     if (item.isNewline) {
+                        return <Text key={`nl-${index}`}>{'\n'}</Text>;
+                     }
+
+                     let status: 'read' | 'current' | 'upcoming' = 'upcoming';
+
+                     if (item.logicalIndex < activeWordIndex) {
+                        status = 'read';
+                     }
+                     else if (item.logicalIndex === activeWordIndex) status = 'current';
+
+                     return (
+                       <AzkarWord 
+                         key={`${currentZeker.id}-${index}`}
+                         word={item.word}
+                         status={status}
+                         textPrimary={colors.textPrimary}
+                         accent={colors.accent}
+                         accentGlow={colors.accentGlow}
+                       />
+                     );
+                   })
+                )}
               </Text>
             );
           })()}

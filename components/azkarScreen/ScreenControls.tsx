@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from 'tamagui';
+import { Button, Text } from 'tamagui';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeColors } from '@/constants/Theme';
 
@@ -38,6 +38,41 @@ interface CategoryButtonProps {
   colors: ThemeColors;
   isDesktop?: boolean;
 }
+
+interface MicButtonProps {
+  isListening: boolean;
+  onPress: () => void;
+  colors: ThemeColors;
+  label: string;
+}
+
+export const MicButton = ({ isListening, onPress, colors, label }: MicButtonProps) => (
+  <Button
+    size="$3.5"
+    bg={isListening ? colors.accent : colors.cardBg}
+    borderColor={isListening ? colors.accent : colors.borderColor}
+    borderWidth={1}
+    br="$10"
+    pressStyle={{ opacity: 0.8, scale: 0.96 }}
+    hoverStyle={{
+      bg: isListening ? colors.accent : colors.accentDim,
+      borderColor: colors.accent
+    }}
+    onPress={onPress}
+    icon={<Ionicons name={isListening ? "mic-off" : "mic-outline"} size={18} color={isListening ? colors.background : colors.textPrimary} />}
+    space="$2"
+    animation="quick"
+    elevation={isListening ? "$2" : "$0"}
+  >
+    <Text
+      color={isListening ? colors.background : colors.textPrimary}
+      fontSize={13}
+      fontWeight="600"
+    >
+      {label}
+    </Text>
+  </Button>
+);
 
 export const CategoryButton = ({ label, isActive, onPress, colors, isDesktop }: CategoryButtonProps) => (
   <Button 

@@ -1,8 +1,7 @@
-import React, { useEffect, useState, useMemo   } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useWindowDimensions, StyleSheet } from 'react-native';
-import { YStack, XStack, Button, Text, ScrollView, View } from 'tamagui';
+import { YStack, XStack, Text, View } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import Animated from 'react-native-reanimated';
 import { setAudioModeAsync } from 'expo-audio';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -22,19 +21,21 @@ import StarField from '@/components/StarField';
 import { CrescentMoon } from '@/components/CrescentMoon';
 import { AzkarTextDisplay } from '@/components/azkarScreen/AzkarTextDisplay';
 import { AzkarCounter } from '@/components/azkarScreen/AzkarCounter';
-import { NavButton, CategoryButton } from '@/components/azkarScreen/ScreenControls';
-import { DesktopCategoryNav } from '@/components/azkarScreen/DesktopCategoryNav';
+import { NavButton, MicButton } from '@/components/azkarScreen/ScreenControls';
+import { AzkarScreenHeader } from '@/components/azkarScreen/AzkarScreenHeader';
 
 // Hooks
 import { useParallax } from '@/hooks/useParallax';
 import { useWebKeyboard } from '@/hooks/useWebKeyboard';
+import { useSmartTrack } from '@/hooks/useSmartTrack';
+import { useAutoComplete } from '@/hooks/useAutoComplete';
 
 export default function CategoryScreen() {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const isDesktop = width > 768;
   const [isCategorySheetOpen, setCategorySheetOpen] = useState(false);
-  
+
   const router = useRouter();
   const { category: categoryParam } = useLocalSearchParams<{ category: string }>();
 
@@ -56,13 +57,21 @@ export default function CategoryScreen() {
     showNote
   } = useAzkarStore();
 
-  // Sync URL param with Store
+  const currentZeker = filteredAzkar[currentIndex];
+
+  const { handleAutoComplete, stopRecognitionRef, playSuccessSound } = useAutoComplete();
+
+  const { isListening, startRecognition, stopRecognition, activeWordIndex } = useSmartTrack({
+    targetText: currentZeker?.arabic,
+    autoReset: true,
+    onComplete: handleAutoComplete,
+  });
+
+  stopRecognitionRef.current = stopRecognition;
+
+  // Sync URL param with store (case-insensitive match)
   useEffect(() => {
     if (categoryParam) {
-      // Normalize param to match AzkarCategory type (capitalize first letter)
-      // Assuming URL is like /morning -> Morning
-      // But if user typed /Morning, it's fine.
-      // We should be case-insensitive or strict. Let's try to match.
       const match = CATEGORIES.find(c => c.toLowerCase() === categoryParam.toLowerCase());
       if (match && match !== currentCategory) {
         setCategory(match);
@@ -72,18 +81,16 @@ export default function CategoryScreen() {
 
   // Handle Category Change (Update URL)
   const handleCategoryChange = (cat: AzkarCategory) => {
-    // Use setParams to update the current route's dynamic segment without a full navigation/transition
     router.setParams({ category: cat });
   };
 
   const colors = THEME[theme];
   const t = TRANSLATIONS[language];
   const isRTL = language === 'ar';
-  
-  const currentZeker = filteredAzkar[currentIndex];
+
   const count = counts[currentZeker?.id] || 0;
   const progress = Math.min((count / currentZeker?.target) * 100, 100);
-  
+
   const hasCategoryProgress = useMemo(() => filteredAzkar.some(z => (counts[z.id] || 0) > 0), [filteredAzkar, counts]);
 
   const isFirst = currentIndex === 0;
@@ -121,108 +128,49 @@ export default function CategoryScreen() {
 
   const renderContent = () => (
     <>
-       <SeoHead 
+       <SeoHead
          title={currentCategory === 'Morning' ? 'Morning Azkar' : 'Evening Azkar'}
-         description={currentZeker.translation} 
+         description={currentZeker.translation}
        />
-       
-       {/* Header */}
-       <XStack 
-          pt={isDesktop ? '$6' : insets.top + 30}
-          pb={isDesktop ? '$6' : '$3'}
-          px="$4"
-          ai="center" 
-          jc="space-between"
-          bbw={isDesktop ? 1 : 0} 
-          bbc={colors.borderColor}
-          fd={isRTL ? 'row-reverse' : 'row'}
-          zIndex={10}
-          minHeight={isDesktop ? 100 : 'auto'}
-        >
-          {/* Settings Button / Left Spacer */}
-          <XStack w={40} jc="flex-start">
-             {/* Spacer/Settings placeholder */}
-             {hasCategoryProgress && (
-              <Button 
-                size="$3" 
-                circular 
-                bg="transparent"
-                color={colors.textSecondary}
-                icon={<Ionicons name="refresh" size={20} color={colors.textSecondary} />} 
-                onPress={resetCategoryCounts}
-                hoverStyle={{ bg: colors.background }}
-                animation="quick"
-                enterStyle={{ opacity: 0, scale: 0.5 }}
-                exitStyle={{ opacity: 0, scale: 0.5 }}
-              />
-            )}
-          </XStack>
 
-          {/* Desktop: Categories ScrollView */}
-          {isDesktop ? (
-            <DesktopCategoryNav 
-              categories={CATEGORIES}
-              currentCategory={currentCategory}
-              onCategoryChange={handleCategoryChange}
-              colors={colors}
-              t={t}
-              isRTL={isRTL}
-            />
-          ) : (
-            /* Mobile: Category Trigger */
-            <Button
-              chromeless
-              onPress={() => setCategorySheetOpen(true)}
-              iconAfter={<Ionicons name="chevron-down" size={16} color={colors.accent} />}
-              pressStyle={{ opacity: 0.6 }}
-            >
-              <Text fontSize={18} fontWeight="700" color={colors.accent}>
-                {(() => {
-                  const key = (currentCategory.charAt(0).toLowerCase() + currentCategory.slice(1)) as keyof typeof t;
-                  const label = t[key] || currentCategory;
-                  return isRTL ? `${t.adhkar} ${label}` : `${label} ${t.adhkar}`;
-                })()}
-              </Text>
-            </Button>
-          )}
-
-          <XStack w={40} jc="flex-end">
-            <Button 
-              size="$3" 
-              circular 
-              bg="transparent"
-              color={colors.textSecondary}
-              icon={<Ionicons name="settings-sharp" size={18} color={colors.textSecondary} />} 
-              onPress={() => setSettingsOpen(true)}
-              hoverStyle={{ bg: colors.background }}
-            />
-            
-          </XStack>
-        </XStack>
+       <AzkarScreenHeader
+         isDesktop={isDesktop}
+         isRTL={isRTL}
+         colors={colors}
+         t={t}
+         currentCategory={currentCategory}
+         hasCategoryProgress={hasCategoryProgress}
+         insetTop={insets.top}
+         onResetCategory={resetCategoryCounts}
+         onCategoryChange={handleCategoryChange}
+         onOpenSettings={() => setSettingsOpen(true)}
+         onOpenCategorySheet={() => setCategorySheetOpen(true)}
+       />
 
         {/* Content Body */}
         <XStack f={1} fd={isDesktop ? (isRTL ? 'row-reverse' : 'row') : 'column'}>
-          
+
           {/* Text Section */}
-          <AzkarTextDisplay 
+          <AzkarTextDisplay
             currentZeker={currentZeker}
             showTranslation={showTranslation}
             showNote={showNote}
             isDesktop={isDesktop}
             theme={theme}
+            activeWordIndex={isListening ? activeWordIndex : -1}
           />
 
           {/* Controls Section Container */}
-          <YStack 
+          <YStack
             w={isDesktop ? 400 : '100%'}
             f={isDesktop ? 0 : 0}
             flexShrink={0}
-            bg={isDesktop ? colors.background : 'transparent'} 
+            bg={isDesktop ? colors.background : 'transparent'}
             px="$6"
             pt="$4"
-            pb={isDesktop ? "$6" : insets.bottom}
-            jc="center" 
-            ai="center" 
+            pb={isDesktop ? "$6" : insets.bottom + 10}
+            jc="center"
+            ai="center"
             space="$6"
             blc={colors.borderColor}
             blw={isDesktop ? (isRTL ? 0 : 1) : 0}
@@ -230,13 +178,14 @@ export default function CategoryScreen() {
             brw={isDesktop ? (isRTL ? 1 : 0) : 0}
             zIndex={10}
           >
-            <AzkarCounter 
+            <AzkarCounter
               count={count}
               target={currentZeker.target}
               progress={progress}
               onIncrement={incrementCount}
               onReset={resetCurrentCount}
               onComplete={nextZeker}
+              playSuccessSound={playSuccessSound}
               theme={theme}
               isDesktop={isDesktop}
               language={language}
@@ -244,28 +193,23 @@ export default function CategoryScreen() {
             />
 
             {/* Nav Controls */}
-            <XStack w="100%" jc={isDesktop ? "center" : "space-between"} gap={isDesktop ? "$6" : "$0"} ai="center" px="$2" fd={isRTL ? 'row-reverse' : 'row'}>
-              <NavButton 
+            <XStack w="100%" jc={isDesktop ? "center" : "space-between"} gap={isDesktop ? "$6" : "$0"} ai="center" px="$2" fd={'row'}>
+              <NavButton
                 iconName={isRTL ? "chevron-forward" : "chevron-back"}
                 onPress={isRTL ? nextZeker : prevZeker}
                 colors={colors}
                 isDesktop={isDesktop}
                 disabled={isRTL ? isLast : isFirst}
               />
-              
-              {!isDesktop && (
-                <Text 
-                  textTransform="uppercase" 
-                  letterSpacing={1} 
-                  fontSize={12} 
-                  color={colors.textSecondary}
-                  fontWeight="600"
-                >
-                  {t.driveMode}
-                </Text>
-              )}
 
-              <NavButton 
+              <MicButton
+                isListening={isListening}
+                onPress={isListening ? stopRecognition : startRecognition}
+                colors={colors}
+                label={t.startReading}
+              />
+
+              <NavButton
                 iconName={isRTL ? "chevron-back" : "chevron-forward"}
                 onPress={isRTL ? prevZeker : nextZeker}
                 colors={colors}
@@ -280,36 +224,36 @@ export default function CategoryScreen() {
   );
 
   return (
-    <YStack 
-      f={1} 
-      bg={colors.background} 
-      jc={isDesktop ? "center" : "flex-start"} 
+    <YStack
+      f={1}
+      bg={colors.background}
+      jc={isDesktop ? "center" : "flex-start"}
       ai="center"
       position="relative"
     >
       <Animated.View style={[StyleSheet.absoluteFill, starParallax]} pointerEvents="none">
         <StarField />
       </Animated.View>
-      
+
       <Animated.View style={[StyleSheet.absoluteFill, moonParallax]} pointerEvents="none">
         <CrescentMoon color={colors.accent} />
       </Animated.View>
-      
-      <YStack  
-        f={1} 
+
+      <YStack
+        f={1}
         w="100%"
         padding={isDesktop ? "$4" : "$0"}
-        jc={isDesktop ? "center" : "flex-start"} 
+        jc={isDesktop ? "center" : "flex-start"}
         ai="center"
         zIndex={1}
       >
         {isDesktop ? (
-          <YStack 
-            w="100%" 
-            maw={1000} 
-            h="80%" 
-            bg={colors.cardBg} 
-            br={24} 
+          <YStack
+            w="100%"
+            maw={1000}
+            h="80%"
+            bg={colors.cardBg}
+            br={24}
             overflow="hidden"
             elevation="$4"
             bc={colors.borderColor}
@@ -325,8 +269,8 @@ export default function CategoryScreen() {
         )}
       </YStack>
       <SettingsModal />
-      <CategorySheet 
-        isOpen={isCategorySheetOpen} 
+      <CategorySheet
+        isOpen={isCategorySheetOpen}
         onClose={() => setCategorySheetOpen(false)}
         categories={CATEGORIES}
         onSelect={(cat) => handleCategoryChange(cat)}
