@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { useWindowDimensions, StyleSheet } from 'react-native';
-import { YStack, XStack, Text, View } from 'tamagui';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useWindowDimensions, StyleSheet, Pressable } from 'react-native';
+import { YStack, XStack, Text, View, Button } from 'tamagui';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInUp, FadeOutUp } from 'react-native-reanimated';
 import { setAudioModeAsync } from 'expo-audio';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
@@ -35,6 +36,7 @@ export default function CategoryScreen() {
   const insets = useSafeAreaInsets();
   const isDesktop = width > 768;
   const [isCategorySheetOpen, setCategorySheetOpen] = useState(false);
+  const [dismissedCompletion, setDismissedCompletion] = useState(false);
 
   const router = useRouter();
   const { category: categoryParam } = useLocalSearchParams<{ category: string }>();
@@ -61,7 +63,7 @@ export default function CategoryScreen() {
 
   const { handleAutoComplete, stopRecognitionRef, playSuccessSound } = useAutoComplete();
 
-  const { isListening, startRecognition, stopRecognition, activeWordIndex } = useSmartTrack({
+  const { isListening, startRecognition, stopRecognition, activeWordIndex, permissionError, clearPermissionError } = useSmartTrack({
     targetText: currentZeker?.arabic,
     autoReset: true,
     onComplete: handleAutoComplete,
@@ -92,6 +94,18 @@ export default function CategoryScreen() {
   const progress = Math.min((count / currentZeker?.target) * 100, 100);
 
   const hasCategoryProgress = useMemo(() => filteredAzkar.some(z => (counts[z.id] || 0) > 0), [filteredAzkar, counts]);
+
+  const categoryProgress = useMemo(() => {
+    const completed = filteredAzkar.filter(z => (counts[z.id] || 0) >= z.target).length;
+    return { completed, total: filteredAzkar.length };
+  }, [filteredAzkar, counts]);
+
+  const isCategoryComplete = categoryProgress.total > 0 && categoryProgress.completed === categoryProgress.total;
+
+  // Reset dismissedCompletion when category changes
+  useEffect(() => {
+    setDismissedCompletion(false);
+  }, [currentCategory]);
 
   const isFirst = currentIndex === 0;
   const isLast = currentIndex === filteredAzkar.length - 1;
@@ -124,6 +138,19 @@ export default function CategoryScreen() {
     configureAudio();
   }, []);
 
+  // Auto-dismiss permission error after 4 seconds
+  useEffect(() => {
+    if (permissionError) {
+      const timer = setTimeout(() => clearPermissionError(), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [permissionError, clearPermissionError]);
+
+  const handleRetryMic = useCallback(() => {
+    clearPermissionError();
+    startRecognition();
+  }, [clearPermissionError, startRecognition]);
+
   if (!currentZeker) return <View><Text>Loading...</Text></View>;
 
   const renderContent = () => (
@@ -133,6 +160,33 @@ export default function CategoryScreen() {
          description={currentZeker.translation}
        />
 
+       {/* Mic Permission Error Banner */}
+       {permissionError && (
+         <Animated.View
+           entering={FadeInUp.duration(300)}
+           exiting={FadeOutUp.duration(300)}
+           style={{ width: '100%', position: 'absolute', top: isDesktop ? 0 : insets.top, zIndex: 100 }}
+         >
+           <Pressable onPress={handleRetryMic}>
+             <XStack
+               bg={colors.accent}
+               px="$4"
+               py="$3"
+               ai="center"
+               jc="center"
+               gap="$2"
+             >
+               <Text fontSize={16} fontWeight="700" color={colors.background}>
+                 {t.micPermissionDenied}
+               </Text>
+               <Text fontSize={14} color={colors.background} opacity={0.8}>
+                 {t.tapToRetry}
+               </Text>
+             </XStack>
+           </Pressable>
+         </Animated.View>
+       )}
+
        <AzkarScreenHeader
          isDesktop={isDesktop}
          isRTL={isRTL}
@@ -140,6 +194,8 @@ export default function CategoryScreen() {
          t={t}
          currentCategory={currentCategory}
          hasCategoryProgress={hasCategoryProgress}
+         currentZekrIndex={currentIndex}
+         totalAzkar={filteredAzkar.length}
          insetTop={insets.top}
          onResetCategory={resetCategoryCounts}
          onCategoryChange={handleCategoryChange}
@@ -268,6 +324,34 @@ export default function CategoryScreen() {
           </YStack>
         )}
       </YStack>
+      {/* Category Completion Celebration Overlay */}
+      {isCategoryComplete && !dismissedCompletion && (
+        <Animated.View
+          entering={FadeIn.duration(400)}
+          style={[StyleSheet.absoluteFill, { zIndex: 200, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.6)' }]}
+        >
+          <YStack ai="center" gap="$4" p="$6">
+            <Ionicons name="checkmark-circle" size={120} color={colors.accent} />
+            <Text fontSize={28} fontWeight="800" color="#fff">
+              {t.categoryComplete}
+            </Text>
+            <Button
+              size="$5"
+              bg={colors.accent}
+              color={colors.background}
+              br="$10"
+              px="$8"
+              fontWeight="700"
+              fontSize={18}
+              onPress={() => setDismissedCompletion(true)}
+              pressStyle={{ opacity: 0.8, scale: 0.97 }}
+            >
+              {t.done}
+            </Button>
+          </YStack>
+        </Animated.View>
+      )}
+
       <SettingsModal />
       <CategorySheet
         isOpen={isCategorySheetOpen}

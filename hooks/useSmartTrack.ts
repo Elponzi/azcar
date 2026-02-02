@@ -11,7 +11,12 @@ interface UseSmartTrackProps {
 
 export function useSmartTrack({ targetText = "", onComplete, autoReset = false }: UseSmartTrackProps = {}) {
   const [isListening, setIsListening] = useState(false);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
   const webRecognitionRef = useRef<any>(null);
+
+  const clearPermissionError = useCallback(() => {
+    setPermissionError(null);
+  }, []);
 
   // Define stop first so we can pass it to matcher
   const stopRecognition = useCallback(() => {
@@ -51,7 +56,13 @@ export function useSmartTrack({ targetText = "", onComplete, autoReset = false }
 
         recognition.onstart = () => setIsListening(true);
         recognition.onend = () => setIsListening(false);
-        recognition.onerror = (e: any) => { console.error("Web Speech Error:", e); setIsListening(false); };
+        recognition.onerror = (e: any) => {
+          console.error("Web Speech Error:", e);
+          if (e.error === 'not-allowed') {
+            setPermissionError('mic_denied');
+          }
+          setIsListening(false);
+        };
 
         recognition.onresult = (event: any) => {
            for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -92,7 +103,11 @@ export function useSmartTrack({ targetText = "", onComplete, autoReset = false }
   const requestPermissions = useCallback(async () => {
     if (Platform.OS === 'web') return true;
     const { status } = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-    return status === 'granted';
+    if (status !== 'granted') {
+      setPermissionError('mic_denied');
+      return false;
+    }
+    return true;
   }, []);
 
   const startRecognition = useCallback(async () => {
@@ -124,5 +139,7 @@ export function useSmartTrack({ targetText = "", onComplete, autoReset = false }
     activeWordIndex,
     startRecognition,
     stopRecognition,
+    permissionError,
+    clearPermissionError,
   };
 }

@@ -26,7 +26,13 @@ export const TRANSLATIONS = {
     times: "times",
     adhkar: "Adhkar",
     driveModeInfoTitle: "What is Drive Mode?",
-    driveModeInfoDesc: "This allows you to use your car's steering wheel buttons (Next/Previous) or headphone controls to navigate through the Adhkar without touching your phone."
+    driveModeInfoDesc: "This allows you to use your car's steering wheel buttons (Next/Previous) or headphone controls to navigate through the Adhkar without touching your phone.",
+    micPermissionDenied: "Microphone access denied",
+    tapToRetry: "Tap to retry",
+    resetAllProgress: "Reset all progress?",
+    cancel: "Cancel",
+    confirmReset: "Reset",
+    categoryComplete: "All Done!",
   },
   ar: {
     morning: "الصباح",
@@ -56,7 +62,13 @@ export const TRANSLATIONS = {
     time: "مرة",
     adhkar: "أذكار",
     driveModeInfoTitle: "ما هو وضع القيادة؟",
-    driveModeInfoDesc: "يسمح لك باستخدام أزرار التحكم في مقود السيارة (التالي/السابق) أو سماعات الرأس للتنقل بين الأذكار دون الحاجة لمس الهاتف."
+    driveModeInfoDesc: "يسمح لك باستخدام أزرار التحكم في مقود السيارة (التالي/السابق) أو سماعات الرأس للتنقل بين الأذكار دون الحاجة لمس الهاتف.",
+    micPermissionDenied: "تم رفض الوصول للميكروفون",
+    tapToRetry: "اضغط لإعادة المحاولة",
+    resetAllProgress: "تصفير جميع الأذكار؟",
+    cancel: "إلغاء",
+    confirmReset: "تصفير",
+    categoryComplete: "!اكتمل",
   }
 };
 
