@@ -144,9 +144,22 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
           exiting={FadeOutUp.duration(400)}
           style={{ alignItems: 'center', width: '100%' }}
         >
+          {currentZeker.prefix && (
+            <Text
+              fontFamily="Amiri"
+              fontSize={isDesktop ? 20 : 16}
+              lineHeight={isDesktop ? 32 : 26}
+              textAlign="center"
+              color={colors.textSecondary}
+              mb="$3"
+              maw={isDesktop ? 800 : '100%'}
+            >
+              {currentZeker.prefix}
+            </Text>
+          )}
           {(() => {
             const fontSize = getDynamicFontSize(currentZeker.arabic, showTranslation);
-            
+
             return (
               <Text
                 fontFamily="Amiri"
@@ -174,7 +187,7 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
                      else if (item.logicalIndex === activeWordIndex) status = 'current';
 
                      return (
-                       <AzkarWord 
+                       <AzkarWord
                          key={`${currentZeker.id}-${index}`}
                          word={item.word}
                          status={status}
@@ -188,6 +201,20 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
               </Text>
             );
           })()}
+          {currentZeker.postfix && (
+            <Text
+              fontFamily="Amiri"
+              fontSize={isDesktop ? 14 : 12}
+              lineHeight={isDesktop ? 22 : 18}
+              textAlign="center"
+              color={colors.textDim}
+              mt="$2"
+              opacity={0.75}
+              maw={isDesktop ? 800 : '100%'}
+            >
+              [ {currentZeker.postfix} ]
+            </Text>
+          )}
           <YStack py="$2" ai="center" opacity={0.8}>
             <Text
               color={colors.accent}

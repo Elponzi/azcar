@@ -10,6 +10,8 @@ export type AzkarCategory =
 export interface AzkarItemBase {
   id: number;
   arabic: string;
+  prefix?: string;
+  postfix?: string;
   note: string;
   translation: string;
   target: number;
