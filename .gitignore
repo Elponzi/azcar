@@ -47,3 +47,8 @@ requirments/
 .claude/
 
 *.apk
+*.keystore
+key.properties
+
+*.jks
+cred

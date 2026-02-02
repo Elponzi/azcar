@@ -44,10 +44,17 @@
       "expo-router",
       "expo-font",
       "expo-audio",
-      "./plugins/withMediaService"
+      "./plugins/withMediaService",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f6d6f1aa-d9d5-4b0f-927d-4becb31a696e"
+      }
     }
   }
 }
