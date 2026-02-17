@@ -51,4 +51,5 @@ requirments/
 key.properties
 
 *.jks
-cred
+credentials.json
+credentials/
