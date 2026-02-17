@@ -3,16 +3,18 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 
-import { useKeepAwake } from 'expo-keep-awake';
 import { TamaguiProvider } from 'tamagui';
 import config from '../tamagui.config';
 
-import { useAzkarStore } from '@/store/azkarStore';
 import { useSilentDriveMode } from '@/hooks/useSilentDriveMode';
 import { setupNativePlayer } from '@/services/TrackPlayerSetup';
+import { useAzkarStore } from '@/store/azkarStore';
+import { useKeepAwake } from '@/hooks/useKeepAwake';
+import { PremiumSplashScreen } from '@/components/SplashScreen';
+
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -31,6 +33,9 @@ setupNativePlayer();
 
 export default function RootLayout() {
   useKeepAwake();
+
+  const [isSplashAnimationFinished, setIsSplashAnimationFinished] = useState(false);
+
   const [loaded, error] = useFonts({
     Tajawal: require('../assets/fonts/Tajawal-Regular.ttf'),
     Amiri: require('../assets/fonts/Amiri-Bold.ttf'),
@@ -56,6 +61,14 @@ export default function RootLayout() {
 
   if (!loaded || !isHydrated) {
     return null;
+  }
+
+  if (!isSplashAnimationFinished) {
+    return (
+      <TamaguiProvider config={config} defaultTheme="dark">
+        <PremiumSplashScreen onAnimationComplete={() => setIsSplashAnimationFinished(true)} />
+      </TamaguiProvider>
+    );
   }
 
   return <RootLayoutNav />;

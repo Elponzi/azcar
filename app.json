@@ -48,6 +48,12 @@
       "./plugins/withMediaService",
       "expo-asset"
     ],
+    "updates": {
+      "url": "https://u.expo.dev/f6d6f1aa-d9d5-4b0f-927d-4becb31a696e"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "experiments": {
       "typedRoutes": true
     },

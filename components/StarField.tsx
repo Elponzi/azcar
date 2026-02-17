@@ -108,9 +108,10 @@ const InfiniteLayer = ({
 
 // --- Main StarField Component ---
 
-const StarFieldComponent = () => {
+const StarFieldComponent = ({ forceTheme }: { forceTheme?: 'light' | 'dark' }) => {
   const { width, height } = useWindowDimensions();
-  const currentTheme = useAzkarStore(state => state.theme);
+  const storedTheme = useAzkarStore(state => state.theme);
+  const currentTheme = forceTheme || storedTheme;
 
   // Configuration
   const isEnabled = EFFECTS_CONFIG.masterEnabled && 
@@ -175,7 +176,7 @@ const StarFieldComponent = () => {
         />
       </View>
 
-      <ShootingStar />
+      <ShootingStar forceTheme={forceTheme} />
     </View>
   );
 };

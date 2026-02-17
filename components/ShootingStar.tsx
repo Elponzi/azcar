@@ -14,9 +14,10 @@ import { useAzkarStore } from '@/store/azkarStore';
 
 const STAR_SIZE = 2; 
 
-export const ShootingStar = () => {
+export const ShootingStar = ({ forceTheme }: { forceTheme?: 'light' | 'dark' }) => {
   const { width, height } = useWindowDimensions();
-  const currentTheme = useAzkarStore(state => state.theme);
+  const storedTheme = useAzkarStore(state => state.theme);
+  const currentTheme = forceTheme || storedTheme;
 
   const { minDelay, maxDelay, duration, minTrailLength, maxTrailLength } = EFFECTS_CONFIG.shootingStar;
 

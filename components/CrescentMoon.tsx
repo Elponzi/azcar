@@ -16,10 +16,13 @@ interface CrescentMoonProps {
   color?: string;
   size?: number;
   isRTL?: boolean;
+  forceTheme?: 'light' | 'dark';
+  style?: any;
 }
 
-export const CrescentMoon = ({ color = '#FFD700', size: propSize, isRTL = false }: CrescentMoonProps) => {
-  const currentTheme = useAzkarStore(state => state.theme);
+export const CrescentMoon = ({ color = '#FFD700', size: propSize, isRTL = false, forceTheme, style }: CrescentMoonProps) => {
+  const storedTheme = useAzkarStore(state => state.theme);
+  const currentTheme = forceTheme || storedTheme;
 
   const { size: configSize, rotation, position, glowEnabled } = EFFECTS_CONFIG.moon;
   const size = propSize || configSize;
@@ -59,14 +62,15 @@ export const CrescentMoon = ({ color = '#FFD700', size: propSize, isRTL = false 
   }));
 
   // Logic Check
-  const isEnabled = EFFECTS_CONFIG.masterEnabled && 
+  const isEnabled = forceTheme || (EFFECTS_CONFIG.masterEnabled && 
                     EFFECTS_CONFIG.moon.enabled && 
-                    EFFECTS_CONFIG.moon.themes.includes(currentTheme);
+                    EFFECTS_CONFIG.moon.themes.includes(currentTheme));
 
   if (!isEnabled) return null;
 
   // Dynamic Styles from Config
-  const dynamicWrapperStyle = {
+  const dynamicWrapperStyle = style || {
+    position: 'absolute',
     top: position.top,
     left: position.left,
     width: size,
