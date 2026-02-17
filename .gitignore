@@ -53,3 +53,5 @@ key.properties
 *.jks
 credentials.json
 credentials/
+
+/d

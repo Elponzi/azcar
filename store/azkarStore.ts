@@ -168,5 +168,7 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
   },
 }));
 
-// Auto-hydrate on app start
-useAzkarStore.getState().hydrate();
+// Auto-hydrate on app start (browser only to avoid static rendering errors)
+if (typeof window !== 'undefined') {
+  useAzkarStore.getState().hydrate();
+}

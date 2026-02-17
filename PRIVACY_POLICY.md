@@ -1,31 +1,36 @@
 # Privacy Policy for Azkar Drive
 
-**Effective Date:** February 2, 2026
+**Effective Date:** February 17, 2026
 
-## 1. Introduction
-Welcome to **Azkar Drive**. This Privacy Policy explains how we handle your information when you use our mobile application. We are committed to protecting your privacy and ensuring you understand what information involves your device.
+Azkar Drive ("we," "us," or "our") is committed to protecting your privacy. This Privacy Policy explains how we handle information when you use our mobile and web applications.
 
-## 2. Information We Collect and How We Use It
+## 1. Information We Collect
 
-### 2.1 Microphone Usage (Audio Recording Permission)
-**Azkar Drive** requires access to your device's microphone (`android.permission.RECORD_AUDIO`) for the sole purpose of enabling the **"Smart Tracking"** feature.
+### 1.1 Audio Data
+Azkar Drive includes a "Smart Tracking" feature that uses your device's microphone to listen to your recitation of Azkar. 
+*   **Local Processing:** All audio processing for speech recognition is performed **locally on your device** or via the operating system's built-in speech services (e.g., Apple Speech or Google Speech Services).
+*   **No Storage:** We **do not collect, record, store, or transmit** any audio data or transcripts to our servers.
+*   **Real-time Only:** Audio data is processed in real-time solely to provide the highlighting and auto-counting features and is immediately discarded.
 
-*   **How it works:** The app uses speech recognition technology to listen to your recitation of Azkar (supplications) while you are driving. This allows the app to automatically increment counters without you needing to touch the screen, promoting safer driving habits.
-*   **Data Processing:** All audio processing is performed **locally on your device**.
-*   **No Storage or Transmission:** We **do not** record, save, store, or transmit your voice or audio data to any external servers, third parties, or cloud storage. The audio data is processed in real-time to detect specific phrases and is immediately discarded.
+### 1.2 Personal Information
+We do not require you to create an account, and we do not collect any personally identifiable information (PII) such as your name, email address, or location.
 
-### 2.2 Device Information
-We may collect non-personal information about your device, such as the model, operating system version, and general usage statistics (e.g., app crashes), to help us improve the app's performance and stability.
+## 2. Local Storage
+The app uses local storage (AsyncStorage) on your device to remember:
+*   Your current count progress.
+*   Your selected theme (Light/Dark).
+*   Your language preference.
+This data stays on your device and is not synchronized with any external servers.
 
-## 3. Data Sharing and Disclosure
-Since we do not collect personal audio data or identifiable user information, we do not share, sell, or disclose your personal data to third parties.
+## 3. Third-Party Services
+Our application may use system-level services for speech recognition:
+*   **Android:** Google Speech Services.
+*   **iOS:** Apple Speech Recognition.
+*   **Web:** The browser's native Web Speech API.
+These services are subject to their respective providers' privacy policies.
 
-## 4. Security
-We prioritize the security of your data. By processing sensitive data like audio input entirely locally on your device, we eliminate the risks associated with transmitting voice data over the internet.
+## 4. Changes to This Policy
+We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page.
 
-## 5. Changes to This Privacy Policy
-We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page. You are advised to review this Privacy Policy periodically for any changes.
-
-## 6. Contact Us
-If you have any questions or suggestions about our Privacy Policy, do not hesitate to contact us at:
-[hartha.aloufi@gmail.com]
+## 5. Contact Us
+If you have any questions about this Privacy Policy, please contact us at: [Your Contact Info]

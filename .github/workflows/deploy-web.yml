@@ -1,0 +1,37 @@
+name: Deploy Web to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Setup Bun 🚀
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies 📦
+        run: bun install
+
+      - name: Build Web 🏗️
+        run: npx expo export --platform web
+
+      - name: Add CNAME 🌐
+        run: echo "adhkarai.adah.dev" > dist/CNAME
+
+      - name: Deploy to GitHub Pages 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist
+          branch: gh-pages
