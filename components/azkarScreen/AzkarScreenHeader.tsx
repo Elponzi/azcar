@@ -16,7 +16,6 @@ import { DesktopCategoryNav } from './DesktopCategoryNav';
 
 interface AzkarScreenHeaderProps {
   isDesktop: boolean;
-  isRTL: boolean;
   colors: ThemeColors;
   t: any;
   currentCategory: AzkarCategory;
@@ -32,7 +31,6 @@ interface AzkarScreenHeaderProps {
 
 export const AzkarScreenHeader = ({
   isDesktop,
-  isRTL,
   colors,
   t,
   currentCategory,
@@ -65,7 +63,6 @@ export const AzkarScreenHeader = ({
         jc="space-between"
         bbw={isDesktop ? 1 : 0}
         bbc={colors.borderColor}
-        fd={isRTL ? 'row-reverse' : 'row'}
         zIndex={10}
         minHeight={isDesktop ? 100 : 'auto'}
       >
@@ -97,7 +94,6 @@ export const AzkarScreenHeader = ({
               onCategoryChange={onCategoryChange}
               colors={colors}
               t={t}
-              isRTL={isRTL}
             />
             <XStack bg={colors.accentDim} px="$2" py="$1" br="$10" ai="center">
               <Text fontSize={12} fontWeight="700" color={colors.accent}>
@@ -106,7 +102,7 @@ export const AzkarScreenHeader = ({
             </XStack>
           </XStack>
         ) : (
-          <XStack ai="center" gap="$2" fd={isRTL ? 'row-reverse' : 'row'}>
+          <XStack ai="center" gap="$2">
             <Button
               chromeless
               onPress={onOpenCategorySheet}
@@ -117,7 +113,7 @@ export const AzkarScreenHeader = ({
                 {(() => {
                   const key = (currentCategory.charAt(0).toLowerCase() + currentCategory.slice(1)) as keyof typeof t;
                   const label = t[key] || currentCategory;
-                  return isRTL ? `${t.adhkar} ${label}` : `${label} ${t.adhkar}`;
+                  return t.adhkar ? `${t.adhkar} ${label}` : `${label} Adhkar`;
                 })()}
               </Text>
             </Button>

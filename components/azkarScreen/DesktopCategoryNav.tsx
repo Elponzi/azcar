@@ -10,7 +10,6 @@ interface DesktopCategoryNavProps {
   onCategoryChange: (category: AzkarCategory) => void;
   colors: ThemeColors;
   t: any;
-  isRTL: boolean;
 }
 
 export const DesktopCategoryNav = ({ 
@@ -18,8 +17,7 @@ export const DesktopCategoryNav = ({
   currentCategory, 
   onCategoryChange, 
   colors, 
-  t, 
-  isRTL 
+  t
 }: DesktopCategoryNavProps) => {
   return (
     <View f={1} mx="$2" overflow="hidden">
@@ -29,8 +27,7 @@ export const DesktopCategoryNav = ({
         contentContainerStyle={{ 
           gap: 8, 
           paddingHorizontal: 4, 
-          alignItems: 'center',
-          flexDirection: isRTL ? 'row-reverse' : 'row'
+          alignItems: 'center'
         }}
       >
         {categories.map((cat) => {

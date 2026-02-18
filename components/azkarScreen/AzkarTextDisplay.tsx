@@ -1,8 +1,9 @@
 import { THEME } from '@/constants/Theme';
 import { AzkarItem } from '@/data';
 import { removeTashkeel, normalizeArabic, tokenizeArabicText } from '@/utils';
-import React, { useMemo, memo, useEffect } from 'react';
-import Animated, { FadeInDown, FadeOutUp, useSharedValue, useAnimatedStyle, withTiming, interpolateColor, withDelay } from 'react-native-reanimated';
+import * as React from 'react';
+import { useMemo, memo, useEffect } from 'react';
+import Animated, { FadeInDown, FadeOutUp, useSharedValue, useAnimatedStyle, withTiming, interpolateColor } from 'react-native-reanimated';
 import { Paragraph, ScrollView, Text, YStack } from 'tamagui';
 
 interface AzkarTextDisplayProps {
@@ -23,6 +24,17 @@ const withOpacity = (hex: string, alpha: number) => {
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+const getDynamicFontSize = (text: string, translationVisible: boolean, isDesktop: boolean) => {
+  const len = removeTashkeel(text).length;
+  const boost = translationVisible ? 1 : 1.3; // 30% larger when translation is off
+
+  if (len < 50) return (isDesktop ? 48 : 32) * boost;
+  if (len < 100) return (isDesktop ? 36 : 24) * boost;
+  if (len < 200) return (isDesktop ? 28 : 20) * boost;
+  if (len < 300) return (isDesktop ? 24 : 18) * boost;
+  return (isDesktop ? 20 : 18) * boost;
 };
 
 const AzkarWord = memo(({ 
@@ -91,20 +103,13 @@ const AzkarWord = memo(({
   );
 });
 
-export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDesktop, theme, activeWordIndex = -1 }: AzkarTextDisplayProps) => {
+export const AzkarTextDisplay = memo(({ currentZeker, showTranslation, showNote, isDesktop, theme, activeWordIndex = -1 }: AzkarTextDisplayProps) => {
   const colors = THEME[theme];
 
-  // Dynamic Font Size
-  const getDynamicFontSize = (text: string, translationVisible: boolean) => {
-    const len = removeTashkeel(text).length;
-    const boost = translationVisible ? 1 : 1.3; // 30% larger when translation is off
-
-    if (len < 50) return (isDesktop ? 48 : 32) * boost;
-    if (len < 100) return (isDesktop ? 36 : 24) * boost;
-    if (len < 200) return (isDesktop ? 28 : 20) * boost;
-    if (len < 300) return (isDesktop ? 24 : 18) * boost;
-    return (isDesktop ? 20 : 18) * boost;
-  };
+  const fontSize = useMemo(() => 
+    getDynamicFontSize(currentZeker.arabic, showTranslation, isDesktop),
+    [currentZeker.arabic, showTranslation, isDesktop]
+  );
 
   // Map visual words to logical indices (skipping punctuation)
   const wordsWithLogicalIndex = useMemo(() => {
@@ -157,50 +162,46 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
               {currentZeker.prefix}
             </Text>
           )}
-          {(() => {
-            const fontSize = getDynamicFontSize(currentZeker.arabic, showTranslation);
+          
+          <Text
+            fontFamily="Amiri"
+            fontSize={fontSize}
+            lineHeight={fontSize * 1.8}
+            textAlign="center"
+            maw={isDesktop ? 800 : '100%'}
+            textShadowColor={theme === 'dark' ? "unset" : 'transparent'}
+            textShadowRadius={0}
+            textShadowOffset={{ width: 0, height: 0 }}
+          >
+            {activeWordIndex === -1 ? (
+                <Text fontFamily="Amiri" color={colors.textPrimary}>{currentZeker.arabic}</Text>
+            ) : (
+                wordsWithLogicalIndex.map((item, index) => {
+                  if (item.isNewline) {
+                    return <Text key={`nl-${index}`}>{'\n'}</Text>;
+                  }
 
-            return (
-              <Text
-                fontFamily="Amiri"
-                fontSize={fontSize}
-                lineHeight={fontSize * 1.8}
-                textAlign="center"
-                maw={isDesktop ? 800 : '100%'}
-                textShadowColor={theme === 'dark' ? "unset" : 'transparent'}
-                textShadowRadius={0}
-                textShadowOffset={{ width: 0, height: 0 }}
-              >
-                {activeWordIndex === -1 ? (
-                   <Text fontFamily="Amiri" color={colors.textPrimary}>{currentZeker.arabic}</Text>
-                ) : (
-                   wordsWithLogicalIndex.map((item, index) => {
-                     if (item.isNewline) {
-                        return <Text key={`nl-${index}`}>{'\n'}</Text>;
-                     }
+                  let status: 'read' | 'current' | 'upcoming' = 'upcoming';
 
-                     let status: 'read' | 'current' | 'upcoming' = 'upcoming';
+                  if (item.logicalIndex < activeWordIndex) {
+                    status = 'read';
+                  }
+                  else if (item.logicalIndex === activeWordIndex) status = 'current';
 
-                     if (item.logicalIndex < activeWordIndex) {
-                        status = 'read';
-                     }
-                     else if (item.logicalIndex === activeWordIndex) status = 'current';
+                  return (
+                    <AzkarWord
+                      key={`${currentZeker.id}-${index}`}
+                      word={item.word}
+                      status={status}
+                      textPrimary={colors.textPrimary}
+                      accent={colors.accent}
+                      accentGlow={colors.accentGlow}
+                    />
+                  );
+                })
+            )}
+          </Text>
 
-                     return (
-                       <AzkarWord
-                         key={`${currentZeker.id}-${index}`}
-                         word={item.word}
-                         status={status}
-                         textPrimary={colors.textPrimary}
-                         accent={colors.accent}
-                         accentGlow={colors.accentGlow}
-                       />
-                     );
-                   })
-                )}
-              </Text>
-            );
-          })()}
           {currentZeker.postfix && (
             <Text
               fontFamily="Amiri"
@@ -260,4 +261,4 @@ export const AzkarTextDisplay = ({ currentZeker, showTranslation, showNote, isDe
       </ScrollView>
     </YStack>
   );
-};
+});

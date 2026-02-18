@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
-import Svg, { Polygon, Defs, RadialGradient, Stop, Circle } from 'react-native-svg';
+import Svg, { Polygon } from 'react-native-svg';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -12,8 +12,6 @@ import Animated, {
 import { ShootingStar } from './ShootingStar';
 import { EFFECTS_CONFIG } from '@/constants/EffectsConfig';
 import { useAzkarStore } from '@/store/azkarStore';
-
-const AnimatedSvg = Animated.createAnimatedComponent(Svg);
 
 // --- Types ---
 interface StarData {
@@ -180,4 +178,4 @@ const StarFieldComponent = ({ forceTheme }: { forceTheme?: 'light' | 'dark' }) =
     </View>
   );
 };
-export default React.memo(StarFieldComponent);
+export const StarField = React.memo(StarFieldComponent);

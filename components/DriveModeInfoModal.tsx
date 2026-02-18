@@ -17,10 +17,9 @@ interface DriveModeInfoModalProps {
   onClose: () => void;
 }
 
-export default function DriveModeInfoModal({ isOpen, onClose }: DriveModeInfoModalProps) {
+export const DriveModeInfoModal = ({ isOpen, onClose }: DriveModeInfoModalProps) => {
   const { theme, language } = useAzkarStore();
   const t = TRANSLATIONS[language];
-  const isRTL = language === 'ar';
   const colors = THEME[theme];
 
   const opacity = useSharedValue(0);
@@ -98,7 +97,6 @@ export default function DriveModeInfoModal({ isOpen, onClose }: DriveModeInfoMod
                 fontSize={18} 
                 fontWeight="700" 
                 color={colors.textPrimary}
-                textAlign={isRTL ? 'right' : 'left'}
              >
                {t.driveModeInfoTitle}
              </H4>
@@ -127,7 +125,6 @@ export default function DriveModeInfoModal({ isOpen, onClose }: DriveModeInfoMod
             color={colors.textSecondary} 
             fontSize={15} 
             lineHeight={24}
-            textAlign={isRTL ? 'right' : 'left'}
           >
             {t.driveModeInfoDesc}
           </Paragraph>

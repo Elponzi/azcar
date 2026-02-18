@@ -11,7 +11,7 @@ import { useAzkarStore } from '@/store/azkarStore';
 import { TRANSLATIONS } from '@/constants/Translations';
 import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '@/constants/Theme';
-import DriveModeInfoModal from './DriveModeInfoModal';
+import { DriveModeInfoModal } from './DriveModeInfoModal';
 
 // --- Helper Component for Toggle Buttons ---
 interface ToggleButtonProps {
@@ -42,12 +42,11 @@ const ToggleButton = ({ label, isActive, onPress, colors }: ToggleButtonProps) =
   </Button>
 );
 
-export default function SettingsModal() {
+export const SettingsModal = () => {
   const { width, height } = useWindowDimensions();
   const isDesktop = width > 768;
   const { theme, setTheme, language, setLanguage, isSettingsOpen, setSettingsOpen, showTranslation, setShowTranslation, showNote, setShowNote, isDriveModeEnabled, setDriveMode } = useAzkarStore();
   const t = TRANSLATIONS[language];
-  const isRTL = language === 'ar';
   
   // Local state for info modal
   const [isInfoOpen, setInfoOpen] = useState(false);
@@ -56,7 +55,7 @@ export default function SettingsModal() {
   const colors = THEME[theme];
 
   const opacity = useSharedValue(0);
-  const translation = useSharedValue(isDesktop ? (isRTL ? -350 : 350) : height);
+  const translation = useSharedValue(isDesktop ? 350 : height);
 
   useEffect(() => {
     if (isSettingsOpen) {
@@ -68,13 +67,13 @@ export default function SettingsModal() {
     } else {
       opacity.value = withTiming(0, { duration: 150 });
       // Add extra buffer to height to ensure it's completely off-screen on all devices
-      const hiddenVal = isDesktop ? (isRTL ? -350 : 350) : (height + 100);
+      const hiddenVal = isDesktop ? 350 : (height + 100);
       translation.value = withTiming(hiddenVal, { 
         duration: 200, 
         easing: Easing.in(Easing.cubic) 
       });
     }
-  }, [isSettingsOpen, isDesktop, isRTL, height]);
+  }, [isSettingsOpen, isDesktop, height]);
 
   const animatedBackdropStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -84,8 +83,7 @@ export default function SettingsModal() {
     if (isDesktop) {
         return {
             transform: [{ translateX: translation.value }],
-            right: isRTL ? undefined : 0,
-            left: isRTL ? 0 : undefined,
+            end: 0,
         }
     } else {
         return {
@@ -93,7 +91,7 @@ export default function SettingsModal() {
             bottom: 0,
         }
     }
-  }, [isDesktop, isRTL]);
+  }, [isDesktop]);
 
   if (!isSettingsOpen && opacity.value === 0) return null;
 
@@ -131,8 +129,7 @@ export default function SettingsModal() {
             shadowRadius: 10,
             elevation: 20,
             padding: 30,
-            borderLeftWidth: isDesktop && !isRTL ? 1 : 0,
-            borderRightWidth: isDesktop && isRTL ? 1 : 0,
+            borderStartWidth: isDesktop ? 1 : 0,
             borderColor: colors.borderColor,
           },
           animatedPanelStyle

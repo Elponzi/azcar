@@ -1,5 +1,5 @@
 import { CrescentMoon } from "@/components/CrescentMoon";
-import StarField from "@/components/StarField";
+import { StarField } from "@/components/StarField";
 import { THEME } from "@/constants/Theme";
 import React, { useEffect } from "react";
 import { StyleSheet, useWindowDimensions } from "react-native";
@@ -130,7 +130,7 @@ export const PremiumSplashScreen = ({
             <Text
               fontFamily="Tajawal"
               fontSize={14}
-              color={colors.textDim}
+              color={colors.textPrimary}
               letterSpacing={2}
               opacity={0.6}
             >

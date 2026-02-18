@@ -1,14 +1,17 @@
+import * as React from 'react';
 import { useEffect, useRef, useCallback } from 'react';
 import { useAudioPlayer } from 'expo-audio';
 import { useAzkarStore } from '@/store/azkarStore';
 
 /**
- * Encapsulates auto-advance-on-completion logic:
- * sound player, navigation guard, and the handleAutoComplete callback.
+ * Encapsulates completion logic (manual or auto):
+ * sound player, navigation guards, and completion handlers.
  */
 export function useAutoComplete() {
   const currentIndex = useAzkarStore((s) => s.currentIndex);
+  const nextZeker = useAzkarStore((s) => s.nextZeker);
   const player = useAudioPlayer(require('@/assets/sounds/switch.mp3'));
+  
   const isNavigatingRef = useRef(false);
   const stopRecognitionRef = useRef<() => void>(() => {});
 
@@ -17,36 +20,41 @@ export function useAutoComplete() {
     isNavigatingRef.current = false;
   }, [currentIndex]);
 
-  const handleAutoComplete = useCallback(() => {
-    useAzkarStore.getState().incrementCount();
+  const handleZekerCompleted = useCallback(() => {
+    if (isNavigatingRef.current) return;
+    
+    player.seekTo(0);
+    player.play();
 
-    const state = useAzkarStore.getState();
-    const activeZeker = state.filteredAzkar[state.currentIndex];
-    const currentCount = state.counts[activeZeker.id] || 0;
+    // Re-check state inside the delay
+    setTimeout(() => {
+      const state = useAzkarStore.getState();
+      if (state.currentIndex < state.filteredAzkar.length - 1) {
+        isNavigatingRef.current = true;
+        nextZeker();
+      } else {
+        stopRecognitionRef.current();
+      }
+    }, 600);
+  }, [player, nextZeker]);
+
+  const handleAutoComplete = useCallback(() => {
+    const store = useAzkarStore.getState();
+    store.incrementCount();
+
+    const freshState = useAzkarStore.getState();
+    const activeZeker = freshState.filteredAzkar[freshState.currentIndex];
+    const currentCount = freshState.counts[activeZeker.id] || 0;
 
     if (currentCount >= activeZeker.target) {
-      player.seekTo(0);
-      player.play();
-
-      setTimeout(() => {
-        if (isNavigatingRef.current) return;
-
-        // Re-read state to avoid acting on stale values
-        const fresh = useAzkarStore.getState();
-        if (fresh.currentIndex < fresh.filteredAzkar.length - 1) {
-          isNavigatingRef.current = true;
-          fresh.nextZeker();
-        } else {
-          stopRecognitionRef.current();
-        }
-      }, 600);
+      handleZekerCompleted();
     }
-  }, [player]);
+  }, [handleZekerCompleted]);
 
   const playSuccessSound = useCallback(() => {
     player.seekTo(0);
     player.play();
   }, [player]);
 
-  return { handleAutoComplete, stopRecognitionRef, playSuccessSound };
+  return { handleAutoComplete, stopRecognitionRef, playSuccessSound, handleZekerCompleted };
 }

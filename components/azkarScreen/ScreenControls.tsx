@@ -3,34 +3,40 @@ import { Button, Text } from 'tamagui';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { ThemeColors } from '@/constants/Theme';
+import { useAzkarStore } from '@/store/azkarStore';
 
 interface NavButtonProps {
-  iconName: keyof typeof Ionicons.glyphMap;
+  iconName: 'chevron-back' | 'chevron-forward';
   onPress: () => void;
   colors: ThemeColors;
   isDesktop: boolean;
   disabled?: boolean;
 }
 
-export const NavButton = ({ iconName, onPress, colors, isDesktop, disabled }: NavButtonProps) => (
-  <Button 
-    size="$6" 
-    circular 
-    bg={colors.cardBg}
-    borderWidth={isDesktop ? 1 : 0}
-    borderColor={colors.borderColor}
-    elevation={0}
-    shadowOpacity={0}
-    color={colors.textPrimary}
-    icon={<Ionicons name={iconName} size={32} color={colors.textPrimary} />} 
-    onPress={() => {
-      if (!disabled) onPress();
-    }}
-    disabled={disabled}
-    opacity={disabled ? 0.3 : 1}
-    pressStyle={{ opacity: disabled ? 0.3 : 0.8 }}
-  />
-);
+export const NavButton = ({ iconName, onPress, colors, isDesktop, disabled }: NavButtonProps) => {
+
+
+  return (
+    <Button 
+      size="$6" 
+      circular 
+      bg={colors.cardBg}
+      borderWidth={isDesktop ? 1 : 0}
+      borderColor={colors.borderColor}
+      elevation={0}
+      shadowOpacity={0}
+      color={colors.textPrimary}
+      icon={<Ionicons name={iconName} size={32} color={colors.textPrimary} />} 
+      onPress={() => {
+        if (!disabled) onPress();
+      }}
+      
+      disabled={disabled}
+      opacity={disabled ? 0.3 : 1}
+      pressStyle={{ opacity: disabled ? 0.3 : 0.8 }}
+    />
+  );
+};
 
 interface CategoryButtonProps {
   label: string;

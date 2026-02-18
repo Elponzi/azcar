@@ -47,7 +47,7 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
   counts: {},
   filteredAzkar: AZKAR_DATA['Morning'],
   theme: 'dark', // Default from mockup
-  language: 'en',
+  language: Platform.OS === 'web' ? 'en' : 'ar',
   isSettingsOpen: false,
   showTranslation: false,
   showNote: false,

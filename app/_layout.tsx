@@ -76,9 +76,9 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const currentTheme = useAzkarStore((state) => state.theme);
-
+ 
   return (
-    <TamaguiProvider config={config} defaultTheme={currentTheme}>
+    <TamaguiProvider config={config} defaultTheme={currentTheme} >
       <ThemeProvider value={currentTheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />

@@ -1,35 +1,36 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { useWindowDimensions, StyleSheet, Pressable } from 'react-native';
-import { YStack, XStack, Text, View, Button } from 'tamagui';
-import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeIn, FadeInUp, FadeOutUp } from 'react-native-reanimated';
-import { setAudioModeAsync } from 'expo-audio';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from "@expo/vector-icons";
+import { setAudioModeAsync } from "expo-audio";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import * as React from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Pressable, StyleSheet, useWindowDimensions } from "react-native";
+import Animated, { FadeIn, FadeInUp, FadeOutUp } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Button, Text, View, XStack, YStack } from "tamagui";
 
-import { useAzkarStore } from '@/store/azkarStore';
-import { THEME } from '@/constants/Theme';
-import { TRANSLATIONS } from '@/constants/Translations';
-import { EFFECTS_CONFIG } from '@/constants/EffectsConfig';
-import { AzkarCategory } from '@/data/types';
-import { CATEGORIES } from '@/data';
+import { EFFECTS_CONFIG } from "@/constants/EffectsConfig";
+import { THEME } from "@/constants/Theme";
+import { TRANSLATIONS } from "@/constants/Translations";
+import { CATEGORIES } from "@/data";
+import { AzkarCategory } from "@/data/types";
+import { useAzkarStore } from "@/store/azkarStore";
 
 // Components
-import { SeoHead } from '@/components/SeoHead';
-import SettingsModal from '@/components/SettingsModal';
-import CategorySheet from '@/components/CategorySheet';
-import StarField from '@/components/StarField';
-import { CrescentMoon } from '@/components/CrescentMoon';
-import { AzkarTextDisplay } from '@/components/azkarScreen/AzkarTextDisplay';
-import { AzkarCounter } from '@/components/azkarScreen/AzkarCounter';
-import { NavButton, MicButton } from '@/components/azkarScreen/ScreenControls';
-import { AzkarScreenHeader } from '@/components/azkarScreen/AzkarScreenHeader';
+import { CategorySheet } from "@/components/CategorySheet";
+import { CrescentMoon } from "@/components/CrescentMoon";
+import { SeoHead } from "@/components/SeoHead";
+import { SettingsModal } from "@/components/SettingsModal";
+import { StarField } from "@/components/StarField";
+import { AzkarCounter } from "@/components/azkarScreen/AzkarCounter";
+import { AzkarScreenHeader } from "@/components/azkarScreen/AzkarScreenHeader";
+import { AzkarTextDisplay } from "@/components/azkarScreen/AzkarTextDisplay";
+import { MicButton, NavButton } from "@/components/azkarScreen/ScreenControls";
 
 // Hooks
-import { useParallax } from '@/hooks/useParallax';
-import { useWebKeyboard } from '@/hooks/useWebKeyboard';
-import { useSmartTrack } from '@/hooks/useSmartTrack';
-import { useAutoComplete } from '@/hooks/useAutoComplete';
+import { useAutoComplete } from "@/hooks/useAutoComplete";
+import { useParallax } from "@/hooks/useParallax";
+import { useSmartTrack } from "@/hooks/useSmartTrack";
+import { useWebKeyboard } from "@/hooks/useWebKeyboard";
 
 export default function CategoryScreen() {
   const { width } = useWindowDimensions();
@@ -39,7 +40,9 @@ export default function CategoryScreen() {
   const [dismissedCompletion, setDismissedCompletion] = useState(false);
 
   const router = useRouter();
-  const { category: categoryParam } = useLocalSearchParams<{ category: string }>();
+  const { category: categoryParam } = useLocalSearchParams<{
+    category: string;
+  }>();
 
   const {
     currentCategory,
@@ -56,14 +59,22 @@ export default function CategoryScreen() {
     language,
     setSettingsOpen,
     showTranslation,
-    showNote
+    showNote,
   } = useAzkarStore();
 
   const currentZeker = filteredAzkar[currentIndex];
 
-  const { handleAutoComplete, stopRecognitionRef, playSuccessSound } = useAutoComplete();
+  const { handleAutoComplete, stopRecognitionRef, handleZekerCompleted } =
+    useAutoComplete();
 
-  const { isListening, startRecognition, stopRecognition, activeWordIndex, permissionError, clearPermissionError } = useSmartTrack({
+  const {
+    isListening,
+    startRecognition,
+    stopRecognition,
+    activeWordIndex,
+    permissionError,
+    clearPermissionError,
+  } = useSmartTrack({
     targetText: currentZeker?.arabic,
     autoReset: true,
     onComplete: handleAutoComplete,
@@ -74,7 +85,9 @@ export default function CategoryScreen() {
   // Sync URL param with store (case-insensitive match)
   useEffect(() => {
     if (categoryParam) {
-      const match = CATEGORIES.find(c => c.toLowerCase() === categoryParam.toLowerCase());
+      const match = CATEGORIES.find(
+        (c) => c.toLowerCase() === categoryParam.toLowerCase(),
+      );
       if (match && match !== currentCategory) {
         setCategory(match);
       }
@@ -88,19 +101,25 @@ export default function CategoryScreen() {
 
   const colors = THEME[theme];
   const t = TRANSLATIONS[language];
-  const isRTL = language === 'ar';
 
   const count = counts[currentZeker?.id] || 0;
   const progress = Math.min((count / currentZeker?.target) * 100, 100);
 
-  const hasCategoryProgress = useMemo(() => filteredAzkar.some(z => (counts[z.id] || 0) > 0), [filteredAzkar, counts]);
+  const hasCategoryProgress = useMemo(
+    () => filteredAzkar.some((z) => (counts[z.id] || 0) > 0),
+    [filteredAzkar, counts],
+  );
 
   const categoryProgress = useMemo(() => {
-    const completed = filteredAzkar.filter(z => (counts[z.id] || 0) >= z.target).length;
+    const completed = filteredAzkar.filter(
+      (z) => (counts[z.id] || 0) >= z.target,
+    ).length;
     return { completed, total: filteredAzkar.length };
   }, [filteredAzkar, counts]);
 
-  const isCategoryComplete = categoryProgress.total > 0 && categoryProgress.completed === categoryProgress.total;
+  const isCategoryComplete =
+    categoryProgress.total > 0 &&
+    categoryProgress.completed === categoryProgress.total;
 
   // Reset dismissedCompletion when category changes
   useEffect(() => {
@@ -129,10 +148,10 @@ export default function CategoryScreen() {
           playsInSilentMode: true,
           allowsRecording: false,
           shouldPlayInBackground: false,
-          interruptionMode: 'duckOthers',
+          interruptionMode: "duckOthers",
         });
       } catch (e) {
-        console.warn('Error configuring audio', e);
+        console.warn("Error configuring audio", e);
       }
     };
     configureAudio();
@@ -151,131 +170,145 @@ export default function CategoryScreen() {
     startRecognition();
   }, [clearPermissionError, startRecognition]);
 
-  if (!currentZeker) return <View><Text>Loading...</Text></View>;
+  if (!currentZeker)
+    return (
+      <View>
+        <Text>Loading...</Text>
+      </View>
+    );
 
   const renderContent = () => (
     <>
-       <SeoHead
-         title={currentCategory === 'Morning' ? 'Morning Azkar' : 'Evening Azkar'}
-         description={currentZeker.translation}
-       />
+      <SeoHead
+        title={
+          currentCategory === "Morning" ? "Morning Azkar" : "Evening Azkar"
+        }
+        description={currentZeker.translation}
+      />
 
-       {/* Mic Permission Error Banner */}
-       {permissionError && (
-         <Animated.View
-           entering={FadeInUp.duration(300)}
-           exiting={FadeOutUp.duration(300)}
-           style={{ width: '100%', position: 'absolute', top: isDesktop ? 0 : insets.top, zIndex: 100 }}
-         >
-           <Pressable onPress={handleRetryMic}>
-             <XStack
-               bg={colors.accent}
-               px="$4"
-               py="$3"
-               ai="center"
-               jc="center"
-               gap="$2"
-             >
-               <Text fontSize={16} fontWeight="700" color={colors.background}>
-                 {t.micPermissionDenied}
-               </Text>
-               <Text fontSize={14} color={colors.background} opacity={0.8}>
-                 {t.tapToRetry}
-               </Text>
-             </XStack>
-           </Pressable>
-         </Animated.View>
-       )}
+      {/* Mic Permission Error Banner */}
+      {permissionError && (
+        <Animated.View
+          entering={FadeInUp.duration(300)}
+          exiting={FadeOutUp.duration(300)}
+          style={{
+            width: "100%",
+            position: "absolute",
+            top: isDesktop ? 0 : insets.top,
+            zIndex: 100,
+          }}
+        >
+          <Pressable onPress={handleRetryMic}>
+            <XStack
+              bg={colors.accent}
+              px="$4"
+              py="$3"
+              ai="center"
+              jc="center"
+              gap="$2"
+            >
+              <Text fontSize={16} fontWeight="700" color={colors.background}>
+                {t.micPermissionDenied}
+              </Text>
+              <Text fontSize={14} color={colors.background} opacity={0.8}>
+                {t.tapToRetry}
+              </Text>
+            </XStack>
+          </Pressable>
+        </Animated.View>
+      )}
 
-       <AzkarScreenHeader
-         isDesktop={isDesktop}
-         isRTL={isRTL}
-         colors={colors}
-         t={t}
-         currentCategory={currentCategory}
-         hasCategoryProgress={hasCategoryProgress}
-         currentZekrIndex={currentIndex}
-         totalAzkar={filteredAzkar.length}
-         insetTop={insets.top}
-         onResetCategory={resetCategoryCounts}
-         onCategoryChange={handleCategoryChange}
-         onOpenSettings={() => setSettingsOpen(true)}
-         onOpenCategorySheet={() => setCategorySheetOpen(true)}
-       />
+      <AzkarScreenHeader
+        isDesktop={isDesktop}
+        colors={colors}
+        t={t}
+        currentCategory={currentCategory}
+        hasCategoryProgress={hasCategoryProgress}
+        currentZekrIndex={currentIndex}
+        totalAzkar={filteredAzkar.length}
+        insetTop={insets.top}
+        onResetCategory={resetCategoryCounts}
+        onCategoryChange={handleCategoryChange}
+        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenCategorySheet={() => setCategorySheetOpen(true)}
+      />
 
-        {/* Content Body */}
-        <XStack f={1} fd={isDesktop ? (isRTL ? 'row-reverse' : 'row') : 'column'}>
+      {/* Content Body */}
+      <XStack f={1} fd={isDesktop ? "row" : "column"}>
+        {/* Text Section */}
+        <AzkarTextDisplay
+          currentZeker={currentZeker}
+          showTranslation={showTranslation}
+          showNote={showNote}
+          isDesktop={isDesktop}
+          theme={theme}
+          activeWordIndex={isListening ? activeWordIndex : -1}
+        />
 
-          {/* Text Section */}
-          <AzkarTextDisplay
-            currentZeker={currentZeker}
-            showTranslation={showTranslation}
-            showNote={showNote}
-            isDesktop={isDesktop}
+        {/* Controls Section Container */}
+        <YStack
+          w={isDesktop ? 400 : "100%"}
+          f={isDesktop ? 0 : 0}
+          flexShrink={0}
+          bg={isDesktop ? colors.background : "transparent"}
+          px="$6"
+          pt="$4"
+          pb={isDesktop ? "$6" : insets.bottom + 10}
+          jc="center"
+          ai="center"
+          space="$6"
+          bc={colors.borderColor}
+          bsw={isDesktop ? 1 : 0}
+          zIndex={10}
+        >
+          <AzkarCounter
+            count={count}
+            target={currentZeker.target}
+            progress={progress}
+            onIncrement={incrementCount}
+            onReset={resetCurrentCount}
+            onZekerComplete={handleZekerCompleted}
             theme={theme}
-            activeWordIndex={isListening ? activeWordIndex : -1}
+            isDesktop={isDesktop}
+            language={language}
+            t={t}
           />
 
-          {/* Controls Section Container */}
-          <YStack
-            w={isDesktop ? 400 : '100%'}
-            f={isDesktop ? 0 : 0}
-            flexShrink={0}
-            bg={isDesktop ? colors.background : 'transparent'}
-            px="$6"
-            pt="$4"
-            pb={isDesktop ? "$6" : insets.bottom + 10}
-            jc="center"
+          {/* Nav Controls */}
+          <XStack
+            w="100%"
+            jc={isDesktop ? "center" : "space-between"}
+            gap={isDesktop ? "$6" : "$0"}
             ai="center"
-            space="$6"
-            blc={colors.borderColor}
-            blw={isDesktop ? (isRTL ? 0 : 1) : 0}
-            brc={colors.borderColor}
-            brw={isDesktop ? (isRTL ? 1 : 0) : 0}
-            zIndex={10}
+            px="$2"
+            fd={"row"}
+            direction="rtl"
           >
-            <AzkarCounter
-              count={count}
-              target={currentZeker.target}
-              progress={progress}
-              onIncrement={incrementCount}
-              onReset={resetCurrentCount}
-              onComplete={nextZeker}
-              playSuccessSound={playSuccessSound}
-              theme={theme}
+            <NavButton
+              iconName="chevron-forward"
+              onPress={prevZeker}
+              colors={colors}
               isDesktop={isDesktop}
-              language={language}
-              t={t}
+              disabled={isFirst}
             />
 
-            {/* Nav Controls */}
-            <XStack w="100%" jc={isDesktop ? "center" : "space-between"} gap={isDesktop ? "$6" : "$0"} ai="center" px="$2" fd={'row'}>
-              <NavButton
-                iconName={isRTL ? "chevron-forward" : "chevron-back"}
-                onPress={isRTL ? nextZeker : prevZeker}
-                colors={colors}
-                isDesktop={isDesktop}
-                disabled={isRTL ? isLast : isFirst}
-              />
+            <MicButton
+              isListening={isListening}
+              onPress={isListening ? stopRecognition : startRecognition}
+              colors={colors}
+              label={t.startReading}
+            />
 
-              <MicButton
-                isListening={isListening}
-                onPress={isListening ? stopRecognition : startRecognition}
-                colors={colors}
-                label={t.startReading}
-              />
-
-              <NavButton
-                iconName={isRTL ? "chevron-back" : "chevron-forward"}
-                onPress={isRTL ? prevZeker : nextZeker}
-                colors={colors}
-                isDesktop={isDesktop}
-                disabled={isRTL ? isFirst : isLast}
-              />
-            </XStack>
-          </YStack>
-
-        </XStack>
+            <NavButton
+              iconName="chevron-back"
+              onPress={nextZeker}
+              colors={colors}
+              isDesktop={isDesktop}
+              disabled={isLast}
+            />
+          </XStack>
+        </YStack>
+      </XStack>
     </>
   );
 
@@ -287,11 +320,17 @@ export default function CategoryScreen() {
       ai="center"
       position="relative"
     >
-      <Animated.View style={[StyleSheet.absoluteFill, starParallax]} pointerEvents="none">
+      <Animated.View
+        style={[StyleSheet.absoluteFill, starParallax]}
+        pointerEvents="none"
+      >
         <StarField />
       </Animated.View>
 
-      <Animated.View style={[StyleSheet.absoluteFill, moonParallax]} pointerEvents="none">
+      <Animated.View
+        style={[StyleSheet.absoluteFill, moonParallax]}
+        pointerEvents="none"
+      >
         <CrescentMoon color={colors.accent} />
       </Animated.View>
 
@@ -328,10 +367,22 @@ export default function CategoryScreen() {
       {isCategoryComplete && !dismissedCompletion && (
         <Animated.View
           entering={FadeIn.duration(400)}
-          style={[StyleSheet.absoluteFill, { zIndex: 200, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.6)' }]}
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              zIndex: 200,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "rgba(0,0,0,0.6)",
+            },
+          ]}
         >
           <YStack ai="center" gap="$4" p="$6">
-            <Ionicons name="checkmark-circle" size={120} color={colors.accent} />
+            <Ionicons
+              name="checkmark-circle"
+              size={120}
+              color={colors.accent}
+            />
             <Text fontSize={28} fontWeight="800" color="#fff">
               {t.categoryComplete}
             </Text>

@@ -21,11 +21,10 @@ interface CategorySheetProps {
   onSelect: (category: AzkarCategory) => void;
 }
 
-export default function CategorySheet({ isOpen, onClose, categories, onSelect }: CategorySheetProps) {
+export const CategorySheet = ({ isOpen, onClose, categories, onSelect }: CategorySheetProps) => {
   const { height } = useWindowDimensions();
   const { theme, language, currentCategory } = useAzkarStore();
   const t = TRANSLATIONS[language];
-  const isRTL = language === 'ar';
   
   const colors = THEME[theme];
 
@@ -111,7 +110,7 @@ export default function CategorySheet({ isOpen, onClose, categories, onSelect }:
             {/* Header */}
             <XStack jc="space-between" ai="center" pb="$2" bbw={1} bbc={colors.borderColor}>
                 <H4 fontSize={18} fontWeight="700" color={colors.textPrimary}>
-                  {isRTL ? "اختر الأذكار" : "Select Category"}
+                  {t.selectCategory || "Select Category"}
                 </H4>
                 <Button 
                     size="$3" 
