@@ -1,9 +1,10 @@
+import * as React from 'react';
+import { useEffect, useState } from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 
 import { TamaguiProvider } from 'tamagui';
@@ -27,7 +28,9 @@ export const unstable_settings = {
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+if (typeof window !== 'undefined') {
+  SplashScreen.preventAutoHideAsync();
+}
 
 setupNativePlayer();
 
@@ -76,9 +79,11 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const currentTheme = useAzkarStore((state) => state.theme);
- 
+  const language = useAzkarStore((state) => state.language);
+  const dir = language === 'ar' ? 'rtl' : 'ltr';
+
   return (
-    <TamaguiProvider config={config} defaultTheme={currentTheme} >
+    <TamaguiProvider config={config} defaultTheme={currentTheme} dir={dir}>
       <ThemeProvider value={currentTheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />

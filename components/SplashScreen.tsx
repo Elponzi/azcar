@@ -1,7 +1,8 @@
 import { CrescentMoon } from "@/components/CrescentMoon";
 import { StarField } from "@/components/StarField";
 import { THEME } from "@/constants/Theme";
-import React, { useEffect } from "react";
+import * as React from "react";
+import { useEffect } from "react";
 import { StyleSheet, useWindowDimensions } from "react-native";
 import Animated, {
   Easing,
