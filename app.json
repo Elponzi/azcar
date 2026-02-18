@@ -2,7 +2,7 @@
   "expo": {
     "name": "أذكار AI",
     "slug": "adhkar-ai",
-    "version": "1.0.16",
+    "version": "1.0.17",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "azkardrive",
@@ -34,7 +34,7 @@
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.INTERNET"
       ],
-      "versionCode": 16
+      "versionCode": 17
     },
     "web": {
       "bundler": "metro",
