@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { FontAwesome } from '@expo/vector-icons';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -16,6 +16,10 @@ import { useAzkarStore } from '@/store/azkarStore';
 import { useKeepAwake } from '@/hooks/useKeepAwake';
 import { PremiumSplashScreen } from '@/components/SplashScreen';
 
+// Polyfill for legacy components that expect React.default (React 19/ESM interop)
+if (!React.default) {
+  (React as any).default = React;
+}
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -39,11 +43,12 @@ export default function RootLayout() {
 
   const [isSplashAnimationFinished, setIsSplashAnimationFinished] = useState(false);
 
+  // Load fonts safely. Spread only if FontAwesome.font exists to prevent SSR crashes.
   const [loaded, error] = useFonts({
     Tajawal: require('../assets/fonts/Tajawal-Regular.ttf'),
     Amiri: require('../assets/fonts/Amiri-Bold.ttf'),
     ReemKufi: require('../assets/fonts/ReemKufi-Bold.ttf'),
-    ...FontAwesome.font,
+    ...(FontAwesome ? FontAwesome.font : {}),
   });
 
   const isHydrated = useAzkarStore((state) => state.isHydrated);
@@ -58,7 +63,9 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded && isHydrated) {
-      SplashScreen.hideAsync();
+      if (typeof window !== 'undefined') {
+        SplashScreen.hideAsync();
+      }
     }
   }, [loaded, isHydrated]);
 
