@@ -12,13 +12,13 @@ import { useAzkarStore } from '@/store/azkarStore';
 import { TRANSLATIONS } from '@/constants/Translations';
 import { THEME } from '@/constants/Theme';
 
-interface DriveModeInfoModalProps {
+interface SmartTrackInfoModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const DriveModeInfoModal = ({ isOpen, onClose }: DriveModeInfoModalProps) => {
-  const { theme, language, setDriveMode, setHasSeenDriveModeInfo } = useAzkarStore();
+export const SmartTrackInfoModal = ({ isOpen, onClose }: SmartTrackInfoModalProps) => {
+  const { theme, language } = useAzkarStore();
   const t = (TRANSLATIONS as any)[language];
   const colors = THEME[theme];
 
@@ -37,17 +37,6 @@ export const DriveModeInfoModal = ({ isOpen, onClose }: DriveModeInfoModalProps)
       scale.value = withTiming(0.9, { duration: 150 });
     }
   }, [isOpen]);
-
-  const handleEnable = () => {
-    setDriveMode(true);
-    setHasSeenDriveModeInfo(true);
-    onClose();
-  };
-
-  const handleDismiss = () => {
-    setHasSeenDriveModeInfo(true);
-    onClose();
-  };
 
   const animatedBackdropStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -73,7 +62,7 @@ export const DriveModeInfoModal = ({ isOpen, onClose }: DriveModeInfoModalProps)
       pointerEvents={isOpen ? 'auto' : 'none'}
       px="$4"
     >
-      <TouchableWithoutFeedback onPress={handleDismiss}>
+      <TouchableWithoutFeedback onPress={onClose}>
         <Animated.View 
           style={[
             { 
@@ -109,13 +98,13 @@ export const DriveModeInfoModal = ({ isOpen, onClose }: DriveModeInfoModalProps)
                 fontWeight="700" 
                 color={colors.textPrimary}
              >
-               {t.driveModeInfoTitle}
+               {t.smartTrackInfoTitle}
              </H4>
              <Button 
                 size="$2" 
                 circular 
                 chromeless 
-                onPress={handleDismiss}
+                onPress={onClose}
                 icon={<Ionicons name="close" size={20} color={colors.textSecondary} />}
              />
           </XStack>
@@ -128,7 +117,7 @@ export const DriveModeInfoModal = ({ isOpen, onClose }: DriveModeInfoModalProps)
                 bc={colors.borderColor}
                 bw={1}
              >
-                <Ionicons name="car-sport" size={32} color={colors.accent} />
+                <Ionicons name="mic" size={32} color={colors.accent} />
              </YStack>
           </YStack>
 
@@ -138,31 +127,18 @@ export const DriveModeInfoModal = ({ isOpen, onClose }: DriveModeInfoModalProps)
             lineHeight={24}
             ta="center"
           >
-            {t.driveModeInfoDesc}
+            {t.smartTrackInfoDesc}
           </Paragraph>
 
-          <YStack space="$3" pt="$2">
-            <Button 
-                bg={colors.accent} 
-                color="#fff" 
-                fontWeight="700"
-                onPress={handleEnable}
-                pressStyle={{ opacity: 0.8, scale: 0.98 }}
-                fontSize={16}
-            >
-                {t.enableDriveMode}
-            </Button>
-            
-            <Button 
-                chromeless
-                color={colors.textSecondary} 
-                fontWeight="600"
-                onPress={handleDismiss}
-                pressStyle={{ opacity: 0.6 }}
-            >
-                {t.notNow}
-            </Button>
-          </YStack>
+          <Button 
+            bg={colors.accent} 
+            color="#fff" 
+            fontWeight="600"
+            onPress={onClose}
+            pressStyle={{ opacity: 0.8 }}
+          >
+            {t.done}
+          </Button>
         </YStack>
       </Animated.View>
     </YStack>

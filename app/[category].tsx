@@ -25,6 +25,8 @@ import { AzkarCounter } from "@/components/azkarScreen/AzkarCounter";
 import { AzkarScreenHeader } from "@/components/azkarScreen/AzkarScreenHeader";
 import { AzkarTextDisplay } from "@/components/azkarScreen/AzkarTextDisplay";
 import { MicButton, NavButton } from "@/components/azkarScreen/ScreenControls";
+import { SmartTrackInfoModal } from "@/components/SmartTrackInfoModal";
+import { DriveModeInfoModal } from "@/components/DriveModeInfoModal";
 
 // Hooks
 import { useAutoComplete } from "@/hooks/useAutoComplete";
@@ -60,7 +62,22 @@ export default function CategoryScreen() {
     setSettingsOpen,
     showTranslation,
     showNote,
+    hasSeenDriveModeInfo,
+    hasSeenSmartTrackInfo,
+    setHasSeenDriveModeInfo,
+    setHasSeenSmartTrackInfo,
+    isDriveModeEnabled,
   } = useAzkarStore();
+
+  const [isSmartTrackInfoOpen, setSmartTrackInfoOpen] = useState(false);
+  const [isDriveModeInfoOpen, setDriveModeInfoOpen] = useState(false);
+  const { isHydrated } = useAzkarStore();
+
+  useEffect(() => {
+    if (isHydrated && !hasSeenDriveModeInfo) {
+      setDriveModeInfoOpen(true);
+    }
+  }, [isHydrated, hasSeenDriveModeInfo]);
 
   const currentZeker = filteredAzkar[currentIndex];
 
@@ -79,6 +96,24 @@ export default function CategoryScreen() {
     autoReset: true,
     onComplete: handleAutoComplete,
   });
+
+  const handleStartRecognition = useCallback(() => {
+    if (!hasSeenSmartTrackInfo) {
+      setSmartTrackInfoOpen(true);
+    } else {
+      startRecognition();
+    }
+  }, [hasSeenSmartTrackInfo, startRecognition]);
+
+  const handleCloseSmartTrackInfo = useCallback(() => {
+    setSmartTrackInfoOpen(false);
+    setHasSeenSmartTrackInfo(true);
+    startRecognition();
+  }, [setHasSeenSmartTrackInfo, startRecognition]);
+
+  const handleCloseDriveModeInfo = useCallback(() => {
+    setDriveModeInfoOpen(false);
+  }, []);
 
   stopRecognitionRef.current = stopRecognition;
 
@@ -294,7 +329,7 @@ export default function CategoryScreen() {
 
             <MicButton
               isListening={isListening}
-              onPress={isListening ? stopRecognition : startRecognition}
+              onPress={isListening ? stopRecognition : handleStartRecognition}
               colors={colors}
               label={t.startReading}
             />
@@ -409,6 +444,16 @@ export default function CategoryScreen() {
         onClose={() => setCategorySheetOpen(false)}
         categories={CATEGORIES}
         onSelect={(cat) => handleCategoryChange(cat)}
+      />
+      
+      <SmartTrackInfoModal 
+        isOpen={isSmartTrackInfoOpen} 
+        onClose={handleCloseSmartTrackInfo} 
+      />
+
+      <DriveModeInfoModal 
+        isOpen={isDriveModeInfoOpen} 
+        onClose={handleCloseDriveModeInfo} 
       />
     </YStack>
   );

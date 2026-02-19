@@ -54,6 +54,7 @@ interface MicButtonProps {
 }
 
 export const MicButton = ({ isListening, onPress, colors, label }: MicButtonProps) => {
+  const { hasSeenSmartTrackInfo } = useAzkarStore();
   const pulseScale = useSharedValue(1);
 
   useEffect(() => {
@@ -65,10 +66,19 @@ export const MicButton = ({ isListening, onPress, colors, label }: MicButtonProp
         ),
         -1,
       );
+    } else if (!hasSeenSmartTrackInfo) {
+      // Gentle discovery pulse for new users
+      pulseScale.value = withRepeat(
+        withSequence(
+          withTiming(1.03, { duration: 1500 }),
+          withTiming(1.0, { duration: 1500 }),
+        ),
+        -1,
+      );
     } else {
       pulseScale.value = withTiming(1, { duration: 200 });
     }
-  }, [isListening]);
+  }, [isListening, hasSeenSmartTrackInfo]);
 
   const pulseStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulseScale.value }],

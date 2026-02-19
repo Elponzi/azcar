@@ -10,6 +10,8 @@ const STORAGE_KEYS = {
   showTranslation: 'azkar:showTranslation',
   showNote: 'azkar:showNote',
   driveMode: 'azkar:driveMode',
+  hasSeenDriveModeInfo: 'azkar:hasSeenDriveModeInfo',
+  hasSeenSmartTrackInfo: 'azkar:hasSeenSmartTrackInfo',
 } as const;
 
 interface AzkarState {
@@ -23,6 +25,8 @@ interface AzkarState {
   showTranslation: boolean;
   showNote: boolean;
   isDriveModeEnabled: boolean;
+  hasSeenDriveModeInfo: boolean;
+  hasSeenSmartTrackInfo: boolean;
   isHydrated: boolean;
 
   // Actions
@@ -38,6 +42,8 @@ interface AzkarState {
   setShowTranslation: (show: boolean) => void;
   setShowNote: (show: boolean) => void;
   setDriveMode: (enabled: boolean) => void;
+  setHasSeenDriveModeInfo: (seen: boolean) => void;
+  setHasSeenSmartTrackInfo: (seen: boolean) => void;
   hydrate: () => Promise<void>;
 }
 
@@ -52,6 +58,8 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
   showTranslation: false,
   showNote: false,
   isDriveModeEnabled: Platform.OS !== 'web',
+  hasSeenDriveModeInfo: false,
+  hasSeenSmartTrackInfo: false,
   isHydrated: false,
 
   setCategory: (category) => {
@@ -143,14 +151,26 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
     AsyncStorage.setItem(STORAGE_KEYS.driveMode, JSON.stringify(enabled));
   },
 
+  setHasSeenDriveModeInfo: (seen: boolean) => {
+    set({ hasSeenDriveModeInfo: seen });
+    AsyncStorage.setItem(STORAGE_KEYS.hasSeenDriveModeInfo, JSON.stringify(seen));
+  },
+
+  setHasSeenSmartTrackInfo: (seen: boolean) => {
+    set({ hasSeenSmartTrackInfo: seen });
+    AsyncStorage.setItem(STORAGE_KEYS.hasSeenSmartTrackInfo, JSON.stringify(seen));
+  },
+
   hydrate: async () => {
     try {
-      const [theme, language, showTranslation, showNote, driveMode] = await Promise.all([
+      const [theme, language, showTranslation, showNote, driveMode, seenDrive, seenSmart] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.theme),
         AsyncStorage.getItem(STORAGE_KEYS.language),
         AsyncStorage.getItem(STORAGE_KEYS.showTranslation),
         AsyncStorage.getItem(STORAGE_KEYS.showNote),
         AsyncStorage.getItem(STORAGE_KEYS.driveMode),
+        AsyncStorage.getItem(STORAGE_KEYS.hasSeenDriveModeInfo),
+        AsyncStorage.getItem(STORAGE_KEYS.hasSeenSmartTrackInfo),
       ]);
 
       set({
@@ -159,6 +179,8 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
         ...(showTranslation !== null && { showTranslation: JSON.parse(showTranslation) }),
         ...(showNote !== null && { showNote: JSON.parse(showNote) }),
         ...(driveMode !== null && { isDriveModeEnabled: JSON.parse(driveMode) }),
+        ...(seenDrive !== null && { hasSeenDriveModeInfo: JSON.parse(seenDrive) }),
+        ...(seenSmart !== null && { hasSeenSmartTrackInfo: JSON.parse(seenSmart) }),
         isHydrated: true,
       });
     } catch (error) {
