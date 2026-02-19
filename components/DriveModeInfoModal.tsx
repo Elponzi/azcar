@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useWindowDimensions, TouchableWithoutFeedback } from 'react-native';
+import { useWindowDimensions, TouchableWithoutFeedback, Platform } from 'react-native';
 import { YStack, XStack, H4, Text, Button, Paragraph } from 'tamagui';
 import Animated, { 
   useSharedValue, 

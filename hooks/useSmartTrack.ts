@@ -89,11 +89,14 @@ export function useSmartTrack({ targetText = "", onComplete, autoReset = false }
     }
   }, []);
 
-  // Native Events (safe to call unconditionally — on web the native events never fire)
-  useSpeechRecognitionEvent("start", () => setIsListening(true));
-  useSpeechRecognitionEvent("end", () => setIsListening(false));
+  // Native Events
+  const isWeb = Platform.OS === 'web';
+  
+  useSpeechRecognitionEvent("start", isWeb ? () => {} : () => setIsListening(true));
+  useSpeechRecognitionEvent("end", isWeb ? () => {} : () => setIsListening(false));
 
   useSpeechRecognitionEvent("result", (event: any) => {
+    if (isWeb) return;
     const text = event?.results?.[0]?.transcript || event?.transcript || "";
     const isFinal = event?.isFinal || false;
 
@@ -101,6 +104,7 @@ export function useSmartTrack({ targetText = "", onComplete, autoReset = false }
   });
 
   useSpeechRecognitionEvent("error", (event: any) => {
+    if (isWeb) return;
     console.log("Speech recognition error:", event);
     setIsListening(false);
   });

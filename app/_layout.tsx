@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
@@ -15,6 +16,24 @@ import { setupNativePlayer } from '@/services/TrackPlayerSetup';
 import { useAzkarStore } from '@/store/azkarStore';
 import { useKeepAwake } from '@/hooks/useKeepAwake';
 import { PremiumSplashScreen } from '@/components/SplashScreen';
+
+// --- SSR/SSG Polyfills for Vercel Build Environment ---
+if (Platform.OS === 'web' && typeof window === 'undefined') {
+  // Polyfill window for libraries that expect it (like expo-font/expo-splash-screen)
+  (global as any).window = {
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    location: { href: '' },
+  };
+  // Polyfill EventTarget which ExpoFontUtils.web.js often extends
+  if (!(global as any).EventTarget) {
+    (global as any).EventTarget = class EventTarget {
+      addEventListener() {}
+      removeEventListener() {}
+      dispatchEvent() { return true; }
+    };
+  }
+}
 
 // Polyfill for legacy components that expect React.default (React 19/ESM interop)
 if (!React.default) {
@@ -36,7 +55,10 @@ if (typeof window !== 'undefined') {
   SplashScreen.preventAutoHideAsync();
 }
 
-setupNativePlayer();
+// Only run native setup on native platforms
+if (Platform.OS !== 'web') {
+  setupNativePlayer();
+}
 
 export default function RootLayout() {
   useKeepAwake();
@@ -48,7 +70,7 @@ export default function RootLayout() {
     Tajawal: require('../assets/fonts/Tajawal-Regular.ttf'),
     Amiri: require('../assets/fonts/Amiri-Bold.ttf'),
     ReemKufi: require('../assets/fonts/ReemKufi-Bold.ttf'),
-    ...(FontAwesome ? FontAwesome.font : {}),
+    ...(typeof FontAwesome !== 'undefined' && FontAwesome.font ? FontAwesome.font : {}),
   });
 
   const isHydrated = useAzkarStore((state) => state.isHydrated);
