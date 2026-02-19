@@ -1,7 +1,7 @@
 import '@/utils/ssr-polyfills';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
@@ -44,6 +44,11 @@ if (Platform.OS !== 'web') {
 }
 
 export default function RootLayout() {
+  // 1. SSR Guard: Layout shouldn't render in Node.js
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
   useKeepAwake();
 
   const [isSplashAnimationFinished, setIsSplashAnimationFinished] = useState(false);
