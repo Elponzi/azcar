@@ -1,3 +1,4 @@
+import '@/utils/ssr-polyfills';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
@@ -16,24 +17,6 @@ import { setupNativePlayer } from '@/services/TrackPlayerSetup';
 import { useAzkarStore } from '@/store/azkarStore';
 import { useKeepAwake } from '@/hooks/useKeepAwake';
 import { PremiumSplashScreen } from '@/components/SplashScreen';
-
-// --- SSR/SSG Polyfills for Vercel Build Environment ---
-if (Platform.OS === 'web' && typeof window === 'undefined') {
-  // Polyfill window for libraries that expect it (like expo-font/expo-splash-screen)
-  (global as any).window = {
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    location: { href: '' },
-  };
-  // Polyfill EventTarget which ExpoFontUtils.web.js often extends
-  if (!(global as any).EventTarget) {
-    (global as any).EventTarget = class EventTarget {
-      addEventListener() {}
-      removeEventListener() {}
-      dispatchEvent() { return true; }
-    };
-  }
-}
 
 // Polyfill for legacy components that expect React.default (React 19/ESM interop)
 if (!React.default) {
