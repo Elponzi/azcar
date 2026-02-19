@@ -65,11 +65,16 @@ export function useSmartTrack({ targetText = "", onComplete, autoReset = false }
         };
 
         recognition.onresult = (event: any) => {
+           // We only iterate from event.resultIndex onwards as specified by the standard
+           // to process the newly added or changed transcript segments.
            for (let i = event.resultIndex; i < event.results.length; ++i) {
               const res = event.results[i];
               const text = res[0].transcript;
               const isFinal = res.isFinal;
-              processTranscriptRef.current(text, isFinal);
+              
+              if (text && text.trim().length > 0) {
+                processTranscriptRef.current(text, isFinal);
+              }
            }
         };
 

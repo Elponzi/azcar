@@ -72,7 +72,10 @@ const NON_ARABIC =
  * shapes, no punctuation.
  */
 export function normalizeArabic(text: string): string {
-  let out = text;
+  if (!text) return '';
+  
+  // Normalise Unicode form for consistency across different browsers/engines
+  let out = text.normalize('NFC');
 
   // 1 + 2  –  strip diacritics and tatweel first so later regex is simpler
   out = out.replace(DIACRITICS, '');
@@ -91,12 +94,24 @@ export function normalizeArabic(text: string): string {
  * Strip diacritics and tatweel from Arabic text.
  */
 export function removeTashkeel(text: string): string {
-  return text.replace(DIACRITICS, '').replace(TATWEEL, '');
+  return text.normalize('NFC').replace(DIACRITICS, '').replace(TATWEEL, '');
 }
 
 /**
- * Split Arabic text into tokens using whitespace, filtering out empty strings.
+ * Split Arabic text into tokens using whitespace and punctuation as separators.
  */
 export function tokenizeArabicText(text: string): string[] {
-  return text.split(/\s+/).filter(w => w.length > 0);
+  if (!text) return [];
+  
+  // 1. Normalize Unicode
+  // 2. Remove diacritics and tatweel (they shouldn't be separators)
+  // 3. Replace all non-Arabic characters with spaces
+  // 4. Split by whitespace
+  return text
+    .normalize('NFC')
+    .replace(DIACRITICS, '')
+    .replace(TATWEEL, '')
+    .replace(/[^\u0621-\u064A\u0660-\u0669\u066E-\u066F\u0671-\u06D3\u06D5\u06EE-\u06EF\u06FA-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 0);
 }
