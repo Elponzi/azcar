@@ -53,7 +53,7 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
   counts: {},
   filteredAzkar: AZKAR_DATA['Morning'],
   theme: 'dark', // Default from mockup
-  language: Platform.OS === 'web' ? 'en' : 'ar',
+  language: 'ar',
   isSettingsOpen: false,
   showTranslation: false,
   showNote: false,
@@ -178,7 +178,7 @@ export const useAzkarStore = create<AzkarState>((set, get) => ({
         ...(language && { language: language as 'en' | 'ar' }),
         ...(showTranslation !== null && { showTranslation: JSON.parse(showTranslation) }),
         ...(showNote !== null && { showNote: JSON.parse(showNote) }),
-        ...(driveMode !== null && { isDriveModeEnabled: JSON.parse(driveMode) }),
+        ...(driveMode !== null && { isDriveModeEnabled: Platform.OS === 'web' ? false : JSON.parse(driveMode) }),
         ...(seenDrive !== null && { hasSeenDriveModeInfo: JSON.parse(seenDrive) }),
         ...(seenSmart !== null && { hasSeenSmartTrackInfo: JSON.parse(seenSmart) }),
         isHydrated: true,

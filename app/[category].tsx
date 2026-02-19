@@ -3,7 +3,7 @@ import { setAudioModeAsync } from "expo-audio";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, useWindowDimensions } from "react-native";
+import { Pressable, StyleSheet, useWindowDimensions, Platform } from "react-native";
 import Animated, { FadeIn, FadeInUp, FadeOutUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Text, View, XStack, YStack } from "tamagui";
@@ -74,7 +74,7 @@ export default function CategoryScreen() {
   const { isHydrated } = useAzkarStore();
 
   useEffect(() => {
-    if (isHydrated && !hasSeenDriveModeInfo) {
+    if (isHydrated && !hasSeenDriveModeInfo && Platform.OS !== 'web') {
       setDriveModeInfoOpen(true);
     }
   }, [isHydrated, hasSeenDriveModeInfo]);

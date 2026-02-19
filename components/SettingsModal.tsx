@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useWindowDimensions, TouchableWithoutFeedback } from 'react-native';
+import { useWindowDimensions, TouchableWithoutFeedback, Platform } from 'react-native';
 import { YStack, XStack, H4, Text, Button } from 'tamagui';
 import Animated, { 
   useSharedValue, 
@@ -237,36 +237,38 @@ export const SettingsModal = () => {
             </YStack>
 
             {/* Drive Mode Section */}
-            <YStack space="$4">
-                <XStack ai="center" space="$2">
-                    <Text fontSize={12} fontWeight="600" textTransform="uppercase" color={colors.textSecondary} letterSpacing={1}>
-                        {t.driveMode}
-                    </Text>
-                    <Button 
-                        size="$1.5"
-                        circular
-                        chromeless
-                        onPress={() => setInfoOpen(true)}
-                        icon={<Ionicons name="information-circle-outline" size={16} color={colors.accent} />}
-                        p={0}
+            {Platform.OS !== 'web' && (
+              <YStack space="$4">
+                  <XStack ai="center" space="$2">
+                      <Text fontSize={12} fontWeight="600" textTransform="uppercase" color={colors.textSecondary} letterSpacing={1}>
+                          {t.driveMode}
+                      </Text>
+                      <Button 
+                          size="$1.5"
+                          circular
+                          chromeless
+                          onPress={() => setInfoOpen(true)}
+                          icon={<Ionicons name="information-circle-outline" size={16} color={colors.accent} />}
+                          p={0}
+                      />
+                  </XStack>
+                  
+                  <XStack bg={colors.cardBg} p="$1" br="$4" bw={0}>
+                    <ToggleButton 
+                      label={t.off} 
+                      isActive={!isDriveModeEnabled} 
+                      onPress={() => setDriveMode(false)} 
+                      colors={colors} 
                     />
-                </XStack>
-                
-                <XStack bg={colors.cardBg} p="$1" br="$4" bw={0}>
-                   <ToggleButton 
-                    label={t.off} 
-                    isActive={!isDriveModeEnabled} 
-                    onPress={() => setDriveMode(false)} 
-                    colors={colors} 
-                  />
-                  <ToggleButton 
-                    label={t.on} 
-                    isActive={isDriveModeEnabled} 
-                    onPress={() => setDriveMode(true)} 
-                    colors={colors} 
-                  />
-                </XStack>
-            </YStack>
+                    <ToggleButton 
+                      label={t.on} 
+                      isActive={isDriveModeEnabled} 
+                      onPress={() => setDriveMode(true)} 
+                      colors={colors} 
+                    />
+                  </XStack>
+              </YStack>
+            )}
 
             {/* Footer Hints */}
             <YStack mt="auto" ai="center" space="$2">
