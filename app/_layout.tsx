@@ -51,7 +51,7 @@ export default function RootLayout() {
 
   useKeepAwake();
 
-  const [isSplashAnimationFinished, setIsSplashAnimationFinished] = useState(false);
+  const [isSplashAnimationFinished, setIsSplashAnimationFinished] = useState(Platform.OS === 'web');
 
   // Load fonts safely. Spread only if FontAwesome.font exists to prevent SSR crashes.
   const [loaded, error] = useFonts({
@@ -73,7 +73,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded && isHydrated) {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && Platform.OS !== 'web') {
         SplashScreen.hideAsync();
       }
     }
@@ -83,7 +83,8 @@ export default function RootLayout() {
     return null;
   }
 
-  if (!isSplashAnimationFinished) {
+  // Only show custom splash on native
+  if (!isSplashAnimationFinished && Platform.OS !== 'web') {
     return (
       <TamaguiProvider config={config} defaultTheme="dark">
         <PremiumSplashScreen onAnimationComplete={() => setIsSplashAnimationFinished(true)} />
