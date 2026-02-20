@@ -1,0 +1,3 @@
+# Only the build artifact is needed for deployment
+*
+!dist/
