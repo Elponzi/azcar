@@ -2,7 +2,7 @@
   "expo": {
     "name": "أذكار AI",
     "slug": "adhkar-ai",
-    "version": "1.0.22",
+    "version": "1.0.23",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "azkardrive",
@@ -14,12 +14,14 @@
       "backgroundColor": "#020617"
     },
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "infoPlist": {
         "NSSpeechRecognitionUsageDescription": "This app uses speech recognition to track your Azkar reading.",
-        "NSMicrophoneUsageDescription": "This app needs access to the microphone to listen to your Azkar reading."
+        "NSMicrophoneUsageDescription": "This app needs access to the microphone to listen to your Azkar reading.",
+        "ITSAppUsesNonExemptEncryption": false
       },
-      "bundleIdentifier": "com.hartha.aloufi.azkardrive"
+      "bundleIdentifier": "com.hartha.aloufi.azkardrive",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {

@@ -9,6 +9,8 @@
     "build-a-prod": "node scripts/build-prod.js",
     "build-a-local": "npx expo run android --variant release",
     "ios": "expo run:ios",
+    "build-i-prod": "node scripts/build-ios-prod.js",
+    "build-i-local": "node scripts/build-ios-local.js",
     "web": "expo start --web",
     "build:web": "npx expo export --platform web",
     "predeploy": "npx expo export --platform web && echo adhkarai.adah.dev > dist/CNAME",

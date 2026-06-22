@@ -13,6 +13,7 @@ export function useSmartTrack({ targetText = "", onComplete, autoReset = false }
   const [isListening, setIsListening] = useState(false);
   const [permissionError, setPermissionError] = useState<string | null>(null);
   const webRecognitionRef = useRef<any>(null);
+  const manualStopRef = useRef(false);
 
   const clearPermissionError = useCallback(() => {
     setPermissionError(null);
@@ -21,6 +22,7 @@ export function useSmartTrack({ targetText = "", onComplete, autoReset = false }
   // Define stop first so we can pass it to matcher
   const stopRecognition = useCallback(() => {
     if (Platform.OS === 'web') {
+        manualStopRef.current = true;
         webRecognitionRef.current?.stop();
         return;
     }
@@ -55,12 +57,28 @@ export function useSmartTrack({ targetText = "", onComplete, autoReset = false }
         recognition.lang = 'ar-SA';
 
         recognition.onstart = () => setIsListening(true);
-        recognition.onend = () => setIsListening(false);
+        recognition.onend = () => {
+          if (!manualStopRef.current) {
+            // Mobile Chrome stops after every isFinal — restart transparently
+            setTimeout(() => {
+              try {
+                webRecognitionRef.current?.start();
+                // isListening stays true; onstart will confirm it
+              } catch (e) {
+                setIsListening(false); // fallback if restart fails
+              }
+            }, 250);
+          } else {
+            manualStopRef.current = false;
+            setIsListening(false);
+          }
+        };
         recognition.onerror = (e: any) => {
           console.error("Web Speech Error:", e);
           if (e.error === 'not-allowed') {
             setPermissionError('mic_denied');
           }
+          manualStopRef.current = true; // don't auto-restart after errors
           setIsListening(false);
         };
 
@@ -84,6 +102,7 @@ export function useSmartTrack({ targetText = "", onComplete, autoReset = false }
       }
 
       return () => {
+        manualStopRef.current = true;
         webRecognitionRef.current?.stop();
       };
     }
@@ -121,6 +140,7 @@ export function useSmartTrack({ targetText = "", onComplete, autoReset = false }
 
   const startRecognition = useCallback(async () => {
     if (Platform.OS === 'web') {
+        manualStopRef.current = false;
         try {
           webRecognitionRef.current?.start();
         } catch(e) { console.error(e); }
